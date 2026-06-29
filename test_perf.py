@@ -217,26 +217,16 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         if len(cy) == 0:
             continue
 
-        # --- DIAGNOSTIKA & OPRAVA CHYBEJICI STICKINESS ---
-        # 1) Definice "rychle cesty" rozsirena na < 1.09, coz zachyti i mensi pesiny (napr. cost 1.08)
-        # 2) Pro knight tahy musime garantovat, ze i stredovy (mid) pixel lezi na ceste.
-        # Pokud neni, runner_next_road bude False, ztrati slevu a dostane penalizaci za opusteni cesty!
-        is_rc = grid[cy, cx] < 1.09
-        is_rn = grid[ny, nx] < 1.09
-        is_rm = grid[mid_y, mid_x] < 1.09 if is_knight else is_rn
-
         if direction == 'forward':
             dz = elev[ny, nx] - elev[cy, cx]
-            is_runner_on_road = is_rc
-            is_runner_next_road = is_rn & is_rm
+            is_runner_on_road = is_road[cy, cx]
+            is_runner_next_road = is_road[ny, nx]
         else:
             dz = elev[cy, cx] - elev[ny, nx]
-            is_runner_on_road = is_rn
-            is_runner_next_road = is_rc & is_rm
+            is_runner_on_road = is_road[ny, nx]
+            is_runner_next_road = is_road[cy, cx]
 
-        # Oprava kopcu: krok musi byt prepocitan na metry (zohledneni grid_size)!
-        dist_m = step_dist * grid_size
-        sklon = dz / dist_m
+        sklon = dz / step_dist
         hill_multiplier = np.ones_like(sklon)
         
         up_mask = sklon > 0.02
@@ -369,56 +359,14 @@ def merit_podobnost(cesta_nova, prijate_cesty, h, w, radius):
 
 
 def _penalizuj_heatmapu(penalty_grid, trasa, radius, hodnota):
-    """Prida plynulou penalizaci (gradient) do penalty_grid v okoli zadane trasy."""
+    """Prida penalizaci do penalty_grid v okoli zadane trasy."""
     h, w = penalty_grid.shape
-    
-    # 1) Vytvoreni kruhoveho gradientoveho jadra (kernel)
-    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
-    dist = np.sqrt(x**2 + y**2)
-    # Linearni upadek, ale s rovnou plosinou (plateau) uprostred,
-    # aby se nevyplatilo "uskakovat" jen kousek vedle cesty
-    plateau_r = radius * 0.4
-    kernel_base = np.where(
-        dist <= plateau_r,
-        1.0,
-        np.maximum(0, 1.0 - (dist - plateau_r) / (radius - plateau_r))
-    )
-    
-    body_k_penalizaci = trasa[::3]
-    total_pts = len(body_k_penalizaci)
-    # 15 % trasy (z obou stran) bude ochranna zona (fade-out), min 5 bodu
-    ochrana_bodu = max(5, int(total_pts * 0.15)) 
-    
-    for i, (ty, tx) in enumerate(body_k_penalizaci):
+    for ty, tx in trasa[::3]:
         y_int, x_int = int(ty), int(tx)
-        
-        # 2) Fade-out zony kolem startu a cile
-        if i < ochrana_bodu:
-            fade_factor = i / ochrana_bodu
-        elif i > total_pts - 1 - ochrana_bodu:
-            fade_factor = max(0, (total_pts - 1 - i)) / ochrana_bodu
-        else:
-            fade_factor = 1.0
-            
-        # Plynule jadro pro dany bod
-        kernel = kernel_base * (hodnota * fade_factor)
-        
-        y_min = max(0, y_int - radius)
-        y_max = min(h, y_int + radius + 1)
-        x_min = max(0, x_int - radius)
-        x_max = min(w, x_int + radius + 1)
-        
-        ky_min = radius - (y_int - y_min)
-        ky_max = radius + (y_max - y_int)
-        kx_min = radius - (x_int - x_min)
-        kx_max = radius + (x_max - x_int)
-        
-        if y_max > y_min and x_max > x_min:
-            # POUZIJEME MAXIMUM MISTO SCITANI - ZABRANI TO VYTVORENI NEPROSTUPNE ZDI
-            # Umozni to krizit se s trasou uprostred postupu
-            vyrez_penalty = penalty_grid[y_min:y_max, x_min:x_max]
-            vyrez_kernel = kernel[ky_min:ky_max, kx_min:kx_max]
-            penalty_grid[y_min:y_max, x_min:x_max] = np.maximum(vyrez_penalty, vyrez_kernel)
+        penalty_grid[
+            max(0, y_int - radius): min(h, y_int + radius + 1),
+            max(0, x_int - radius): min(w, x_int + radius + 1),
+        ] += hodnota
 
 
 def vyhlad_cestu(cesta_pixely, grid, vyhlazeni=3):
@@ -444,40 +392,22 @@ def vyhlad_cestu(cesta_pixely, grid, vyhlazeni=3):
         x_int = max(0, min(w - 1, int(px)))
         cost = grid[y_int, x_int]
 
-        # 1) Zjistime jestli ma smysl vubec vyhlazovat
-        if cost < 1.09:
-            okno = vyhlazeni    # cesty a pesiny
+        # Dynamicke okno podle povrchu
+        if cost < 1.05:
+            okno = vyhlazeni    # cesta: plne vyhlazeni
         elif cost < 1.5:
-            okno = 1            # lehky teren
+            okno = 1            # lehky teren: jemne
         else:
-            okno = 0            # tezky teren/les - nechat presne podle Dijkstry
+            okno = 0            # tezky teren/les: zadne
 
         if okno == 0:
             nova.append((py, px))
         else:
-            # Vypocet klouzaveho prumeru (vyhlazeneho bodu)
             a = max(0, i - okno)
             b = min(len(pts), i + okno + 1)
             avg_y = sum(p[0] for p in pts[a:b]) / (b - a)
             avg_x = sum(p[1] for p in pts[a:b]) / (b - a)
-            
-            # --- DIAGNOSTIKA & OPRAVA CHYBY "ZKRACENI ROHU DO LESA" ---
-            # Zkontrolujeme cenu puvodniho bodu a cenu "vyhlazeneho" bodu
-            sm_y_int = max(0, min(h - 1, int(avg_y)))
-            sm_x_int = max(0, min(w - 1, int(avg_x)))
-            sm_cost = grid[sm_y_int, sm_x_int]
-            
-            # Pokud vyhlazeny bod padne do lesa/pomalejsiho terenu.
-            # Zprisnena kontrola: Bily les (1.0) a cesta (0.965) maji rozdil jen 3.6%. 
-            # Pokud puvodni bod byl na ceste (< 1.05), vyhlazeny MUSI byt take na ceste.
-            # Nebo obecne nesmi byt pomalejsi o vice nez 2% (misto puvodnich 10%).
-            byl_na_ceste = cost < 1.05
-            je_na_ceste = sm_cost < 1.05
-            
-            if (byl_na_ceste and not je_na_ceste) or (sm_cost > cost * 1.02):
-                nova.append((py, px))
-            else:
-                nova.append((avg_y, avg_x))
+            nova.append((avg_y, avg_x))
 
     nova[0] = start_orig
     nova[-1] = cil_orig
@@ -493,28 +423,20 @@ print("🖼️ Nacitam mapu...")
 class AplikaceStavitel:
     def __init__(self):
         self.img = Image.open(map_image_file)
-        self.img.load()  # Nacte cely obrazek do RAM, aby byl crop okamzity
-        self.orig_w, self.orig_h = self.img.size
-        
         self.fig, self.ax = plt.subplots(figsize=(14, 10))
         self.fig.canvas.manager.set_window_title(
             "AI Elitni stavitel - Dijkstra Heatmap"
         )
+        # --- ZMENSENI PROSTORU PRO MAPU ---
         plt.subplots_adjust(bottom=0.14)
 
-        print("⚙️ Vykresluji mapu na monitor (dynamické rozlišení)...")
-        # Vykreslime jen pocatecni downsample
-        crop_arr = self._get_crop(0, self.orig_w, 0, self.orig_h)
-        self.im = self.ax.imshow(crop_arr, interpolation="nearest", extent=[0, self.orig_w, self.orig_h, 0])
-
-        # Pripojeni na udalosti hybani a zoomovani
-        self.ax.callbacks.connect('xlim_changed', self._on_zoom)
-        self.ax.callbacks.connect('ylim_changed', self._on_zoom)
+        print("⚙️ Vykresluji mapu na monitor (fast mode: NEAREST)...")
+        self.ax.imshow(self.img, interpolation="nearest")
 
         # --- UI WIDGETY (Sliders) ---
         axcolor = 'lightgoldenrodyellow'
         self.ax_kopce = plt.axes([0.15, 0.05, 0.55, 0.025], facecolor=axcolor)
-        self.slider_kopce = Slider(self.ax_kopce, 'Penalizace Kopců', 1.0, 30.0, valinit=5.0)
+        self.slider_kopce = Slider(self.ax_kopce, 'Penalizace Kopců', 3.0, 30.0, valinit=12.0)
 
         self.ax_btn = plt.axes([0.78, 0.04, 0.12, 0.05])
         self.btn_prepocitat = Button(self.ax_btn, 'Přepočítat [R]', color=axcolor, hovercolor='0.975')
@@ -527,39 +449,6 @@ class AplikaceStavitel:
 
         # Stavove promenne pro vlastni trasu
         self.rezim_vlastni_trasy = False
-
-    def _get_crop(self, x0, x1, y0, y1):
-        x0, x1 = max(0, int(x0)), min(self.orig_w, int(x1))
-        y0, y1 = max(0, int(y0)), min(self.orig_h, int(y1))
-        if x1 <= x0 or y1 <= y0:
-            return np.zeros((1, 1, 3), dtype=np.uint8)
-        crop = self.img.crop((x0, y0, x1, y1))
-        cw, ch = crop.size
-        ratio = min(2000.0 / cw, 2000.0 / ch)
-        if ratio < 1.0:
-            crop = crop.resize((int(cw * ratio), int(ch * ratio)), Image.Resampling.BILINEAR)
-        return np.array(crop)
-
-    def _on_zoom(self, event_ax):
-        if getattr(self, '_updating_zoom', False):
-            return
-        
-        self._updating_zoom = True
-        try:
-            xlim = event_ax.get_xlim()
-            ylim = event_ax.get_ylim()
-            
-            # Omezit souradnice na realnou velikost mapy
-            x0 = max(0, min(xlim))
-            x1 = min(self.orig_w, max(xlim))
-            y0 = max(0, min(ylim))
-            y1 = min(self.orig_h, max(ylim))
-            
-            if x1 > x0 and y1 > y0:
-                self.im.set_data(self._get_crop(x0, x1, y0, y1))
-                self.im.set_extent([x0, x1, y1, y0])
-        finally:
-            self._updating_zoom = False
         self.vlastni_body = []
         self.vykreslene_vlastni_body = []
 
@@ -878,15 +767,14 @@ class AplikaceStavitel:
 
         # --- Var 2+: Hledani alternativ pres penalizovanou heatmapu ---
         heatmap_penalty = np.zeros((height, width), dtype=np.float64)
-        # Penalizacni radius skaluje inverzne s delkou postupu (zmensen, aby netvoril obri stity)
-        pen_r_zaklad = int(PODOBNOST_RADIUS * 1.5)
+        # Penalizacni radius skaluje inverzne s delkou postupu
+        pen_r_zaklad = int(PODOBNOST_RADIUS * 3)
         if delka_postupu > 2000:
             pen_r = max(10, int(pen_r_zaklad * (2000 / delka_postupu) ** 0.5))
         else:
             pen_r = pen_r_zaklad
-        # Penalizacni hodnota: drasticky snizena, aby trasy mohly prochazet uprostred,
-        # pokud se i tak vejdou do 65% limitu. Ted je to spise 'vyhybej se' nez 'zabrana'.
-        pen_hodnota = optimalni_cas * 0.04
+        # Penalizacni hodnota: snizena z 0.5 na 0.15 aby nezabila celou mapu
+        pen_hodnota = optimalni_cas * 0.15
 
         # Penalizuj Var 1
         if prijate_cesty:
@@ -1090,4 +978,4 @@ class AplikaceStavitel:
 
 
 app = AplikaceStavitel()
-plt.show()
+app.body=[(606, 155), (593, 609)]; app.spocitat_trasy()
