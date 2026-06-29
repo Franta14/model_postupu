@@ -753,13 +753,12 @@ class AplikaceStavitel:
         road_ratio = road_dist / vzd if vzd > 0 else 0.0
         return vzd, prev, usili, road_ratio
 
-    def vykresli_trasu(self, cesta, barva, label, bod_A, bod_B):
+    def vykresli_trasu(self, cesta, barva, label, bod_A, bod_B, smooth=True):
         """Vyhladí a vykreslí jednu trasu na mapu."""
-        cesta_viz = (
-            vyhlad_cestu(cesta, cost_grid_base, vyhlazeni=VYHLAZENI_BUNEK)
-            if ZAPNOUT_VYHLAZENI
-            else cesta
-        )
+        if smooth and ZAPNOUT_VYHLAZENI:
+            cesta_viz = vyhlad_cestu(cesta, cost_grid_base, vyhlazeni=VYHLAZENI_BUNEK)
+        else:
+            cesta_viz = cesta
 
         wx, wy = [], []
         for py, px in cesta_viz:
@@ -1023,8 +1022,9 @@ class AplikaceStavitel:
             )
 
             # Dijkstra z bodu A segmentu
+            val_kopce = self.slider_kopce.val
             dist_seg, parents_y_seg, parents_x_seg = dijkstra_heatmap(
-                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size
+                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size, val_kopce, direction='forward'
             )
 
             # Kontrola dosazitelnosti
@@ -1062,7 +1062,7 @@ class AplikaceStavitel:
         print(f"\n   Vlastni trasa: {vzd_km:.2f} km | +{prev:.0f}m | {cas_c}:{cas_v:02d} ({t_m}:{t_v:02d}/km)")
 
         # Vizualizace
-        self.vykresli_trasu(cesta_celkova, "#FFA500", label, self.body[0], self.body[1])
+        self.vykresli_trasu(cesta_celkova, "#FFA500", label, self.body[0], self.body[1], smooth=False)
 
         # Aktualizace legendy
         leg = self.ax.get_legend()
