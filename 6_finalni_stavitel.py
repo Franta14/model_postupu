@@ -213,6 +213,9 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         ny = ny[valid_terren]
         nx = nx[valid_terren]
         terren_cost = terren_cost[valid_terren]
+        if is_knight:
+            mid_y = mid_y[valid_terren]
+            mid_x = mid_x[valid_terren]
         
         if len(cy) == 0:
             continue
@@ -235,14 +238,17 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
             is_runner_next_road = is_rc & is_rm
 
         # Oprava kopcu: krok musi byt prepocitan na metry (zohledneni grid_size)!
-        dist_m = step_dist * grid_size
+        dist_m = step_dist * NASOBIC_MERITKA
         sklon = dz / dist_m
         hill_multiplier = np.ones_like(sklon)
         
         up_mask = sklon > 0.02
         sklon_ef = sklon[up_mask] - 0.02
         lin_penalta = kopce_vaha * 0.02 * sklon_ef
-        exp_penalta = np.where(sklon_ef > 0.15, kopce_vaha * 0.2 * ((sklon_ef - 0.15) ** 1.5), 0.0)
+        exp_penalta = np.zeros_like(sklon_ef)
+        steep = sklon_ef > 0.15
+        if np.any(steep):
+            exp_penalta[steep] = kopce_vaha * 0.2 * ((sklon_ef[steep] - 0.15) ** 1.5)
         hill_multiplier[up_mask] = 1.0 + lin_penalta + exp_penalta
         
         down_mask = sklon < -0.02
@@ -325,25 +331,36 @@ def penalizuj_grid(grid, trasa, sirka_px):
     """
     Vytvori kopii cenove mrizky a zdrazi teren podel zadane trasy.
     Kolem pixelu trasy vytvori binarni masku (dilatace o sirka_px bunek)
-    a prida penalizaci = vynasobi naklady na pruchod * 1.5.
+    a prida penalizaci = vynasobi naklady na pruchod * 1.10.
+    (Ochranna zona na startu a v cili umozni trasam se sbihat)
     """
     h, w = grid.shape
     grid_pen = grid.copy()
 
     # Vytvor binarni masku trasy
     trasa_maska = np.zeros((h, w), dtype=bool)
-    for py, px in trasa:
+    
+    total_pts = len(trasa)
+    ochrana = max(5, int(total_pts * 0.10)) # Prvnich a poslednich 10% bodu chranime
+    
+    for i in range(ochrana, total_pts - ochrana):
+        py, px = trasa[i]
         y_int = max(0, min(h - 1, int(py)))
         x_int = max(0, min(w - 1, int(px)))
         trasa_maska[y_int, x_int] = True
+
+    # Pokud je trasa moc kratka, alespon stred
+    if not np.any(trasa_maska) and total_pts > 0:
+        py, px = trasa[total_pts // 2]
+        trasa_maska[max(0, min(h-1, int(py))), max(0, min(w-1, int(px)))] = True
 
     # Dilatace – rozsir masku kolem trasy
     struct = np.ones((3, 3), dtype=bool)
     iteraci = max(1, sirka_px // 2)
     zona = binary_dilation(trasa_maska, structure=struct, iterations=iteraci)
 
-    # Zvyseni ceny terenu o 50%
-    grid_pen[zona] *= 1.5
+    # Jemne zvyseni ceny terenu (umozni castecne sdileni tras, pokud je alternativa pomala)
+    grid_pen[zona] *= 1.10
 
     return grid_pen
 
@@ -368,57 +385,6 @@ def merit_podobnost(cesta_nova, prijate_cesty, h, w, radius):
     return sdil / max(1, len(cesta_nova))
 
 
-def _penalizuj_heatmapu(penalty_grid, trasa, radius, hodnota):
-    """Prida plynulou penalizaci (gradient) do penalty_grid v okoli zadane trasy."""
-    h, w = penalty_grid.shape
-    
-    # 1) Vytvoreni kruhoveho gradientoveho jadra (kernel)
-    y, x = np.ogrid[-radius:radius+1, -radius:radius+1]
-    dist = np.sqrt(x**2 + y**2)
-    # Linearni upadek, ale s rovnou plosinou (plateau) uprostred,
-    # aby se nevyplatilo "uskakovat" jen kousek vedle cesty
-    plateau_r = radius * 0.4
-    kernel_base = np.where(
-        dist <= plateau_r,
-        1.0,
-        np.maximum(0, 1.0 - (dist - plateau_r) / (radius - plateau_r))
-    )
-    
-    body_k_penalizaci = trasa[::3]
-    total_pts = len(body_k_penalizaci)
-    # 15 % trasy (z obou stran) bude ochranna zona (fade-out), min 5 bodu
-    ochrana_bodu = max(5, int(total_pts * 0.15)) 
-    
-    for i, (ty, tx) in enumerate(body_k_penalizaci):
-        y_int, x_int = int(ty), int(tx)
-        
-        # 2) Fade-out zony kolem startu a cile
-        if i < ochrana_bodu:
-            fade_factor = i / ochrana_bodu
-        elif i > total_pts - 1 - ochrana_bodu:
-            fade_factor = max(0, (total_pts - 1 - i)) / ochrana_bodu
-        else:
-            fade_factor = 1.0
-            
-        # Plynule jadro pro dany bod
-        kernel = kernel_base * (hodnota * fade_factor)
-        
-        y_min = max(0, y_int - radius)
-        y_max = min(h, y_int + radius + 1)
-        x_min = max(0, x_int - radius)
-        x_max = min(w, x_int + radius + 1)
-        
-        ky_min = radius - (y_int - y_min)
-        ky_max = radius + (y_max - y_int)
-        kx_min = radius - (x_int - x_min)
-        kx_max = radius + (x_max - x_int)
-        
-        if y_max > y_min and x_max > x_min:
-            # POUZIJEME MAXIMUM MISTO SCITANI - ZABRANI TO VYTVORENI NEPROSTUPNE ZDI
-            # Umozni to krizit se s trasou uprostred postupu
-            vyrez_penalty = penalty_grid[y_min:y_max, x_min:x_max]
-            vyrez_kernel = kernel[ky_min:ky_max, kx_min:kx_max]
-            penalty_grid[y_min:y_max, x_min:x_max] = np.maximum(vyrez_penalty, vyrez_kernel)
 
 
 def vyhlad_cestu(cesta_pixely, grid, vyhlazeni=3):
@@ -719,37 +685,70 @@ class AplikaceStavitel:
         
         for j in range(1, len(cesta)):
             p1, p2 = cesta[j - 1], cesta[j]
-            dg = math.hypot(p2[1] - p1[1], p2[0] - p1[0]) * grid_size
-            vzd += dg * NASOBIC_MERITKA
-            if working_grid_base[int(p2[0]), int(p2[1])] < 1.05:
-                road_dist += dg * NASOBIC_MERITKA
-            z1 = elev_grid[int(p1[0]), int(p1[1])]
-            z2 = elev_grid[int(p2[0]), int(p2[1])]
-            if z2 > z1:
-                prev += z2 - z1
-                
-            sk = (z2 - z1) / (dg * NASOBIC_MERITKA) if dg > 0.1 else 0
+            dy_px = p2[0] - p1[0]
+            dx_px = p2[1] - p1[1]
+            dist_px = math.hypot(dy_px, dx_px)
+            dg = dist_px * grid_size
+            dist_m = dg * NASOBIC_MERITKA
+            vzd += dist_m
             
-            if sk > 0.02:
-                sklon_efektivni = sk - 0.02
+            y1, x1 = int(p1[0]), int(p1[1])
+            y2, x2 = int(p2[0]), int(p2[1])
+            
+            is_rc = working_grid_base[y1, x1] < 1.09
+            is_rn = working_grid_base[y2, x2] < 1.09
+            
+            if abs(dy_px) > 1.5 or abs(dx_px) > 1.5:
+                is_knight = True
+                mid_y, mid_x = y1 + int(dy_px / 2), x1 + int(dx_px / 2)
+                terren_cost = working_grid_base[y1, x1] * 0.2 + working_grid_base[mid_y, mid_x] * 0.3 + working_grid_base[y2, x2] * 0.5
+                is_rm = working_grid_base[mid_y, mid_x] < 1.09
+            else:
+                is_knight = False
+                terren_cost = working_grid_base[y1, x1] * 0.35 + working_grid_base[y2, x2] * 0.65
+                is_rm = is_rn
+                
+            is_runner_on_road = is_rc
+            is_runner_next_road = is_rn and is_rm
+            
+            z1 = elev_grid[y1, x1]
+            z2 = elev_grid[y2, x2]
+            dz = z2 - z1
+            
+            if dz > 0:
+                prev += dz
+                
+            sklon = dz / dist_m if dist_m > 0.1 else 0.0
+            
+            if sklon > 0.02:
+                sklon_efektivni = sklon - 0.02
                 lin_penalta = val_kopce * 0.02 * sklon_efektivni
                 if sklon_efektivni > 0.15:
                     exp_penalta = val_kopce * 0.2 * ((sklon_efektivni - 0.15) ** 1.5)
                 else:
                     exp_penalta = 0.0
                 hm = 1.0 + lin_penalta + exp_penalta
-            elif sk < -0.02:
+            elif sklon < -0.02:
                 limit_zrychleni = -0.25
-                if sk >= limit_zrychleni:
-                    hm = 1.0 + (sk * 0.5)
+                if sklon >= limit_zrychleni:
+                    hm = 1.0 + (sklon * 0.5)
                 else:
                     maximalni_zrychleni = 1.0 + (limit_zrychleni * 0.5)
-                    prebytek_sklonu = abs(sk) - abs(limit_zrychleni)
+                    prebytek_sklonu = abs(sklon) - abs(limit_zrychleni)
                     hm = maximalni_zrychleni + (prebytek_sklonu * 1.5)
             else:
                 hm = 1.0
                 
-            usili += dg * working_grid_base[int(p2[0]), int(p2[1])] * hm
+            step_effort = dg * terren_cost * hm
+            
+            if is_runner_on_road and is_runner_next_road:
+                step_effort *= 0.92
+                road_dist += dist_m
+            elif is_runner_on_road and not is_runner_next_road:
+                step_effort += dg * 0.40
+                
+            usili += step_effort
+            
         road_ratio = road_dist / vzd if vzd > 0 else 0.0
         return vzd, prev, usili, road_ratio
 
@@ -774,16 +773,15 @@ class AplikaceStavitel:
         self.vykreslene_trasy.extend([l1, l2])
 
     # =================================================================
-    # HLAVNI VYPOCET: Dijkstra Heatmap (Protnuti izochron)
+    # HLAVNI VYPOCET: Iterative Penalty (hledani vice variant)
     # =================================================================
     def spocitat_trasy(self):
         self.hotovo = True
-        self.ax.set_title("POCITAM TRASY (Dijkstra Heatmap)...", color="red", fontweight="bold")
+        self.ax.set_title("POCITAM TRASY (Iterative Penalty)...", color="red", fontweight="bold")
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
         t_celkovy_start = time.time()
-        working_grid = cost_grid_base  # Bez kopie – Dijkstra grid NEMENI
         colors = ["#DD0000", "#00AA00", "#0055DD"]
 
         bod_A, bod_B = self.body[0], self.body[1]
@@ -813,134 +811,90 @@ class AplikaceStavitel:
               f"{time.time()-t0:.2f}s", flush=True)
 
         # ==============================================================
-        # FAZE 2: Dijkstra VPRED (ze Startu)
+        # FAZE 2: Generovani variant (Iterative Penalty)
         # ==============================================================
-        print("   Faze 2: Dijkstra VPRED ze Startu...", flush=True)
-        t0 = time.time()
-        dist_forward, parents_y_f, parents_x_f = dijkstra_heatmap(
-            working_grid, elev_grid, start, maska, grid_size, val_kopce,
-            direction='forward'
-        )
-        print(f"      Dokonceno | {time.time()-t0:.2f}s", flush=True)
-
-        # Kontrola dosazitelnosti
-        if np.isinf(dist_forward[g_y, g_x]):
-            print("   CHYBA: Cil neni dosazitelny ze Startu!")
-            self.ax.set_title(
-                "NENALEZENO!" + self.navod_hotovo, color="red", fontweight="bold"
-            )
-            self.fig.canvas.draw_idle()
-            return
-
-        # ==============================================================
-        # FAZE 3: Dijkstra ZPET (z Cile)
-        # ==============================================================
-        print("   Faze 3: Dijkstra ZPET z Cile...", flush=True)
-        t0 = time.time()
-        dist_backward, parents_y_b, parents_x_b = dijkstra_heatmap(
-            working_grid, elev_grid, goal, maska, grid_size, val_kopce,
-            direction='backward'
-        )
-        print(f"      Dokonceno | {time.time()-t0:.2f}s", flush=True)
-
-        # ==============================================================
-        # FAZE 4: Generovani variant (Heatmapa + penalizace)
-        # ==============================================================
-        print("   Faze 4: Generovani variant...", flush=True)
+        print("   Faze 2: Generovani variant...", flush=True)
         t0 = time.time()
 
         vybrane = []
         prijate_cesty = []
-
-        # Heatmapa = soucet forward + backward casu
-        heatmap = dist_forward + dist_backward
-        optimalni_cas = dist_forward[g_y, g_x]
-
-        # Dynamicky casovy limit: delsi postupy maji vetsi toleranci
-        # (obihacka po silnici muze byt procentualne "drazsi" ale realne rychlejsi)
+        
+        # Grid se bude v dalsich iteracich zdrazovat v okoli nalezenych cest
+        working_grid = cost_grid_base.copy()
+        
         delka_postupu = math.hypot(g_y - s_y, g_x - s_x)
-        zakladni_odchylka = config.MAX_CAS_ODCHYLKA  # 0.30
+        zakladni_odchylka = config.MAX_CAS_ODCHYLKA
         if delka_postupu > 2000:
             extra = 0.10 * math.log2(delka_postupu / 2000)
             zakladni_odchylka = min(zakladni_odchylka + extra, 0.55)
-        limit_cas = optimalni_cas * (1.0 + zakladni_odchylka)
+            
+        optimalni_cas = None
+        limit_cas = None
 
-        # --- Var 1: Optimalni trasa (primo z dopredne mapy) ---
-        var1 = trasuj_cestu(parents_y_f, parents_x_f, start, goal)
-        if var1:
-            vzd, prev, usili, road_ratio = self.spocitat_metriky(var1, working_grid)
-            var1 = vyhlad_cestu(var1, working_grid, vyhlazeni=3)
-            vybrane.append((usili, vzd, prev, var1))
-            prijate_cesty.append(var1)
-            print(f"      ✅ Var 1: {vzd/1000:.2f} km | "
-                  f"+{prev:.0f}m | road={road_ratio*100:.0f}%", flush=True)
-
-        # --- Var 2+: Hledani alternativ pres penalizovanou heatmapu ---
-        heatmap_penalty = np.zeros((height, width), dtype=np.float64)
-        # Penalizacni radius skaluje inverzne s delkou postupu (zmensen, aby netvoril obri stity)
-        pen_r_zaklad = int(PODOBNOST_RADIUS * 1.5)
-        if delka_postupu > 2000:
-            pen_r = max(10, int(pen_r_zaklad * (2000 / delka_postupu) ** 0.5))
-        else:
-            pen_r = pen_r_zaklad
-        # Penalizacni hodnota: drasticky snizena, aby trasy mohly prochazet uprostred,
-        # pokud se i tak vejdou do 65% limitu. Ted je to spise 'vyhybej se' nez 'zabrana'.
-        pen_hodnota = optimalni_cas * 0.04
-
-        # Penalizuj Var 1
-        if prijate_cesty:
-            _penalizuj_heatmapu(heatmap_penalty, prijate_cesty[-1],
-                                pen_r, pen_hodnota)
-
-        for var_idx in range(1, POCET_VARIANT):
-            # Heatmapa + kumulativni penalizace
-            heatmap_pen = heatmap + heatmap_penalty
-            # Hledame jen pixely s rozumnym casem (originalni heatmapa!)
-            heatmap_search = np.where(
-                maska & (heatmap <= limit_cas), heatmap_pen, np.inf
+        pokus = 0
+        MAX_POKUSU = 10
+        
+        while len(vybrane) < POCET_VARIANT and pokus < MAX_POKUSU:
+            pokus += 1
+            t_iter = time.time()
+            
+            # Dijkstra VPRED na aktualnim (pripadne penalizovanem) working_grid
+            dist_forward, parents_y_f, parents_x_f = dijkstra_heatmap(
+                working_grid, elev_grid, start, maska, grid_size, val_kopce,
+                direction='forward'
             )
-
-            nalezeno_var = False
-            for attempt in range(200):
-                min_idx = np.argmin(heatmap_search)
-                min_y, min_x = np.unravel_index(min_idx, (height, width))
-
-                if np.isinf(heatmap_search[min_y, min_x]):
+            
+            # Kontrola dosazitelnosti
+            if np.isinf(dist_forward[g_y, g_x]):
+                if len(vybrane) == 0:
+                    print("   CHYBA: Cil neni dosazitelny ze Startu!")
+                    self.ax.set_title("NENALEZENO!" + self.navod_hotovo, color="red", fontweight="bold")
+                    self.fig.canvas.draw_idle()
+                    return
+                else:
                     break
 
-                # Trasuj cestu pres tento pivot
-                cesta_f = trasuj_cestu(parents_y_f, parents_x_f, start, (min_y, min_x))
-                cesta_b = trasuj_cestu(parents_y_b, parents_x_b, goal, (min_y, min_x))
-
-                if not cesta_f or not cesta_b:
-                    heatmap_search[min_y, min_x] = np.inf
-                    continue
-
-                trasa = cesta_f[:-1] + cesta_b[::-1]
+            # Pracovni cas (na penalizovanem gridu roste, ale odrazi snahu trasy vyhnout se penalizaci)
+            cas_iterace = dist_forward[g_y, g_x]
+            
+            # Urceni limitu na zaklade PRVNI, nejrychlejsi trasy
+            if len(vybrane) == 0:
+                optimalni_cas = cas_iterace
+                limit_cas = optimalni_cas * (1.0 + zakladni_odchylka)
+            
+            # Ochrana: I alternativy se musi vejit do tolerovaneho casu (dle nepenalizovane vahy)
+            # Trasujeme cestu a meri se jeji METRIKY na NEPENALIZOVANEM gridu
+            trasa = trasuj_cestu(parents_y_f, parents_x_f, start, goal)
+            if not trasa:
+                break
                 
-                # Metriky MUSI byt spocitany z originalni grid trasy pred vyhlazenim
-                # (vyhlazeni vytvari sub-pixely s nekonecnym sklonem)
-                vzd, prev, usili, road_ratio = self.spocitat_metriky(trasa, working_grid)
-                trasa = vyhlad_cestu(trasa, working_grid, vyhlazeni=3)
+            vzd, prev, usili, road_ratio = self.spocitat_metriky(trasa, cost_grid_base)
+            trasa_vyhlazena = vyhlad_cestu(trasa, cost_grid_base, vyhlazeni=3)
 
-                # Tvrda kontrola duplikatu
-                shoda = merit_podobnost(trasa, prijate_cesty, height, width, PODOBNOST_RADIUS)
-                if shoda > config.MAX_SHODA:
-                    heatmap_search[min_y, min_x] = np.inf
-                    continue
+            # Kontrola shody - pokud si Dijkstra presto najde z poloviny stejnou cestu
+            shoda = merit_podobnost(trasa_vyhlazena, prijate_cesty, height, width, PODOBNOST_RADIUS)
+            if shoda > config.MAX_SHODA:
+                print(f"      [Pokus {pokus} zahozen] prilis podobna (shoda {shoda*100:.1f}%)")
+                # Pridame dalsi vrstvu penalizace
+                working_grid = penalizuj_grid(working_grid, trasa, config.PENALIZACE_SIRKA_PX)
+                continue
 
-                # Prijato!
-                vybrane.append((usili, vzd, prev, trasa))
-                prijate_cesty.append(trasa)
-                _penalizuj_heatmapu(heatmap_penalty, trasa,
-                                    pen_r, pen_hodnota)
-                print(f"      ✅ Var {len(vybrane)}: {vzd/1000:.2f} km | "
-                      f"+{prev:.0f}m | road={road_ratio*100:.0f}%", flush=True)
-                nalezeno_var = True
+            # Overeni, ze skutecny cas/usili je v ramci limitu. 
+            # `usili` odpovida vzdalenosti s vahami terenu.
+            if usili > limit_cas:
+                print(f"      Dalsi varianta jiz prilis dlouha (odhad usili {usili:.0f} > limit {limit_cas:.0f})")
                 break
 
-            if not nalezeno_var:
-                break
+            # Varianta byla prijata!
+            vybrane.append((usili, vzd, prev, trasa_vyhlazena))
+            prijate_cesty.append(trasa_vyhlazena)
+            
+            print(f"      ✅ Var {len(vybrane)} (pokus {pokus}): {vzd/1000:.2f} km | "
+                  f"+{prev:.0f}m | road={road_ratio*100:.0f}% | "
+                  f"cas_vypoctu: {time.time()-t_iter:.2f}s", flush=True)
+                  
+            # Ochrana: zpenalizujeme Working Grid pred hledanim pripadne dalsi varianty
+            working_grid = penalizuj_grid(working_grid, trasa, config.PENALIZACE_SIRKA_PX)
 
         print(f"   Celkem nalezeno {len(vybrane)} variant | {time.time()-t0:.2f}s", flush=True)
 
