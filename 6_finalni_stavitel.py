@@ -6,7 +6,7 @@ import sys
 import time
 from PIL import Image
 from matplotlib.widgets import Slider, Button
-from scipy.ndimage import binary_dilation
+from scipy.ndimage import binary_dilation, gaussian_filter, map_coordinates
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import dijkstra as sp_dijkstra
 import config
@@ -35,8 +35,12 @@ zakladni_tempo_desetinne = ZAKLADNI_TEMPO_MIN + (ZAKLADNI_TEMPO_SEC / 60.0)
 # 1. NACTENI DAT Z CACHE
 # =====================================================================
 try:
+    # Nacteni gridu
     cost_grid_base = np.load(os.path.join(cache_dir, "cenova_mapa.npy"))
     elev_grid = np.load(os.path.join(cache_dir, "vyskova_mapa.npy"))
+    
+    # Vyhlazeni umelych zubu z interpolace vrstevnic (zabrani falesnym kopcum na silnici)
+    elev_grid = gaussian_filter(elev_grid, sigma=5)
     meta = np.load(os.path.join(cache_dir, "cenova_mapa_meta.npy"))
     min_x, min_y, max_x, max_y, grid_size = meta
     height, width = cost_grid_base.shape
@@ -244,11 +248,12 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         
         up_mask = sklon > 0.02
         sklon_ef = sklon[up_mask] - 0.02
-        lin_penalta = kopce_vaha * 0.02 * sklon_ef
+        lin_penalta = kopce_vaha * 2.5 * sklon_ef
         exp_penalta = np.zeros_like(sklon_ef)
+        
         steep = sklon_ef > 0.15
         if np.any(steep):
-            exp_penalta[steep] = kopce_vaha * 0.2 * ((sklon_ef[steep] - 0.15) ** 1.5)
+            exp_penalta[steep] = kopce_vaha * 10.0 * ((sklon_ef[steep] - 0.15) ** 1.5)
         hill_multiplier[up_mask] = 1.0 + lin_penalta + exp_penalta
         
         down_mask = sklon < -0.02
@@ -337,11 +342,13 @@ def penalizuj_grid(grid, trasa, sirka_px):
     h, w = grid.shape
     grid_pen = grid.copy()
 
-    # Vytvor binarni masku trasy
-    trasa_maska = np.zeros((h, w), dtype=bool)
-    
     total_pts = len(trasa)
-    ochrana = max(5, int(total_pts * 0.10)) # Prvnich a poslednich 10% bodu chranime
+    if total_pts == 0:
+        return grid_pen
+
+    # Vytvor binarni masku trasy (stredni cast)
+    trasa_maska = np.zeros((h, w), dtype=bool)
+    ochrana = max(5, int(total_pts * 0.20)) 
     
     for i in range(ochrana, total_pts - ochrana):
         py, px = trasa[i]
@@ -349,8 +356,7 @@ def penalizuj_grid(grid, trasa, sirka_px):
         x_int = max(0, min(w - 1, int(px)))
         trasa_maska[y_int, x_int] = True
 
-    # Pokud je trasa moc kratka, alespon stred
-    if not np.any(trasa_maska) and total_pts > 0:
+    if not np.any(trasa_maska):
         py, px = trasa[total_pts // 2]
         trasa_maska[max(0, min(h-1, int(py))), max(0, min(w-1, int(px)))] = True
 
@@ -359,7 +365,20 @@ def penalizuj_grid(grid, trasa, sirka_px):
     iteraci = max(1, sirka_px // 2)
     zona = binary_dilation(trasa_maska, structure=struct, iterations=iteraci)
 
-    # Jemne zvyseni ceny terenu (umozni castecne sdileni tras, pokud je alternativa pomala)
+    # 100% zruseni penalizace v kruhu kolem startu a cile 
+    # (reseni problemu, kdy se dilatace "rozlila" zpet az na start)
+    y_start, x_start = trasa[0]
+    y_cil, x_cil = trasa[-1]
+    
+    # Ochranny polomer nyni dynamicky roste s delkou trasy (20 % z celkove delky v pixelech)
+    # Spodni limit 15 px (aby se vzdy bezpecne smazala sirka dilatace u velmi kratkych tras)
+    ochranny_polomer = max(15, int(total_pts * 0.20))
+    
+    Y, X = np.ogrid[:h, :w]
+    zona[(Y - y_start)**2 + (X - x_start)**2 < ochranny_polomer**2] = False
+    zona[(Y - y_cil)**2 + (X - x_cil)**2 < ochranny_polomer**2] = False
+
+    # Jemne zvyseni ceny terenu
     grid_pen[zona] *= 1.10
 
     return grid_pen
@@ -679,9 +698,42 @@ class AplikaceStavitel:
                 self.prepocti_akce()
 
     def spocitat_metriky(self, cesta, working_grid_base):
-        """Vypocet vzdalenosti, prevyseni, usili a podilu cest pro trasu."""
-        vzd = prev = usili = road_dist = 0.0
+        """Vypocet vzdalenosti, prevyseni, usili (s penalizacemi pro algoritmus i bez nich pro cas) a podilu cest pro trasu."""
+        vzd = prev = usili = usili_real = road_dist = 0.0
         val_kopce = self.slider_kopce.val
+        
+        # --- OPRAVA VÝŠKOVÉHO ŠUMU ---
+        if len(cesta) > 0:
+            # Pouziti bilinearni interpolace misto nearest-neighbor pro odstraneni schodoviteho sumu na svazich
+            y_c = [p[0] for p in cesta]
+            x_c = [p[1] for p in cesta]
+            z_raw = map_coordinates(elev_grid, [y_c, x_c], order=1)
+            window = 15
+            z_smooth = []
+            n_pts = len(z_raw)
+            for i in range(n_pts):
+                start_idx = max(0, i - window // 2)
+                end_idx = min(n_pts, i + window // 2 + 1)
+                z_smooth.append(sum(z_raw[start_idx:end_idx]) / (end_idx - start_idx))
+                
+            MIN_CLIMB = 3.0
+            current_valley = z_smooth[0]
+            current_peak = z_smooth[0]
+            
+            for z in z_smooth[1:]:
+                if z > current_peak: current_peak = z
+                if z < current_valley: current_valley = z
+                    
+                if z - current_valley >= MIN_CLIMB:
+                    prev += (z - current_valley)
+                    current_valley = z
+                    current_peak = z
+                elif current_peak - z >= MIN_CLIMB:
+                    current_valley = z
+                    current_peak = z
+        else:
+            z_smooth = []
+        # -----------------------------
         
         for j in range(1, len(cesta)):
             p1, p2 = cesta[j - 1], cesta[j]
@@ -711,20 +763,18 @@ class AplikaceStavitel:
             is_runner_on_road = is_rc
             is_runner_next_road = is_rn and is_rm
             
-            z1 = elev_grid[y1, x1]
-            z2 = elev_grid[y2, x2]
+            z1 = z_smooth[j - 1]
+            z2 = z_smooth[j]
             dz = z2 - z1
             
-            if dz > 0:
-                prev += dz
-                
             sklon = dz / dist_m if dist_m > 0.1 else 0.0
             
             if sklon > 0.02:
                 sklon_efektivni = sklon - 0.02
-                lin_penalta = val_kopce * 0.02 * sklon_efektivni
+                # Prevedeni do realneho Naismithova pravidla (100m kopec = 1km roviny navic)
+                lin_penalta = val_kopce * 2.5 * sklon_efektivni
                 if sklon_efektivni > 0.15:
-                    exp_penalta = val_kopce * 0.2 * ((sklon_efektivni - 0.15) ** 1.5)
+                    exp_penalta = val_kopce * 10.0 * ((sklon_efektivni - 0.15) ** 1.5)
                 else:
                     exp_penalta = 0.0
                 hm = 1.0 + lin_penalta + exp_penalta
@@ -739,18 +789,20 @@ class AplikaceStavitel:
             else:
                 hm = 1.0
                 
-            step_effort = dg * terren_cost * hm
+            step_effort_base = dg * terren_cost * hm
+            step_effort_algo = step_effort_base
             
             if is_runner_on_road and is_runner_next_road:
-                step_effort *= 0.92
+                step_effort_algo *= 0.92
                 road_dist += dist_m
             elif is_runner_on_road and not is_runner_next_road:
-                step_effort += dg * 0.40
+                step_effort_algo += dg * 0.40
                 
-            usili += step_effort
+            usili += step_effort_algo
+            usili_real += step_effort_base
             
         road_ratio = road_dist / vzd if vzd > 0 else 0.0
-        return vzd, prev, usili, road_ratio
+        return vzd, prev, usili, usili_real, road_ratio
 
     def vykresli_trasu(self, cesta, barva, label, bod_A, bod_B, smooth=True):
         """Vyhladí a vykreslí jednu trasu na mapu."""
@@ -819,8 +871,16 @@ class AplikaceStavitel:
         vybrane = []
         prijate_cesty = []
         
+        # Vytvorime prirozeny, plynuly sum (mikro-teren), aby trasy nebyly umele rovne
+        # Pomoci normalizace zajistime presne 10% odchylku (standard deviation) nakladu
+        # Sigma=5 vytvori plynule vlny "hustniku a mycin" o velikosti cca 20-30 metru
+        noise_raw = np.random.normal(0, 1.0, size=cost_grid_base.shape).astype(np.float32)
+        noise_smooth = gaussian_filter(noise_raw, sigma=5)
+        if np.std(noise_smooth) > 0:
+            noise_smooth = (noise_smooth / np.std(noise_smooth)) * 0.10
+        
         # Grid se bude v dalsich iteracich zdrazovat v okoli nalezenych cest
-        working_grid = cost_grid_base.copy()
+        working_grid = cost_grid_base * (1.0 + noise_smooth)
         
         delka_postupu = math.hypot(g_y - s_y, g_x - s_x)
         zakladni_odchylka = config.MAX_CAS_ODCHYLKA
@@ -868,7 +928,7 @@ class AplikaceStavitel:
             if not trasa:
                 break
                 
-            vzd, prev, usili, road_ratio = self.spocitat_metriky(trasa, cost_grid_base)
+            vzd, prev, usili, usili_real, road_ratio = self.spocitat_metriky(trasa, cost_grid_base)
             trasa_vyhlazena = vyhlad_cestu(trasa, cost_grid_base, vyhlazeni=3)
 
             # Kontrola shody - pokud si Dijkstra presto najde z poloviny stejnou cestu
@@ -886,7 +946,7 @@ class AplikaceStavitel:
                 break
 
             # Varianta byla prijata!
-            vybrane.append((usili, vzd, prev, trasa_vyhlazena))
+            vybrane.append((usili_real, vzd, prev, trasa_vyhlazena))
             prijate_cesty.append(trasa_vyhlazena)
             
             print(f"      ✅ Var {len(vybrane)} (pokus {pokus}): {vzd/1000:.2f} km | "
@@ -1003,10 +1063,10 @@ class AplikaceStavitel:
                 cesta_celkova.extend(cesta_usek)
 
         # Metriky
-        vzd, prev, usili, road_ratio = self.spocitat_metriky(cesta_celkova, cost_grid_base)
+        vzd, prev, usili_algo, usili_real, road_ratio = self.spocitat_metriky(cesta_celkova, cost_grid_base)
 
         vzd_km = vzd / 1000.0
-        cas_min = usili * NASOBIC_MERITKA * (zakladni_tempo_desetinne / (1000.0 * CENA_LESNI_CESTY))
+        cas_min = usili_real * NASOBIC_MERITKA * (zakladni_tempo_desetinne / (1000.0 * CENA_LESNI_CESTY))
         cas_c = int(cas_min)
         cas_v = int((cas_min - cas_c) * 60)
         t_m = int(cas_min / vzd_km) if vzd_km > 0 else 0

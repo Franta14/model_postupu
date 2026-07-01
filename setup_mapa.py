@@ -218,8 +218,8 @@ for obj in root.iter():
     if not pts:
         continue
 
-    # --- Vrstevnice: 101=bežna, 102=indexova, 103=pomocna ---
-    if isom in ['101', '102', '103'] and len(pts) >= 2:
+    # --- Vrstevnice: 101=bežna, 102=indexova (103=pomocna IGNORUJEME pro interpolaci) ---
+    if isom in ['101', '102'] and len(pts) >= 2:
         elev_known = None
         if text_content:
             try:
@@ -299,36 +299,43 @@ priority_order = [
 
 cost_grid = np.full((grid_h, grid_w), DEFAULT_COST, dtype=np.float32)
 t0 = time.time()
-for y_idx in range(grid_h):
-    real_y = min_y + y_idx * GRID_SIZE_M
-    if y_idx % 300 == 0:
-        pct = y_idx / grid_h * 100
-        elapsed = time.time() - t0
-        eta = (elapsed / max(y_idx, 1)) * (grid_h - y_idx)
-        print(f"   -> {pct:.0f}%  (zbývá ~{eta:.0f}s)")
-    for x_idx in range(grid_w):
-        real_x = min_x + x_idx * GRID_SIZE_M
-        pt = Point(real_x, real_y)
-        for teren in priority_order:
-            if teren in prepared_geom and prepared_geom[teren].contains(pt):
-                cost_grid[y_idx, x_idx] = COST_DICT[teren]
-                break
+skip_krok2 = False
+if os.path.exists(cache_cenova) and os.path.exists(cache_meta):
+    print("   ✅ Cenova mrizka nalezena v cache, preskakuji pomaly vypocet...")
+    cost_grid = np.load(cache_cenova)
+    skip_krok2 = True
 
-# Dilatace + eroze cest
-kernel = np.ones((3, 3), bool)
-maska = (cost_grid > 0.8) & (cost_grid < 1.1)
-maska = binary_dilation(maska, structure=kernel)
-maska = binary_erosion(maska, structure=kernel, iterations=1)
-maska = binary_erosion(maska, structure=np.array([[0,1,0],[1,1,1],[0,1,0]], bool), iterations=1)
-for y in range(grid_h):
-    for x in range(grid_w):
-        if maska[y, x] and cost_grid[y, x] < 9000.0:
-            cost_grid[y, x] = COST_DICT["Cesta (Lesni)"]
+if not skip_krok2:
+    for y_idx in range(grid_h):
+        real_y = min_y + y_idx * GRID_SIZE_M
+        if y_idx % 300 == 0:
+            pct = y_idx / grid_h * 100
+            elapsed = time.time() - t0
+            eta = (elapsed / max(y_idx, 1)) * (grid_h - y_idx)
+            print(f"   -> {pct:.0f}%  (zbývá ~{eta:.0f}s)")
+        for x_idx in range(grid_w):
+            real_x = min_x + x_idx * GRID_SIZE_M
+            pt = Point(real_x, real_y)
+            for teren in priority_order:
+                if teren in prepared_geom and prepared_geom[teren].contains(pt):
+                    cost_grid[y_idx, x_idx] = COST_DICT[teren]
+                    break
 
-np.save(cache_cenova, cost_grid)
-metadata = np.array([min_x, min_y, max_x, max_y, GRID_SIZE_M])
-np.save(cache_meta, metadata)
-print(f"   ✅ Cenova mrizka ulozena ({time.time()-t0:.0f}s).")
+    # Dilatace + eroze cest
+    kernel = np.ones((3, 3), bool)
+    maska = (cost_grid > 0.8) & (cost_grid < 1.1)
+    maska = binary_dilation(maska, structure=kernel)
+    maska = binary_erosion(maska, structure=kernel, iterations=1)
+    maska = binary_erosion(maska, structure=np.array([[0,1,0],[1,1,1],[0,1,0]], bool), iterations=1)
+    for y in range(grid_h):
+        for x in range(grid_w):
+            if maska[y, x] and cost_grid[y, x] < 9000.0:
+                cost_grid[y, x] = COST_DICT["Cesta (Lesni)"]
+
+    np.save(cache_cenova, cost_grid)
+    metadata = np.array([min_x, min_y, max_x, max_y, GRID_SIZE_M])
+    np.save(cache_meta, metadata)
+    print(f"   ✅ Cenova mrizka ulozena ({time.time()-t0:.0f}s).")
 
 
 # ============================================================
@@ -336,125 +343,78 @@ print(f"   ✅ Cenova mrizka ulozena ({time.time()-t0:.0f}s).")
 # ============================================================
 print("\n⛰️  Krok 3/3: Generuji vyskovou mrizku z vrstevnic...")
 
-# 3a) Ziskame labeled vrstevnice
-labeled = [(c['geom'], c['elevation']) for c in contour_lines_raw if c['elevation'] is not None]
-print(f"   Vrstevnice s popisky vysek: {len(labeled)}")
+print("   Stahuji referencni vyskovou mrizku z API (opentopodata.org)...")
+# Vytvoreni mrizky bodu (20x20) pres celou mapu (400 bodu celkem)
+grid_pts_x = np.linspace(min_x, max_x, 20)
+grid_pts_y = np.linspace(min_y, max_y, 20)
+xx_api, yy_api = np.meshgrid(grid_pts_x, grid_pts_y)
+api_oom_pts = np.c_[xx_api.ravel(), yy_api.ravel()]
 
-seed_points = []   # seznam (x_oom, y_oom, elevation)
-
-if len(labeled) >= 3:
-    # Bereme body pozdel labeled vrstevnic jako seed
-    for geom, elev in labeled:
-        if hasattr(geom, 'coords'):
-            for x, y in list(geom.coords)[::5]:   # kazdy 5. bod
-                seed_points.append((x, y, elev))
-    print(f"   Pouzivam {len(seed_points)} seed bodu z popisku.")
-
-else:
-    # Fallback: elevation API pro XML kontroly
-    print("   Malo/zadne popisky - stahuji vysky pro XML kontroly z API...")
-    locations = "|".join(f"{lat},{lon}" for (_, _), (lon, lat) in
-                         [(controls_oom[i], controls_world[i]) for i in range(len(controls_world))])
-
-    # Prevedeme world (S-JTSK) zpet na GPS pro API
+# OOM je lokalni (v mm). Z Kroku 1 zname transformaci world(S-JTSK) -> OOM:
+# OOM = M * world + T, kde M = [[m11, m12], [m21, m22]] a T = [tx, ty]
+# Zpetne: world = M_inv * (OOM - T)
+try:
+    M = np.array([[m11, m12], [m21, m22]])
+    M_inv = np.linalg.inv(M)
+    T = np.array([tx, ty])
+    
+    world_pts = []
+    for x, y in api_oom_pts:
+        w_pt = M_inv.dot(np.array([x, y]) - T)
+        world_pts.append(w_pt)
+        
+    # Prevod world (S-JTSK) zpet na GPS pro API
     t_inv = Transformer.from_crs("EPSG:5514", "EPSG:4326", always_xy=True)
-    api_pts = []
-    for i in range(len(controls_world)):
-        lon_g, lat_g = t_inv.transform(controls_world[i,0], controls_world[i,1])
-        api_pts.append(f"{lat_g:.6f},{lon_g:.6f}")
-    loc_str = "|".join(api_pts)
+    api_gps_pts = [t_inv.transform(w[0], w[1]) for w in world_pts]
+except Exception as e:
+    print(f"   ⚠️  Chyba pri transformaci souradnic OOM->GPS: {e}")
+    api_gps_pts = []
 
+# API umoznuje max 100 bodu na request, takze rozdelime do davek (chunks)
+api_elevations = []
+chunk_size = 100
+for i in range(0, len(api_gps_pts), chunk_size):
+    chunk = api_gps_pts[i:i+chunk_size]
+    loc_str = "|".join([f"{lat:.6f},{lon:.6f}" for lon, lat in chunk])
     try:
         url = f"https://api.opentopodata.org/v1/eudem25m?locations={loc_str}"
         r = requests.get(url, timeout=15)
         data = r.json()
         if data.get('status') == 'OK':
-            for i, res in enumerate(data['results']):
-                elev = res.get('elevation')
-                if elev is not None:
-                    ox, oy = controls_oom[i]
-                    seed_points.append((ox, oy, elev))
-            print(f"   API: ziskano {len(seed_points)} vyskovych bodu.")
+            for res in data['results']:
+                val = res.get('elevation')
+                api_elevations.append(val if val is not None else 0.0)
+            print(f"      Stazeno {min(i+chunk_size, 400)}/400 bodu...")
         else:
-            print(f"   ⚠️  API selhalo: {data.get('status')}")
+            print(f"   ⚠️  API selhalo u davky {i}: {data.get('status')}")
+            api_elevations.extend([0.0]*len(chunk))
     except Exception as e:
-        print(f"   ⚠️  API nedostupne ({e}). Vyskova mapa bude plocka (0m).")
+        print(f"   ⚠️  API nedostupne ({e}).")
+        api_elevations.extend([0.0]*len(chunk))
+    time.sleep(1.2) # Ochrana proti rate-limitingu (max 1 pozadavek za vterinu)
+        
+api_elevations = np.array(api_elevations)
 
-# 3b) Pokud mame seed body + vrstevnice, propagujeme vyskovym vyhledavanim
-if seed_points and contour_lines_raw:
-    print("   Priraduji vysky vrstevnicim...")
-    # Sestavime GEO index vsech vrstevnic
-    all_contour_geoms = [c['geom'] for c in contour_lines_raw]
-
-    # Pro kazdy seed bod: najdeme nejblizsi vrstevnici a nastavime ji vysku
-    contour_elevations = [None] * len(contour_lines_raw)
-
-    for sx, sy, selev in seed_points:
-        pt = Point(sx, sy)
-        best_idx = -1
-        best_d = float('inf')
-        for ci, cg in enumerate(all_contour_geoms):
-            d = pt.distance(cg)
-            if d < best_d:
-                best_d = d
-                best_idx = ci
-        if best_idx >= 0 and best_d < config.EKVIDISTANCE_M * 3:
-            if contour_elevations[best_idx] is None:
-                contour_elevations[best_idx] = selev
-            else:
-                contour_elevations[best_idx] = (contour_elevations[best_idx] + selev) / 2
-
-    # 3c) Interpolace vysky po mrizce z konturnich bodu se znamou vyskou
-    known_pts_xy  = []
-    known_pts_z   = []
-    for ci, cg in enumerate(all_contour_geoms):
-        elev = contour_elevations[ci]
-        if elev is None:
-            # Zkus predat z puvodnich dat
-            elev = contour_lines_raw[ci]['elevation']
-        if elev is not None:
-            if hasattr(cg, 'coords'):
-                for x, y in list(cg.coords)[::3]:
-                    known_pts_xy.append((x, y))
-                    known_pts_z.append(elev)
-
-    if len(known_pts_xy) >= 4:
-        print(f"   Interpoluji vyskovou mrizku z {len(known_pts_xy)} bodu...")
-        known_pts_xy = np.array(known_pts_xy)
-        known_pts_z  = np.array(known_pts_z)
-
-        x_coords = min_x + np.arange(grid_w) * GRID_SIZE_M
-        y_coords = min_y + np.arange(grid_h) * GRID_SIZE_M
-        xx, yy = np.meshgrid(x_coords, y_coords)
-        grid_pts = np.c_[xx.ravel(), yy.ravel()]
-
-        vyskova = griddata(known_pts_xy, known_pts_z, grid_pts, method='linear')
-        # Vyplnime NaN metodou nearest
-        nan_mask = np.isnan(vyskova)
-        if nan_mask.any():
-            vyskova_nn = griddata(known_pts_xy, known_pts_z, grid_pts, method='nearest')
-            vyskova[nan_mask] = vyskova_nn[nan_mask]
-        vyskova = vyskova.reshape((grid_h, grid_w)).astype(np.float32)
-    else:
-        print("   ⚠️  Malo bodu pro interpolaci - vyskova mapa bude nulova.")
-        vyskova = np.zeros((grid_h, grid_w), dtype=np.float32)
-
-elif seed_points:
-    # Zadne vrstevnice, jen seed body - interpolace primo
-    print(f"   Interpoluji z {len(seed_points)} seed bodu (bez vrstevnic)...")
-    pts_xy = np.array([(s[0], s[1]) for s in seed_points])
-    pts_z  = np.array([s[2] for s in seed_points])
+print("   Generuji hladký výškový model přímo ze satelitních dat (ignoruji nekonzistentní OCAD vrstevnice)...")
+if len(api_elevations) >= 4:
     x_coords = min_x + np.arange(grid_w) * GRID_SIZE_M
     y_coords = min_y + np.arange(grid_h) * GRID_SIZE_M
     xx, yy = np.meshgrid(x_coords, y_coords)
     grid_pts = np.c_[xx.ravel(), yy.ravel()]
-    vyskova = griddata(pts_xy, pts_z, grid_pts, method='linear')
+    
+    # Cubic interpolace vytvori plynule hladke kopce a udoli bez ostrych hran
+    try:
+        vyskova = griddata(api_oom_pts, api_elevations, grid_pts, method='cubic')
+    except Exception:
+        vyskova = griddata(api_oom_pts, api_elevations, grid_pts, method='linear')
+        
     nan_mask = np.isnan(vyskova)
     if nan_mask.any():
-        vyskova[nan_mask] = griddata(pts_xy, pts_z, grid_pts[nan_mask], method='nearest')
+        vyskova_nn = griddata(api_oom_pts, api_elevations, grid_pts, method='nearest')
+        vyskova[nan_mask] = vyskova_nn[nan_mask]
     vyskova = vyskova.reshape((grid_h, grid_w)).astype(np.float32)
 else:
-    print("   ⚠️  Zadna vyskova data - vyskova mapa bude nulova.")
+    print("   ⚠️  Malo bodu z API, pouzivam nulovou vysku.")
     vyskova = np.zeros((grid_h, grid_w), dtype=np.float32)
 
 np.save(cache_vyskova, vyskova)
