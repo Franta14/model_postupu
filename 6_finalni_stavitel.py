@@ -39,8 +39,8 @@ try:
     cost_grid_base = np.load(os.path.join(cache_dir, "cenova_mapa.npy"))
     elev_grid = np.load(os.path.join(cache_dir, "vyskova_mapa.npy"))
     
-    # Vyhlazeni umelych zubu z interpolace vrstevnic (zabrani falesnym kopcum na silnici)
-    elev_grid = gaussian_filter(elev_grid, sigma=5)
+    # Jemne vyhlazeni (model uz je predhlazen v setup_mapa.py, sigma=10)
+    elev_grid = gaussian_filter(elev_grid, sigma=2)
     meta = np.load(os.path.join(cache_dir, "cenova_mapa_meta.npy"))
     min_x, min_y, max_x, max_y, grid_size = meta
     height, width = cost_grid_base.shape

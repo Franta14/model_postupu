@@ -17,7 +17,7 @@ import requests
 from shapely.geometry import Point, LineString, Polygon, MultiLineString
 from shapely.ops import unary_union, nearest_points
 from shapely.prepared import prep
-from scipy.ndimage import binary_dilation, binary_erosion
+from scipy.ndimage import binary_dilation, binary_erosion, map_coordinates, gaussian_filter
 from scipy.interpolate import griddata
 from scipy.optimize import minimize, least_squares
 from pyproj import Transformer
@@ -395,24 +395,169 @@ for i in range(0, len(api_gps_pts), chunk_size):
         
 api_elevations = np.array(api_elevations)
 
-print("   Generuji hladký výškový model přímo ze satelitních dat (ignoruji nekonzistentní OCAD vrstevnice)...")
+print("   Vytvářím referenční API model (pouze pro určení směru svahu)...")
 if len(api_elevations) >= 4:
     x_coords = min_x + np.arange(grid_w) * GRID_SIZE_M
     y_coords = min_y + np.arange(grid_h) * GRID_SIZE_M
     xx, yy = np.meshgrid(x_coords, y_coords)
-    grid_pts = np.c_[xx.ravel(), yy.ravel()]
-    
-    # Cubic interpolace vytvori plynule hladke kopce a udoli bez ostrych hran
+    grid_pts_full = np.c_[xx.ravel(), yy.ravel()]
+
     try:
-        vyskova = griddata(api_oom_pts, api_elevations, grid_pts, method='cubic')
+        vyskova_api = griddata(api_oom_pts, api_elevations, grid_pts_full, method='linear')
     except Exception:
-        vyskova = griddata(api_oom_pts, api_elevations, grid_pts, method='linear')
-        
-    nan_mask = np.isnan(vyskova)
+        vyskova_api = griddata(api_oom_pts, api_elevations, grid_pts_full, method='nearest')
+    nan_mask = np.isnan(vyskova_api)
     if nan_mask.any():
-        vyskova_nn = griddata(api_oom_pts, api_elevations, grid_pts, method='nearest')
-        vyskova[nan_mask] = vyskova_nn[nan_mask]
-    vyskova = vyskova.reshape((grid_h, grid_w)).astype(np.float32)
+        vyskova_nn = griddata(api_oom_pts, api_elevations, grid_pts_full, method='nearest')
+        vyskova_api[nan_mask] = vyskova_nn[nan_mask]
+    vyskova_api_grid = vyskova_api.reshape((grid_h, grid_w)).astype(np.float32)
+
+    # ==========================================================
+    # 3a) RASTERIZACE OCAD VRSTEVNIC NA GRID
+    # ==========================================================
+    print("   Rasterizuji OCAD vrstevnice na grid...")
+
+    contour_raster = np.zeros((grid_h, grid_w), dtype=np.int32)
+    ekv = getattr(config, 'EKVIDISTANCE_M', 5.0)
+
+    for idx, c in enumerate(contour_lines_raw):
+        geom = c['geom']
+        if geom.is_empty:
+            continue
+        lines = [geom] if geom.geom_type == 'LineString' else list(geom.geoms)
+        for line in lines:
+            coords = np.array(line.coords)
+            if len(coords) < 2:
+                continue
+            # Pro kazdy usek cary: hustá interpolace (kazdy 0.3 bunky)
+            for j in range(len(coords) - 1):
+                x1, y1 = coords[j]
+                x2, y2 = coords[j + 1]
+                gx1 = (x1 - min_x) / GRID_SIZE_M
+                gy1 = (y1 - min_y) / GRID_SIZE_M
+                gx2 = (x2 - min_x) / GRID_SIZE_M
+                gy2 = (y2 - min_y) / GRID_SIZE_M
+                n_steps = int(max(abs(gx2 - gx1), abs(gy2 - gy1)) * 3) + 2
+                ts = np.linspace(0, 1, n_steps)
+                pxs = (gx1 + ts * (gx2 - gx1)).astype(int)
+                pys = (gy1 + ts * (gy2 - gy1)).astype(int)
+                valid = (pys >= 0) & (pys < grid_h) & (pxs >= 0) & (pxs < grid_w)
+                contour_raster[pys[valid], pxs[valid]] = idx + 1
+
+                # Zajisteni 4-connectivity: pokud dva po sobe jdouci pixely
+                # jsou diagonalne, vlozime mezipixel
+                for k in range(1, n_steps):
+                    if not valid[k] or not valid[k - 1]:
+                        continue
+                    cy, cx = int(pys[k]), int(pxs[k])
+                    py, px = int(pys[k - 1]), int(pxs[k - 1])
+                    if abs(cy - py) > 0 and abs(cx - px) > 0:
+                        # Diagonalni skok: vlozime most
+                        bridge_y, bridge_x = py, cx
+                        if 0 <= bridge_y < grid_h and 0 <= bridge_x < grid_w:
+                            contour_raster[bridge_y, bridge_x] = idx + 1
+
+    num_contour_cells = np.count_nonzero(contour_raster)
+    print(f"   Rasterizovano {num_contour_cells} bunek vrstevnic z {len(contour_lines_raw)} car.")
+    # Ulozeni pro diagnostiku (debug_elevation.py)
+    np.save(os.path.join(cache_dir, "contour_raster.npy"), (contour_raster > 0).astype(np.uint8))
+
+    # ==========================================================
+    # 3b) PRIRAZENI VYSEK VRSTEVNICIM (z API reference)
+    # ==========================================================
+    print("   Prirazuji vysky jednotlivym vrstevnicim...")
+
+    num_contours = len(contour_lines_raw)
+    contour_elevations = np.full(num_contours, np.nan)
+
+    for idx, c in enumerate(contour_lines_raw):
+        geom = c['geom']
+        if geom.is_empty:
+            continue
+
+        # Pokud ma vrstevnice znamou vysku z textu, pouzij ji
+        if c['elevation'] is not None:
+            contour_elevations[idx] = c['elevation']
+            continue
+
+        # Jinak: zjisti API vysku ve stredu cary a zaokrouhli na ekvidistanci
+        mid_pt = geom.interpolate(0.5, normalized=True)
+        gx = (mid_pt.x - min_x) / GRID_SIZE_M
+        gy = (mid_pt.y - min_y) / GRID_SIZE_M
+
+        gx_clip = np.clip(gx, 0, grid_w - 1)
+        gy_clip = np.clip(gy, 0, grid_h - 1)
+        api_elev = map_coordinates(vyskova_api_grid, [[gy_clip], [gx_clip]], order=1)[0]
+
+        contour_elevations[idx] = round(api_elev / ekv) * ekv
+
+    valid_elevs = contour_elevations[~np.isnan(contour_elevations)]
+    print(f"   Prirazeno {len(valid_elevs)}/{num_contours} vrstevnic")
+    if len(valid_elevs) > 0:
+        print(f"   Rozsah vysek: {valid_elevs.min():.0f} - {valid_elevs.max():.0f} m")
+        unique_levels = sorted(np.unique(valid_elevs))
+        print(f"   Unikatni urovne ({len(unique_levels)}): {unique_levels}")
+
+    # ==========================================================
+    # 3c) INTERPOLACE VYSKOVEHO GRIDU Z BODU NA VRSTEVNICICH
+    # ==========================================================
+    print("   Interpoluji vyskovy grid z vrstevnicovych bodu...")
+
+    # Kazdy pixel contour_raster dostane vysku sve vrstevnice
+    contour_ys, contour_xs = np.where(contour_raster > 0)
+    contour_indices = contour_raster[contour_ys, contour_xs] - 1
+    contour_zs = contour_elevations[contour_indices]
+
+    # Odfiltruj NaN
+    valid_pts = ~np.isnan(contour_zs)
+    pts_y = contour_ys[valid_pts].astype(np.float64)
+    pts_x = contour_xs[valid_pts].astype(np.float64)
+    pts_z = contour_zs[valid_pts]
+
+    print(f"   Celkem {len(pts_y)} interpolacnich bodu z vrstevnic")
+
+    if len(pts_y) < 10:
+        print("   Prilis malo bodu z vrstevnic! Pouzivam API model.")
+        vyskova = vyskova_api_grid.copy()
+    else:
+        # Subsample pro griddata (prilis mnoho bodu = pomale)
+        MAX_PTS = 40000
+        if len(pts_y) > MAX_PTS:
+            rng = np.random.default_rng(42)
+            sel = rng.choice(len(pts_y), MAX_PTS, replace=False)
+            sel.sort()
+            pts_y = pts_y[sel]
+            pts_x = pts_x[sel]
+            pts_z = pts_z[sel]
+            print(f"   Subsamplovano na {MAX_PTS} bodu pro interpolaci")
+
+        # Rohy mapy (aby griddata neprodukovala NaN na okrajich)
+        corners = np.array([[0, 0], [0, grid_w-1], [grid_h-1, 0], [grid_h-1, grid_w-1]],
+                           dtype=np.float64)
+        points_all = np.column_stack((pts_y, pts_x))
+        corner_z = []
+        for cy, cx in corners:
+            dists = (points_all[:,0] - cy)**2 + (points_all[:,1] - cx)**2
+            corner_z.append(pts_z[np.argmin(dists)])
+
+        pts_y = np.concatenate((pts_y, corners[:,0]))
+        pts_x = np.concatenate((pts_x, corners[:,1]))
+        pts_z = np.concatenate((pts_z, np.array(corner_z)))
+
+        # Interpolace (Delaunay linear)
+        print("   Interpoluji plynuly teren (griddata linear)...")
+        points = np.column_stack((pts_y, pts_x))
+        grid_y, grid_x = np.mgrid[0:grid_h, 0:grid_w]
+
+        vyskova = griddata(points, pts_z, (grid_y, grid_x), method='linear')
+
+        nan_mask = np.isnan(vyskova)
+        if nan_mask.any():
+            vyskova_nearest = griddata(points, pts_z, (grid_y, grid_x), method='nearest')
+            vyskova[nan_mask] = vyskova_nearest[nan_mask]
+
+        vyskova = vyskova.astype(np.float32)
+
 else:
     print("   ⚠️  Malo bodu z API, pouzivam nulovou vysku.")
     vyskova = np.zeros((grid_h, grid_w), dtype=np.float32)
