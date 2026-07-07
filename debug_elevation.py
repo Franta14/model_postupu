@@ -16,13 +16,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-try:
-    import config
-    map_image_file = config.PNG_FILE
-    map_name = os.path.splitext(os.path.basename(config.OMAP_FILE))[0]
-except ImportError:
-    map_image_file = "mapa.png"
-    map_name = "Homolka_Vojirov_20240917"
+import config
+map_image_file = config.PNG_FILE
+map_name = os.path.splitext(os.path.basename(config.OMAP_FILE))[0]
 
 
 def load_common():

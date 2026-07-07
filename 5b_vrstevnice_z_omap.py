@@ -77,7 +77,8 @@ def main():
     # Vytvoření prázdné masky
     contour_grid = np.zeros((height, width), dtype=np.uint8)
     
-    omap_file = 'Homolka_Vojirov_20240917.omap'
+    import config
+    omap_file = config.OMAP_FILE
     print(f"Nacitam XML soubor {omap_file}...")
     
     try:
@@ -157,7 +158,7 @@ def main():
     print("Generuji kontrolni vizualizacni PNG obrazek pres original...")
     try:
         import matplotlib.image as mpimg
-        img = mpimg.imread('mapa.png')
+        img = mpimg.imread(config.PNG_FILE)
         
         # Převedeme numpy pole na plně průhledné RGB a červenou pro masku
         overlay = np.zeros((height, width, 4), dtype=np.float32)

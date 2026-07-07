@@ -49,7 +49,8 @@ def astar(grid, start, goal):
     return None
 
 # KROK 1: Kliknuti na PNG mapu
-img = Image.open("mapa.png")
+import config
+img = Image.open(config.PNG_FILE)
 fig1, ax1 = plt.subplots(figsize=(10, 8))
 ax1.imshow(img)
 ax1.set_title("1. Klikni START a CÍL")

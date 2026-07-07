@@ -3,14 +3,13 @@ import numpy as np
 from collections import defaultdict
 import os
 
-try:
-    import config
-    MAP_IMAGE = config.PNG_FILE
-except ImportError:
-    MAP_IMAGE = "mapa.png"
+import config
+MAP_IMAGE = config.PNG_FILE
+OMAP_FILE = config.OMAP_FILE
+CACHE_DIR = os.path.join("cache", os.path.splitext(os.path.basename(OMAP_FILE))[0])
 
 def load_meta():
-    meta = np.load("cache/Homolka_Vojirov_20240917/cenova_mapa_meta.npy")
+    meta = np.load(os.path.join(CACHE_DIR, "cenova_mapa_meta.npy"))
     return {
         'min_x': meta[0], 'min_y': meta[1],
         'max_x': meta[2], 'max_y': meta[3],
@@ -19,9 +18,9 @@ def load_meta():
 
 def main():
     meta = load_meta()
-    lidar_grid = np.load("cache/Homolka_Vojirov_20240917/vyskova_mapa.npy")
+    lidar_grid = np.load(os.path.join(CACHE_DIR, "vyskova_mapa.npy"))
     
-    with open("cache/Homolka_Vojirov_20240917/assigned_heights.json") as f:
+    with open(os.path.join(CACHE_DIR, "assigned_heights.json")) as f:
         assigned = json.load(f)
         
     c500 = [k for k,v in assigned.items() if v == 500.0]

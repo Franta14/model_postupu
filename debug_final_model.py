@@ -3,13 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-try:
-    import config
-    MAP_IMAGE = config.PNG_FILE
-    OMAP_FILE = config.OMAP_FILE
-except ImportError:
-    MAP_IMAGE = "mapa.png"
-    OMAP_FILE = "Homolka_Vojirov_20240917.omap"
+import config
+MAP_IMAGE = config.PNG_FILE
+OMAP_FILE = config.OMAP_FILE
 
 CACHE_DIR = os.path.join("cache", os.path.splitext(os.path.basename(OMAP_FILE))[0])
 LIDAR_FILE = os.path.join(CACHE_DIR, "vyskova_mapa.npy")
