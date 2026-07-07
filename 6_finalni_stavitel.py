@@ -230,7 +230,7 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         # Pokud neni, runner_next_road bude False, ztrati slevu a dostane penalizaci za opusteni cesty!
         is_rc = grid[cy, cx] < 1.09
         is_rn = grid[ny, nx] < 1.09
-        is_rm = grid[mid_y, mid_x] < 1.09 if is_knight else is_rn
+        is_rm = is_rn
 
         if direction == 'forward':
             dz = elev[ny, nx] - elev[cy, cx]
@@ -248,12 +248,12 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         
         up_mask = sklon > 0.02
         sklon_ef = sklon[up_mask] - 0.02
-        lin_penalta = kopce_vaha * 2.5 * sklon_ef
+        lin_penalta = kopce_vaha * 1.5 * sklon_ef
         exp_penalta = np.zeros_like(sklon_ef)
         
         steep = sklon_ef > 0.15
         if np.any(steep):
-            exp_penalta[steep] = kopce_vaha * 10.0 * ((sklon_ef[steep] - 0.15) ** 1.5)
+            exp_penalta[steep] = kopce_vaha * 5.0 * ((sklon_ef[steep] - 0.15) ** 1.5)
         hill_multiplier[up_mask] = 1.0 + lin_penalta + exp_penalta
         
         down_mask = sklon < -0.02
@@ -274,10 +274,10 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='f
         step_effort = step_dist * terren_cost * hill_multiplier
         
         both_road = is_runner_on_road & is_runner_next_road
-        step_effort[both_road] *= 0.92
+        step_effort[both_road] *= 0.87
         
         exit_road = is_runner_on_road & (~is_runner_next_road)
-        step_effort[exit_road] += step_dist * 0.40
+        step_effort[exit_road] += step_dist * 0.15
 
         row_indices.append(cy * w + cx)
         col_indices.append(ny * w + nx)
@@ -715,8 +715,8 @@ class AplikaceStavitel:
                 start_idx = max(0, i - window // 2)
                 end_idx = min(n_pts, i + window // 2 + 1)
                 z_smooth.append(sum(z_raw[start_idx:end_idx]) / (end_idx - start_idx))
-                
-            MIN_CLIMB = 3.0
+            import config
+            MIN_CLIMB = max(3.0, config.EKVIDISTANCE_M * 0.9)
             current_valley = z_smooth[0]
             current_peak = z_smooth[0]
             
@@ -754,7 +754,7 @@ class AplikaceStavitel:
                 is_knight = True
                 mid_y, mid_x = y1 + int(dy_px / 2), x1 + int(dx_px / 2)
                 terren_cost = working_grid_base[y1, x1] * 0.2 + working_grid_base[mid_y, mid_x] * 0.3 + working_grid_base[y2, x2] * 0.5
-                is_rm = working_grid_base[mid_y, mid_x] < 1.09
+                is_rm = is_rn
             else:
                 is_knight = False
                 terren_cost = working_grid_base[y1, x1] * 0.35 + working_grid_base[y2, x2] * 0.65
@@ -771,10 +771,10 @@ class AplikaceStavitel:
             
             if sklon > 0.02:
                 sklon_efektivni = sklon - 0.02
-                # Prevedeni do realneho Naismithova pravidla (100m kopec = 1km roviny navic)
-                lin_penalta = val_kopce * 2.5 * sklon_efektivni
+                # Mírná penalizace kopců (cesta do kopce < les po rovině)
+                lin_penalta = val_kopce * 1.5 * sklon_efektivni
                 if sklon_efektivni > 0.15:
-                    exp_penalta = val_kopce * 10.0 * ((sklon_efektivni - 0.15) ** 1.5)
+                    exp_penalta = val_kopce * 5.0 * ((sklon_efektivni - 0.15) ** 1.5)
                 else:
                     exp_penalta = 0.0
                 hm = 1.0 + lin_penalta + exp_penalta
@@ -793,10 +793,10 @@ class AplikaceStavitel:
             step_effort_algo = step_effort_base
             
             if is_runner_on_road and is_runner_next_road:
-                step_effort_algo *= 0.92
+                step_effort_algo *= 0.87
                 road_dist += dist_m
             elif is_runner_on_road and not is_runner_next_road:
-                step_effort_algo += dg * 0.40
+                step_effort_algo += dg * 0.15
                 
             usili += step_effort_algo
             usili_real += step_effort_base
@@ -810,6 +810,9 @@ class AplikaceStavitel:
             cesta_viz = vyhlad_cestu(cesta, cost_grid_base, vyhlazeni=VYHLAZENI_BUNEK)
         else:
             cesta_viz = cesta
+        
+        # Pridani prirozene vlnovitosti v lesnich usecich
+        cesta_viz = self._pridej_prirozene_odchylky(cesta_viz, cost_grid_base)
 
         wx, wy = [], []
         for py, px in cesta_viz:
@@ -823,6 +826,99 @@ class AplikaceStavitel:
         (l1,) = self.ax.plot(wx, wy, color=barva, linewidth=4, alpha=0.9, label=label)
         (l2,) = self.ax.plot(wx, wy, color="white", linewidth=1, alpha=0.8)
         self.vykreslene_trasy.extend([l1, l2])
+    
+    def _pridej_prirozene_odchylky(self, cesta, grid):
+        """
+        Přidá jemné, přirozené odchylky do lesních úseků trasy.
+        Na cestách/pěšinách (cost < 1.09) trasa zůstává rovná.
+        V lese se přidají sinusové mikro-vlny kolmo na směr postupu.
+        Přechody cesta↔les jsou plynulé (fade in/out přes 15 bodů).
+        """
+        if len(cesta) < 10:
+            return cesta
+        
+        h, w = grid.shape
+        pts = [(float(p[0]), float(p[1])) for p in cesta]
+        n = len(pts)
+        
+        # Deterministický seed z pozice trasy (stejná trasa = stejná vlnovitost)
+        seed_val = int(abs(pts[0][0] * 1000 + pts[0][1] * 7 + pts[-1][0] * 13 + pts[-1][1] * 31)) % (2**31)
+        rng = np.random.RandomState(seed_val)
+        
+        # 3 harmonické pro přirozený tvar
+        phases = rng.uniform(0, 2 * math.pi, size=3)
+        freqs = [0.04, 0.09, 0.17]
+        amps_ratio = [0.55, 0.30, 0.15]
+        
+        # 1) Spočítat "surovou" amplitudu pro každý bod podle terénu
+        raw_amp = np.zeros(n)
+        for i in range(n):
+            py, px = pts[i]
+            y_int = max(0, min(h - 1, int(py)))
+            x_int = max(0, min(w - 1, int(px)))
+            cost = grid[y_int, x_int]
+            if cost < 1.09:
+                raw_amp[i] = 0.0        # cesta/pěšina
+            elif cost < 1.20:
+                raw_amp[i] = 2.0        # bílý les
+            elif cost < 1.50:
+                raw_amp[i] = 3.0        # polooles
+            else:
+                raw_amp[i] = 4.5        # hustník
+        
+        # 2) Vyhladit amplitudu klouzavým průměrem (fade in/out na hranicích terénu)
+        fade_window = 15
+        smooth_amp = np.convolve(raw_amp, np.ones(fade_window) / fade_window, mode='same')
+        # Start a cíl bez odchylek
+        smooth_amp[:5] = 0.0
+        smooth_amp[-5:] = 0.0
+        
+        # 3) Aplikovat odchylky kolmo na směr postupu
+        nova = list(pts)
+        for i in range(1, n - 1):
+            amp = smooth_amp[i]
+            if amp < 0.1:
+                continue
+            
+            # Sinusová vlna
+            odchylka = 0.0
+            for k in range(3):
+                odchylka += amps_ratio[k] * math.sin(freqs[k] * i + phases[k])
+            odchylka *= amp
+            
+            # Směr postupu (širší span pro hladkost)
+            span = min(8, i, n - 1 - i)
+            dy = pts[i + span][0] - pts[i - span][0]
+            dx = pts[i + span][1] - pts[i - span][1]
+            dist_dir = math.hypot(dy, dx)
+            if dist_dir < 0.5:
+                continue
+            
+            nx_perp = -dy / dist_dir
+            ny_perp = dx / dist_dir
+            
+            new_py = pts[i][0] + odchylka * ny_perp
+            new_px = pts[i][1] + odchylka * nx_perp
+            
+            ny_int = max(0, min(h - 1, int(new_py)))
+            nx_int = max(0, min(w - 1, int(new_px)))
+            if grid[ny_int, nx_int] < 9000.0:
+                nova[i] = (new_py, new_px)
+        
+        # 4) Finální vyhlazení pro odstranění zbývajících ostrých rohů
+        vyhlazena = [nova[0]]
+        for i in range(1, n - 1):
+            a = max(0, i - 2)
+            b = min(n, i + 3)
+            avg_y = sum(nova[j][0] for j in range(a, b)) / (b - a)
+            avg_x = sum(nova[j][1] for j in range(a, b)) / (b - a)
+            vyhlazena.append((avg_y, avg_x))
+        vyhlazena.append(nova[-1])
+        
+        # Zachovat přesně start a cíl
+        vyhlazena[0] = cesta[0]
+        vyhlazena[-1] = cesta[-1]
+        return vyhlazena
 
     # =================================================================
     # HLAVNI VYPOCET: Iterative Penalty (hledani vice variant)
@@ -871,16 +967,9 @@ class AplikaceStavitel:
         vybrane = []
         prijate_cesty = []
         
-        # Vytvorime prirozeny, plynuly sum (mikro-teren), aby trasy nebyly umele rovne
-        # Pomoci normalizace zajistime presne 10% odchylku (standard deviation) nakladu
-        # Sigma=5 vytvori plynule vlny "hustniku a mycin" o velikosti cca 20-30 metru
-        noise_raw = np.random.normal(0, 1.0, size=cost_grid_base.shape).astype(np.float32)
-        noise_smooth = gaussian_filter(noise_raw, sigma=5)
-        if np.std(noise_smooth) > 0:
-            noise_smooth = (noise_smooth / np.std(noise_smooth)) * 0.10
-        
-        # Grid se bude v dalsich iteracich zdrazovat v okoli nalezenych cest
-        working_grid = cost_grid_base * (1.0 + noise_smooth)
+        # Prvni varianta se pocita na CISTEM gridu (deterministicky vysledek).
+        # Sum se prida az od druheho pokusu, aby alternativy nebyly umelé kopie.
+        working_grid = cost_grid_base.copy()
         
         delka_postupu = math.hypot(g_y - s_y, g_x - s_x)
         zakladni_odchylka = config.MAX_CAS_ODCHYLKA
@@ -955,6 +1044,15 @@ class AplikaceStavitel:
                   
             # Ochrana: zpenalizujeme Working Grid pred hledanim pripadne dalsi varianty
             working_grid = penalizuj_grid(working_grid, trasa, config.PENALIZACE_SIRKA_PX)
+            
+            # Po prvni variante pridame jemny sum, aby alternativy mely duvod se odchylit
+            # (prvni varianta byla deterministicka na cistem gridu)
+            if len(vybrane) == 1:
+                noise_raw = np.random.normal(0, 1.0, size=cost_grid_base.shape).astype(np.float32)
+                noise_smooth = gaussian_filter(noise_raw, sigma=5)
+                if np.std(noise_smooth) > 0:
+                    noise_smooth = (noise_smooth / np.std(noise_smooth)) * 0.05
+                working_grid = working_grid * (1.0 + noise_smooth)
 
         print(f"   Celkem nalezeno {len(vybrane)} variant | {time.time()-t0:.2f}s", flush=True)
 

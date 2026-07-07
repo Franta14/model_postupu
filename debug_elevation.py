@@ -54,114 +54,139 @@ def load_common():
     }
 
 
-def grid_to_img_coords(data, grid_data):
-    """Prevede grid souradnice na PNG pixel souradnice."""
-    h, w = grid_data.shape
-    grid_rows, grid_cols = np.mgrid[0:h, 0:w]
-    
-    oom_x = data['min_x'] + grid_cols * data['grid_size']
-    oom_y = data['min_y'] + grid_rows * data['grid_size']
-    
-    cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = data['cal']
-    det = cal_a * cal_e - cal_b * cal_d
-    img_cols = (cal_e * (oom_x - cal_c) - cal_b * (oom_y - cal_f)) / det
-    img_rows = (cal_a * (oom_y - cal_f) - cal_d * (oom_x - cal_c)) / det
-    
-    return img_cols, img_rows
-
+def extract_coords(coords_text):
+    pts = []
+    if ';' in coords_text:
+        for part in coords_text.strip().split(';'):
+            nums = part.strip().split()
+            if len(nums) >= 2:
+                try: pts.append((float(nums[0]) / 1000.0, -float(nums[1]) / 1000.0))
+                except ValueError: pass
+    else:
+        nums = coords_text.strip().split()
+        for i in range(0, len(nums) - 1, 2):
+            try: pts.append((float(nums[i]) / 1000.0, -float(nums[i+1]) / 1000.0))
+            except ValueError: pass
+    return pts
 
 def mode_contour_positions(data):
-    """Rezim 1: Zobrazi raw OCAD vrstevnice (cervene) pres PNG mapu."""
-    contour_path = os.path.join(data['cache_dir'], "contour_raster.npy")
-    if not os.path.exists(contour_path):
-        print(f"❌ Nenalezen soubor {contour_path}")
-        print("   Spust nejprve: python setup_mapa.py")
+    """Zobrazi plynulé vektorové čáry vrstevnic přímo z OMAP přes PNG mapu."""
+    import xml.etree.ElementTree as ET
+    
+    omap_file = getattr(config, 'OMAP_FILE', "Homolka_Vojirov_20240917.omap") if 'config' in globals() else "Homolka_Vojirov_20240917.omap"
+    
+    print(f"Nacitam vektorove krivky z {omap_file}...")
+    try:
+        tree = ET.parse(omap_file)
+        root = tree.getroot()
+    except Exception as e:
+        print(f"Chyba pri cteni {omap_file}: {e}")
         return
 
-    print("Načítám rasterizované OCAD vrstevnice...")
-    contour_raster = np.load(contour_path)
+    ns = {'ns': 'http://openorienteering.org/apps/mapper/xml/v2'}
     
-    img_cols, img_rows = grid_to_img_coords(data, contour_raster)
-    
-    print("Kreslím OCAD vrstevnice přes mapu...")
+    symbol_map = {}
+    for sym_elem in root.findall('.//ns:symbol', ns) or root.findall('.//symbol'):
+        s_id = sym_elem.attrib.get('id')
+        s_code = sym_elem.attrib.get('code')
+        if s_id and s_code:
+            symbol_map[s_id] = s_code.split('.')[0]
+
+    objects = root.findall('.//ns:object', ns)
+    if not objects:
+        objects = root.findall('.//object')
+        ns = {}
+
+    print("Kreslim spojite vektorove cary pres mapu...")
     fig, ax = plt.subplots(figsize=(14, 10))
     ax.imshow(data['img'])
     
-    # Vykresleni OCAD vrstevnic jako cervene cary (scatter bodu)
-    contour_mask = contour_raster > 0
-    contour_rows, contour_cols = np.where(contour_mask)
-    img_x = img_cols[contour_rows, contour_cols]
-    img_y = img_rows[contour_rows, contour_cols]
-    ax.scatter(img_x, img_y, color='red', s=0.8, alpha=0.9, marker='s')
-    
-    ax.set_title("DIAGNOSTIKA: Rasterizované OCAD vrstevnice (červené) vs. OB mapa",
+    count = 0
+    for obj in objects:
+        isom_code = None
+        
+        # 1. Zkus najit <symbol> uvnitr
+        sym_child = obj.find('symbol' if not ns else 'ns:symbol', ns)
+        if sym_child is not None and sym_child.text:
+            isom_code = sym_child.text.strip().split('.')[0][:3]
+        else:
+            # 2. Zkus mapovani pres atribut
+            sym_attr = obj.attrib.get('symbol')
+            if sym_attr:
+                if sym_attr in symbol_map:
+                    isom_code = symbol_map[sym_attr][:3]
+                else:
+                    isom_code = sym_attr.split('.')[0][:3]
+                        
+        if isom_code in ['101', '102']:
+            coords_elem = obj.find('coords' if not ns else 'ns:coords', ns)
+            if coords_elem is not None and coords_elem.text:
+                pts = extract_coords(coords_elem.text)
+                if len(pts) < 2:
+                    continue
+                
+                pts = np.array(pts)
+                
+                # Prevod OMAP -> Grid index -> PNG Pixel
+                # 1. Na grid indexy
+                grid_x = (pts[:, 0] - data['min_x']) / data['grid_size']
+                grid_y = (pts[:, 1] - data['min_y']) / data['grid_size']
+                
+                # 2. Na PNG pixely
+                cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = data['cal']
+                det = cal_a * cal_e - cal_b * cal_d
+                
+                oom_x = data['min_x'] + grid_x * data['grid_size']
+                oom_y = data['min_y'] + grid_y * data['grid_size']
+                
+                img_x = (cal_e * (oom_x - cal_c) - cal_b * (oom_y - cal_f)) / det
+                img_y = (cal_a * (oom_y - cal_f) - cal_d * (oom_x - cal_c)) / det
+                
+                # Jednotná červená barva pro oboje vrstevnice
+                ax.plot(img_x, img_y, color='red', linewidth=1.2, alpha=0.9)
+                count += 1
+                
+    # Vykresleni mostu
+    groups_file = os.path.join(data['cache_dir'], "vrstevnice_groups.json")
+    if os.path.exists(groups_file):
+        print("Kreslim spojovaci mosty...")
+        import json
+        with open(groups_file, 'r') as f:
+            gdata = json.load(f)
+            bridges = gdata.get('connections', [])
+            
+        for pt_a, pt_b in bridges:
+            bx = np.array([pt_a[0], pt_b[0]])
+            by = np.array([pt_a[1], pt_b[1]])
+            
+            # Prevod mostu na img coords
+            grid_x = (bx - data['min_x']) / data['grid_size']
+            grid_y = (by - data['min_y']) / data['grid_size']
+            
+            cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = data['cal']
+            det = cal_a * cal_e - cal_b * cal_d
+            oom_x = data['min_x'] + grid_x * data['grid_size']
+            oom_y = data['min_y'] + grid_y * data['grid_size']
+            img_x = (cal_e * (oom_x - cal_c) - cal_b * (oom_y - cal_f)) / det
+            img_y = (cal_a * (oom_y - cal_f) - cal_d * (oom_x - cal_c)) / det
+            
+            ax.plot(img_x, img_y, color='lime', linewidth=3.0, alpha=0.9, zorder=5)
+            ax.scatter(img_x, img_y, color='cyan', s=15, zorder=6)
+                
+    ax.set_title(f"DIAGNOSTIKA: Vytazeno {count} vrstevnic. Zeleně jsou spoje.",
                  fontsize=13, fontweight='bold')
     ax.axis('off')
     plt.tight_layout()
     print("Hotovo! Zobrazuji okno...")
     plt.show()
-
-
-def mode_elevation_model(data):
-    """Rezim 2: Zobrazi vyskovy model (heatmapa + izolinie) pres PNG mapu."""
-    elev_path = os.path.join(data['cache_dir'], "vyskova_mapa.npy")
-    if not os.path.exists(elev_path):
-        print(f"❌ Nenalezen soubor {elev_path}")
-        return
-
-    print("Načítám výškový model...")
-    elev_grid = np.load(elev_path)
-    
-    img_cols, img_rows = grid_to_img_coords(data, elev_grid)
-    
-    print("Kreslím heatmapu a vrstevnice nad mapou...")
-    fig, ax = plt.subplots(figsize=(14, 10))
-    ax.imshow(data['img'])
-    
-    ekv = getattr(config, 'EKVIDISTANCE_M', 5.0) if 'config' in dir() else 5.0
-    elev_min = np.nanmin(elev_grid)
-    elev_max = np.nanmax(elev_grid)
-    levels = np.arange(np.floor(elev_min / ekv) * ekv,
-                       np.ceil(elev_max / ekv) * ekv + ekv, ekv)
-    
-    contourf = ax.contourf(img_cols, img_rows, elev_grid,
-                           levels=levels, alpha=0.4, cmap='jet')
-    contours = ax.contour(img_cols, img_rows, elev_grid,
-                          levels=levels, colors='black', linewidths=0.8, alpha=0.7)
-    ax.clabel(contours, inline=True, fontsize=9, fmt='%1.0f m')
-    
-    cbar = plt.colorbar(contourf, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Nadmořská výška (m)", rotation=270, labelpad=15)
-    
-    # Prekrytí OCAD vrstevnic (oranzove body = presne pozice z .omap)
-    contour_path = os.path.join(data['cache_dir'], "contour_raster.npy")
-    if os.path.exists(contour_path):
-        contour_raster = np.load(contour_path)
-        c_mask = contour_raster > 0
-        c_rows, c_cols = np.where(c_mask)
-        c_img_x = img_cols[c_rows, c_cols]
-        c_img_y = img_rows[c_rows, c_cols]
-        ax.scatter(c_img_x, c_img_y, color='orange', s=0.3, alpha=0.7, marker='s',
-                   label='OMAP vrstevnice')
-    
-    ax.set_title("Výškový model (černé izolinie) vs. OMAP vrstevnice (oranžové)",
-                 fontsize=13, fontweight='bold')
-    ax.axis('off')
-    plt.tight_layout()
-    print("Hotovo! Zobrazuji okno...")
-    plt.show()
-
 
 def main():
     data = load_common()
     if data is None:
         return
     
-    if "--model" in sys.argv:
-        mode_elevation_model(data)
-    else:
-        mode_contour_positions(data)
-
+    # Rezim --model je smazany, vzdy pouzivame vykreslovani z OMAP
+    mode_contour_positions(data)
 
 if __name__ == "__main__":
     main()
