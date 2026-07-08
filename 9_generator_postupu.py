@@ -211,7 +211,7 @@ for p1, p2, dist_m in valid_pairs:
     
     for v in range(3):
         dist_map, py, px = generator_engine.dijkstra_heatmap(
-            penalized_grid, elev_grid, (p1['gy'], p1['gx']), mask, grid_size, config.NASOBIC_MERITKA, kopce_vaha=25.0, direction='forward'
+            penalized_grid, elev_grid, (p1['gy'], p1['gx']), mask, grid_size, config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
         )
         
         route = generator_engine.trasuj_cestu(py, px, (p1['gy'], p1['gx']), (p2['gy'], p2['gx']))

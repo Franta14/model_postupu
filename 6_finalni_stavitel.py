@@ -151,7 +151,7 @@ def vytvor_masku_elipsy(start, goal, h, w, rozsireni=0.45):
     return maska
 
 
-def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=25.0, direction='forward'):
+def dijkstra_heatmap(grid, elev, source, mask, gs, kopce_vaha=5.0, direction='forward'):
     """
     Vektorizovana Dijkstra expanze pres celou povolenou oblast.
     Vyuziva scipy.sparse.csgraph.dijkstra pro maximalni vykon (C/Cython).
@@ -989,7 +989,7 @@ class AplikaceStavitel:
             
             # Dijkstra VPRED na aktualnim (pripadne penalizovanem) working_grid
             dist_forward, parents_y_f, parents_x_f = dijkstra_heatmap(
-                working_grid, elev_grid, start, maska, grid_size, val_kopce,
+                working_grid, elev_grid, start, maska, grid_size, kopce_vaha=val_kopce,
                 direction='forward'
             )
             
@@ -1136,7 +1136,7 @@ class AplikaceStavitel:
             # Dijkstra z bodu A segmentu
             val_kopce = self.slider_kopce.val
             dist_seg, parents_y_seg, parents_x_seg = dijkstra_heatmap(
-                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size, val_kopce, direction='forward'
+                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size, kopce_vaha=val_kopce, direction='forward'
             )
 
             # Kontrola dosazitelnosti

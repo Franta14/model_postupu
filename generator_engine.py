@@ -20,7 +20,7 @@ def vytvor_masku_elipsy(start, goal, h, w, rozsireni=0.45):
     mask = (dist_start + dist_goal) <= (dist_centers * (1.0 + rozsireni))
     return mask
 
-def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=25.0, direction='forward'):
+def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=5.0, direction='forward'):
     """
     Vektorizovana Dijkstra expanze pres celou povolenou oblast.
     """
@@ -97,11 +97,28 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=2
         
         up_mask = sklon > 0.02
         sklon_ef = sklon[up_mask] - 0.02
-        hill_multiplier[up_mask] += (sklon_ef * kopce_vaha)
+        lin_penalta = kopce_vaha * 1.5 * sklon_ef
+        exp_penalta = np.zeros_like(sklon_ef)
         
-        down_mask = sklon < -0.05
-        sklon_down = -sklon[down_mask] - 0.05
-        hill_multiplier[down_mask] += (sklon_down * (kopce_vaha * 0.3))
+        steep = sklon_ef > 0.15
+        if np.any(steep):
+            exp_penalta[steep] = kopce_vaha * 5.0 * ((sklon_ef[steep] - 0.15) ** 1.5)
+        hill_multiplier[up_mask] = 1.0 + lin_penalta + exp_penalta
+        
+        down_mask = sklon < -0.02
+        sklon_down = sklon[down_mask]
+        limit_zrychleni = -0.25
+        
+        mild_down = sklon_down >= limit_zrychleni
+        steep_down = ~mild_down
+        
+        hm_down = np.empty_like(sklon_down)
+        hm_down[mild_down] = 1.0 + (sklon_down[mild_down] * 0.5)
+        
+        maximalni_zrychleni = 1.0 + (limit_zrychleni * 0.5)
+        prebytek_sklonu = np.abs(sklon_down[steep_down]) - np.abs(limit_zrychleni)
+        hm_down[steep_down] = maximalni_zrychleni + (prebytek_sklonu * 1.5)
+        hill_multiplier[down_mask] = hm_down
         
         final_cost = terren_cost * hill_multiplier * dist_m
 
@@ -147,14 +164,14 @@ def trasuj_cestu(parents_y, parents_x, start, goal):
     max_steps = parents_y.shape[0] * parents_y.shape[1]
     steps = 0
     while (cy != sy or cx != sx) and steps < max_steps:
-        cesta.append((cy, cx))
+        cesta.append((int(cy), int(cx)))
         ny, nx = parents_y[cy, cx], parents_x[cy, cx]
         if ny == -1 or nx == -1:
             return None
         cy, cx = ny, nx
         steps += 1
         
-    cesta.append((sy, sx))
+    cesta.append((int(sy), int(sx)))
     cesta.reverse()
     return cesta
 

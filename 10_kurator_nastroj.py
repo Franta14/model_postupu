@@ -36,6 +36,7 @@ class KuratorNastroj:
         self.current_data = None
         self.vykreslene_prvky = []
         self.edit_mode = False
+        self.tweak_mode = False
         self.edit_points = []
         
         self.setup_ui()
@@ -65,9 +66,13 @@ class KuratorNastroj:
         self.btn_del = Button(ax_btn_del, 'Zahodit (N)', color='lightcoral')
         self.btn_del.on_clicked(self.zahodit)
         
-        ax_btn_edit = plt.axes([0.7, 0.38, 0.28, 0.05])
-        self.btn_edit = Button(ax_btn_edit, 'Upravit variantu ručně (E)', color='lightblue')
+        ax_btn_edit = plt.axes([0.7, 0.38, 0.13, 0.05])
+        self.btn_edit = Button(ax_btn_edit, 'Nová trasa (E)', color='lightblue')
         self.btn_edit.on_clicked(self.toggle_edit)
+        
+        ax_btn_tweak = plt.axes([0.85, 0.38, 0.13, 0.05])
+        self.btn_tweak = Button(ax_btn_tweak, 'Vyladit (T)', color='plum')
+        self.btn_tweak.on_clicked(self.toggle_tweak)
         
         # Info o poctu
         self.ax_count = plt.axes([0.7, 0.25, 0.28, 0.1])
@@ -97,6 +102,7 @@ class KuratorNastroj:
             self.current_data = json.load(f)
             
         self.edit_mode = False
+        self.tweak_mode = False
         self.edit_points = []
         self.txt_count.set_text(f"Postup {self.current_idx + 1} / {len(self.json_files)}")
         self.vykresli_stav()
@@ -176,10 +182,16 @@ class KuratorNastroj:
         
         # Edit mode UI
         if self.edit_mode:
-            self.ax_map.set_title("Režim úprav: Klikej průjezdní body a zmáčkni ENTER pro výpočet.")
+            self.ax_map.set_title("Režim NOVÁ TRASA: Klikej průjezdní body a zmáčkni ENTER.")
             if self.edit_points:
                 ex, ey = zip(*self.edit_points)
                 (ep,) = self.ax_map.plot(ex, ey, 'ro-', markersize=8)
+                self.vykreslene_prvky.append(ep)
+        elif self.tweak_mode:
+            self.ax_map.set_title("Režim VYLADĚNÍ: Naklikej body pro úpravu, ENTER upraví nejbližší variantu.")
+            if self.edit_points:
+                ex, ey = zip(*self.edit_points)
+                (ep,) = self.ax_map.plot(ex, ey, 'yo-', markersize=8)
                 self.vykreslene_prvky.append(ep)
         else:
             self.ax_map.set_title("Náhled postupu")
@@ -210,6 +222,13 @@ class KuratorNastroj:
         
     def toggle_edit(self, event=None):
         self.edit_mode = not self.edit_mode
+        if self.edit_mode: self.tweak_mode = False
+        self.edit_points = []
+        self.vykresli_stav()
+
+    def toggle_tweak(self, event=None):
+        self.tweak_mode = not self.tweak_mode
+        if self.tweak_mode: self.edit_mode = False
         self.edit_points = []
         self.vykresli_stav()
 
@@ -227,7 +246,7 @@ class KuratorNastroj:
         return max(0, min(self.height - 1, int(gy))), max(0, min(self.width - 1, int(gx)))
 
     def on_click(self, event):
-        if not self.edit_mode or event.inaxes != self.ax_map:
+        if not (self.edit_mode or self.tweak_mode) or event.inaxes != self.ax_map:
             return
         if event.button == 1: # Left click
             self.edit_points.append((event.xdata, event.ydata))
@@ -253,34 +272,47 @@ class KuratorNastroj:
         if len(self.edit_points) < 1: return
         
         print("Trkám vlastní trasu...")
-        body = []
         sy, sx = self.current_data['start']['gy'], self.current_data['start']['gx']
-        body.append((sy, sx))
-        
-        for px, py in self.edit_points:
-            body.append(self.img_to_grid(px, py))
-            
         ey, ex = self.current_data['end']['gy'], self.current_data['end']['gx']
+        
+        # Seřazení bodů podle toho, jak leží na přímce Start -> Cíl
+        v_y = ey - sy
+        v_x = ex - sx
+        def proj_score(pt):
+            gy, gx = self.img_to_grid(pt[0], pt[1])
+            return (gy - sy) * v_y + (gx - sx) * v_x
+            
+        sorted_points = sorted(self.edit_points, key=proj_score)
+        
+        body = [(sy, sx)]
+        for px, py in sorted_points:
+            body.append(self.img_to_grid(px, py))
         body.append((ey, ex))
         
         celkova_cesta = []
         for i in range(len(body) - 1):
+            mask_seg = generator_engine.vytvor_masku_elipsy(
+                body[i], body[i+1], self.height, self.width, rozsireni=0.50
+            )
             py, px = generator_engine.dijkstra_heatmap(
-                self.cost_grid, self.elev_grid, body[i], None, self.grid_size, config.NASOBIC_MERITKA, kopce_vaha=25.0, direction='forward'
+                self.cost_grid, self.elev_grid, body[i], mask_seg, self.grid_size, config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
             )[1:]
             
             cesta_useku = generator_engine.trasuj_cestu(py, px, body[i], body[i+1])
-            if cesta_useku:
-                # napojit bez duplikace bodu
-                if celkova_cesta and celkova_cesta[-1] == cesta_useku[0]:
-                    celkova_cesta.extend(cesta_useku[1:])
-                else:
-                    celkova_cesta.extend(cesta_useku)
+            if cesta_useku is None:
+                print(f"Nelze najít cestu pro úsek {i + 1}")
+                return
+                
+            cesta_useku = generator_engine.vyhlad_cestu(cesta_useku, self.cost_grid, 3)
+
+            if i > 0:
+                celkova_cesta.extend(cesta_useku[1:])
+            else:
+                celkova_cesta.extend(cesta_useku)
                     
         if celkova_cesta:
-            smooth = generator_engine.vyhlad_cestu(celkova_cesta, self.cost_grid, 3)
             vzd, prev, usili, usili_real, _ = metriky.spocitat_metriky(
-                smooth, self.cost_grid, self.elev_grid, self.grid_size, config.NASOBIC_MERITKA, 5.0
+                celkova_cesta, self.cost_grid, self.elev_grid, self.grid_size, config.NASOBIC_MERITKA, 5.0
             )
             cas_s = metriky.vypocti_cas(usili_real, config.ZAKLADNI_TEMPO_MIN, config.ZAKLADNI_TEMPO_SEC)
             tempo = (cas_s / vzd) * 1000 if vzd > 0 else 0
@@ -290,7 +322,7 @@ class KuratorNastroj:
                 "prevyseni_m": round(prev),
                 "cas_s": round(cas_s),
                 "tempo_str": metriky.formatuj_cas(tempo),
-                "cesta": smooth
+                "cesta": celkova_cesta
             })
             
             print("Vlastní trasa přidána!")
@@ -298,11 +330,111 @@ class KuratorNastroj:
             self.edit_points = []
             self.vykresli_stav()
 
+    def vypocti_vyladenou_trasu(self):
+        if len(self.edit_points) < 1: return
+        print("Vylaďuji trasu...")
+        
+        # 1. Preved clicked points to grid coordinates
+        grid_points = [self.img_to_grid(px, py) for px, py in self.edit_points]
+        
+        # 2. Find closest variant to the first clicked point
+        first_pt = grid_points[0]
+        closest_var_idx = -1
+        min_dist_to_var = float('inf')
+        closest_idx_in_path = -1
+        
+        for v_idx, var in enumerate(self.current_data['variants']):
+            path = var['cesta']
+            path_arr = np.array(path)
+            diff = path_arr - np.array([first_pt[0], first_pt[1]])
+            dists = np.sum(diff**2, axis=1)
+            idx_min = np.argmin(dists)
+            dist_min = dists[idx_min]
+            
+            if dist_min < min_dist_to_var:
+                min_dist_to_var = dist_min
+                closest_var_idx = v_idx
+                closest_idx_in_path = idx_min
+                
+        if closest_var_idx == -1: return
+        
+        # 3. Find closest index for the last clicked point
+        last_pt = grid_points[-1]
+        var = self.current_data['variants'][closest_var_idx]
+        path = var['cesta']
+        path_arr = np.array(path)
+        
+        diff_last = path_arr - np.array([last_pt[0], last_pt[1]])
+        dists_last = np.sum(diff_last**2, axis=1)
+        last_idx_in_path = np.argmin(dists_last)
+        
+        # 4. Set start and end indices with margin
+        idx_1 = closest_idx_in_path
+        idx_2 = last_idx_in_path
+        
+        if idx_1 > idx_2:
+            idx_1, idx_2 = idx_2, idx_1
+            grid_points.reverse()
+            
+        margin_points = int(150 / self.grid_size) # cca 150m okoli
+        i_start = max(0, idx_1 - margin_points)
+        i_end = min(len(path) - 1, idx_2 + margin_points)
+        
+        body = [path[i_start]] + grid_points + [path[i_end]]
+        
+        celkova_cesta_useku = []
+        for i in range(len(body) - 1):
+            mask_seg = generator_engine.vytvor_masku_elipsy(
+                body[i], body[i+1], self.height, self.width, rozsireni=0.50
+            )
+            py, px = generator_engine.dijkstra_heatmap(
+                self.cost_grid, self.elev_grid, body[i], mask_seg, self.grid_size, config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
+            )[1:]
+            
+            cesta_useku = generator_engine.trasuj_cestu(py, px, body[i], body[i+1])
+            if cesta_useku is None:
+                print(f"Nelze najít cestu pro úsek {i + 1}")
+                return
+                
+            cesta_useku = generator_engine.vyhlad_cestu(cesta_useku, self.cost_grid, 3)
+
+            if i > 0:
+                celkova_cesta_useku.extend(cesta_useku[1:])
+            else:
+                celkova_cesta_useku.extend(cesta_useku)
+                    
+        if celkova_cesta_useku:
+            new_path = path[:i_start] + celkova_cesta_useku + path[i_end+1:]
+            
+            vzd, prev, usili, usili_real, _ = metriky.spocitat_metriky(
+                new_path, self.cost_grid, self.elev_grid, self.grid_size, config.NASOBIC_MERITKA, 5.0
+            )
+            cas_s = metriky.vypocti_cas(usili_real, config.ZAKLADNI_TEMPO_MIN, config.ZAKLADNI_TEMPO_SEC)
+            tempo = (cas_s / vzd) * 1000 if vzd > 0 else 0
+            
+            self.current_data['variants'].append({
+                "vzdal_m": round(vzd),
+                "prevyseni_m": round(prev),
+                "cas_s": round(cas_s),
+                "tempo_str": metriky.formatuj_cas(tempo),
+                "cesta": new_path
+            })
+            
+            print("Vyladěná trasa přidána jako nová varianta!")
+            self.tweak_mode = False
+            self.edit_points = []
+            self.vykresli_stav()
+        else:
+            print("Nepodařilo se najít trasu přes dané body.")
+
     def on_key(self, event):
         if event.key.lower() == 'y': self.schvalit()
         elif event.key.lower() == 'n': self.zahodit()
         elif event.key.lower() == 'e': self.toggle_edit()
-        elif event.key == 'enter' and self.edit_mode: self.vypocti_vlastni_trasu()
+        elif event.key.lower() == 't': self.toggle_tweak()
+        elif event.key == 'enter':
+            if self.edit_mode: self.vypocti_vlastni_trasu()
+            elif self.tweak_mode: self.vypocti_vyladenou_trasu()
 
 if __name__ == '__main__':
     KuratorNastroj()
