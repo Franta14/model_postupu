@@ -11,7 +11,8 @@ from scipy.spatial import cKDTree
 
 # --- NASTAVENI ---
 xyz_soubor = "DMR5G.xyz"
-xml_file = "vel1.xml"  # IOF CourseData s Position + MapPosition
+import config
+xml_file = config.XML_FILE  # IOF CourseData s Position + MapPosition
 
 # Doladeni kalibrace oproti cistemu Nelder-Meadu:
 # 1) least_squares (TRF) = presne L2 minima stejneho modelu (casto par metru lepe)

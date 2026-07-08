@@ -10,8 +10,9 @@ from datetime import datetime
 # --- NASTAVENI ---
 # =====================================================================
 gpx_file = "Zapa.gpx"     # Tvůj GPX soubor z hodinek
-xml_file = "KLAS.xml"     # 👈 NOVÉ: Tvůj IOF XML soubor z OCADu/Purple Pen
-map_image_file = "mapa.png"
+import config
+xml_file = config.XML_FILE     # 👈 NOVÉ: Tvůj IOF XML soubor z OCADu/Purple Pen
+map_image_file = config.PNG_FILE
 
 # ZÁKLADNÍ TEMPO MODELU (To, které chceme kalibrovat)
 ZAKLADNI_TEMPO_MIN = 3

@@ -14,7 +14,8 @@ except FileNotFoundError:
     print("❌ Chybí data nebo kalibrace.npy! Nejdřív naklikej kalibraci ve stavitelovi.")
     exit()
 
-img = Image.open("mapa.png")
+import config
+img = Image.open(config.PNG_FILE)
 
 # Držíme stav kalibrace v paměti
 state = {

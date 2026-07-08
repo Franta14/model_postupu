@@ -7,13 +7,9 @@ import matplotlib.cm as cm
 from matplotlib.collections import LineCollection
 from PIL import Image
 
-try:
-    import config
-    MAP_IMAGE = config.PNG_FILE
-    OMAP_FILE = config.OMAP_FILE
-except ImportError:
-    MAP_IMAGE = "mapa.png"
-    OMAP_FILE = "Homolka_Vojirov_20240917.omap"
+import config
+MAP_IMAGE = config.PNG_FILE
+OMAP_FILE = config.OMAP_FILE
 
 CACHE_DIR = os.path.join("cache", os.path.splitext(os.path.basename(OMAP_FILE))[0])
 GROUPS_FILE = os.path.join(CACHE_DIR, "vrstevnice_groups.json")
