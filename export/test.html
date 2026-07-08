@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html><head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head><body>
+<div id="map-container" style="width:500px; height:500px;"></div>
+<script>
+    const iofPurple = "#D81E5B";
+    let map = L.map('map-container', { crs: L.CRS.Simple, minZoom: 0, maxZoom: 6, zoomSnap: 0 });
+    L.tileLayer('../tiles/{z}/{x}/{y}.png', { maxZoom: 6, noWrap: true, bounds: [[-256, 0], [0, 256]] }).addTo(map);
+
+    let showVariantsForIndex = {0: true};
+    let currentLayer;
+
+    fetch('../postupy/postupy_index.json').then(r=>r.json()).then(index=>{
+        fetch('../postupy/' + index[0].file).then(r=>r.json()).then(geojsonOriginal => {
+            try {
+                // clone
+                let geojson = JSON.parse(JSON.stringify(geojsonOriginal));
+                let startCoords = null, endCoords = null;
+                geojson.features.forEach(f => {
+                    if (f.properties.type === 'start') startCoords = f.geometry.coordinates;
+                    if (f.properties.type === 'end') endCoords = f.geometry.coordinates;
+                });
+                if (startCoords && endCoords) {
+                    let dx = endCoords[0] - startCoords[0];
+                    let dy = endCoords[1] - startCoords[1];
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    let ux = dx / dist, uy = dy / dist;
+                    let rStart = 0.75, rEnd = 0.55;   
+                    let lineStart = [startCoords[0] + ux * rStart * 1.5, startCoords[1] + uy * rStart * 1.5];
+                    let lineEnd = [endCoords[0] - ux * rEnd * 1.2, endCoords[1] - uy * rEnd * 1.2];
+                    geojson.features.push({
+                        "type": "Feature",
+                        "geometry": {"type": "LineString", "coordinates": [lineStart, lineEnd]},
+                        "properties": {"type": "spojnice"}
+                    });
+                }
+                let showVariants = true;
+                currentLayer = L.geoJSON(geojson, {
+                    filter: function(feature) {
+                        if (feature.properties.type === 'variant' && !showVariants) return false;
+                        return true;
+                    },
+                    style: function (feature) {
+                        if (feature.properties.type === 'variant') return { color: feature.properties.color, weight: 6, opacity: 0.8 };
+                        if (feature.properties.type === 'spojnice') return { color: iofPurple, weight: 3, opacity: 0.8 };
+                    },
+                    pointToLayer: function (feature, latlng) {
+                        if (feature.properties.type === 'end') {
+                            let rEnd = 0.55;
+                            let outer = L.circle(latlng, {radius: rEnd, color: iofPurple, weight: 3, fill: false, opacity: 0.9});
+                            let inner = L.circle(latlng, {radius: rEnd * 0.6, color: iofPurple, weight: 3, fill: false, opacity: 0.9});
+                            return L.featureGroup([outer, inner]);
+                        }
+                        if (feature.properties.type === 'start' && endCoords) {
+                            let rStart = 0.75;
+                            let dx = endCoords[0] - startCoords[0];
+                            let dy = endCoords[1] - startCoords[1];
+                            let dist = Math.sqrt(dx*dx + dy*dy);
+                            let ux = dx / dist, uy = dy / dist;
+                            let vx = -uy, vy = ux;
+                            let p1 = [startCoords[1] + uy * rStart, startCoords[0] + ux * rStart];
+                            let p2 = [startCoords[1] - 0.5 * uy * rStart + 0.866 * vy * rStart, startCoords[0] - 0.5 * ux * rStart + 0.866 * vx * rStart];
+                            let p3 = [startCoords[1] - 0.5 * uy * rStart - 0.866 * vy * rStart, startCoords[0] - 0.5 * ux * rStart - 0.866 * vx * rStart];
+                            return L.polygon([p1, p2, p3], {color: iofPurple, weight: 3, fill: false, opacity: 0.9});
+                        }
+                        return L.circleMarker(latlng, {radius: 5, color: "red"});
+                    }
+                }).addTo(map);
+                map.fitBounds(currentLayer.getBounds());
+                console.log("SUCCESS!");
+                document.body.innerHTML += "<h1>SUCCESS</h1>";
+            } catch(e) {
+                console.error(e);
+                document.body.innerHTML += "<h1>ERROR: " + e.message + "</h1><pre>" + e.stack + "</pre>";
+            }
+        });
+    });
+</script>
+</body></html>

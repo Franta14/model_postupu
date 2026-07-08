@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <title>Scrollienteering</title>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+    
+    <!-- Leaflet Gesture Handling (Two-finger pan) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
+    <script src="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.js" crossorigin="anonymous"></script>
+
+    <!-- Custom PWA Styles -->
+    <link rel="stylesheet" href="style.css"/>
+
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("JS Error: " + message + " at " + lineno + ":" + colno);
+            return true;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("Promise Error: " + event.reason);
+        });
+    </script>
+</head>
+<body>
+    <div id="loader">Načítám postupy...</div>
+    
+    <!-- Foreground scroll-snapping reels -->
+    <div id="reels-container">
+        <!-- JS will inject .reel elements here -->
+    </div>
+    
+    <!-- Global Variants Panel (Bottom Sheet) -->
+    <div class="variants-panel" id="global-variants-panel">
+        <div class="panel-header">
+            <div class="panel-title">Ideální postupy</div>
+            <button class="close-btn" id="global-close-btn">×</button>
+        </div>
+        <div id="global-variants-content"></div>
+    </div>
+    
+    <!-- Custom Logic -->
+    <script src="app.js"></script>
+</body>
+</html>

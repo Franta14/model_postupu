@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+:root {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --glass-bg: rgba(30, 30, 30, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --accent: #D81E5B;
+  --accent-light: #ff4785;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden; 
+}
+
+/* Foreground reels container (Scroll snapping) */
+#reels-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#reels-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual reel slide */
+.reel {
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+/* Map inside each reel */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* UI overlay at bottom of each slide */
+.reel-ui {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 24px 20px 40px;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 2;
+  pointer-events: none; /* Let map receive events through UI background */
+}
+
+/* But buttons inside UI must be clickable */
+.reel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+
+.reel-title {
+  font-size: 2rem;
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+  margin-bottom: 5px;
+}
+
+.reel-subtitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ccc;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+}
+
+/* Primary Action Button */
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 15px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(216, 30, 91, 0.4);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+}
+
+/* Glassmorphism panel for variants (Top Right Floating) */
+.variants-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+  border-radius: 15px;
+  padding: 15px;
+  width: auto;
+  min-width: 280px;
+  max-width: 90vw;
+  max-height: 70vh;
+  overflow-y: auto;
+  
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+  z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.variants-panel.active {
+  transform: translateX(0);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.panel-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Variant item list */
+.variant-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.variant-item:last-child {
+  border-bottom: none;
+}
+
+.variant-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-right: 12px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.variant-stats {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.variant-main {
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin-bottom: 3px;
+}
+
+.variant-sub {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+/* Overlay loading */
+#loader {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg-color);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: opacity 0.5s ease;
+}
+
+/* Gesture handling tweaks */
+.leaflet-container:after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}

@@ -179,11 +179,32 @@ def draw_leg_image(p1, p2, routes, filename):
 
 # 4. Generovani tras
 print("🚀 Hledám postupy...")
-random.seed(123)
+random.seed() # Změněno z pevného seedu (123) na náhodný, ať to negeneruje dokola to samé!
 
 generated_count = 0
 attempts = 0
 
+print("Načítám historii již použitých kontrol (pro zajištění unikátnosti)...")
+forbidden_pts = []
+for folder in ["postupy", "schvalene_postupy", "archiv_postupu"]:
+    folder_path = os.path.join(cache_dir, folder)
+    if os.path.exists(folder_path):
+        import glob
+        for jfile in glob.glob(os.path.join(folder_path, "*.json")):
+            try:
+                with open(jfile, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if "start" in data and "end" in data:
+                        forbidden_pts.append([data["start"]['gy'], data["start"]['gx']])
+                        forbidden_pts.append([data["end"]['gy'], data["end"]['gx']])
+            except Exception:
+                pass
+
+if forbidden_pts:
+    forbidden_pts = np.array(forbidden_pts)
+else:
+    forbidden_pts = np.empty((0, 2))
+    
 print("Filtruji páry s vhodnou vzdáleností...")
 valid_pairs = []
 for i in range(50000):
@@ -199,6 +220,19 @@ print(f"Nalezeno {len(valid_pairs)} kandidátů na postupy.")
 for p1, p2, dist_m in valid_pairs:
     if generated_count >= 5:
         break
+        
+    # KONTROLA UNIKÁTNOSTI VŮČI HISTORII
+    if len(forbidden_pts) > 0:
+        p1_arr = np.array([p1['gy'], p1['gx']])
+        p2_arr = np.array([p2['gy'], p2['gx']])
+        
+        dist_p1 = np.sqrt(np.sum((forbidden_pts - p1_arr)**2, axis=1)) * grid_size * config.NASOBIC_MERITKA
+        dist_p2 = np.sqrt(np.sum((forbidden_pts - p2_arr)**2, axis=1)) * grid_size * config.NASOBIC_MERITKA
+        
+        # Pokud je Start nebo Cíl blíž než 150m k jakékoliv dříve použité kontrole, přeskočíme
+        if np.min(dist_p1) < 150 or np.min(dist_p2) < 150:
+            continue
+
     attempts += 1
         
     print(f"Hledám trasy pro {p1['isom']} -> {p2['isom']} ({dist_m:.0f}m)")
@@ -261,6 +295,13 @@ for p1, p2, dist_m in valid_pairs:
         }
         with open(base_fname + ".json", "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=4, cls=NumpyEncoder)
+            
+        # Přidat nové body do forbidden listu, ať se v tomto běhu neopakují
+        new_pts = np.array([[p1['gy'], p1['gx']], [p2['gy'], p2['gx']]])
+        if len(forbidden_pts) == 0:
+            forbidden_pts = new_pts
+        else:
+            forbidden_pts = np.vstack([forbidden_pts, new_pts])
             
         generated_count += 1
     else:

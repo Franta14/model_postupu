@@ -13,7 +13,9 @@ class KuratorNastroj:
         self.cache_dir = os.path.join(config.CACHE_DIR, self.map_name)
         self.postupy_dir = os.path.join(self.cache_dir, "postupy")
         self.schvalene_dir = os.path.join(self.cache_dir, "schvalene_postupy")
+        self.archiv_dir = os.path.join(self.cache_dir, "archiv_postupu")
         os.makedirs(self.schvalene_dir, exist_ok=True)
+        os.makedirs(self.archiv_dir, exist_ok=True)
         
         # Nacteni gridu pro pripadne prepocty (editace)
         print("Načítám data mapy pro případné úpravy...")
@@ -37,6 +39,7 @@ class KuratorNastroj:
         self.vykreslene_prvky = []
         self.edit_mode = False
         self.tweak_mode = False
+        self.del_var_mode = False
         self.edit_points = []
         
         self.setup_ui()
@@ -73,9 +76,13 @@ class KuratorNastroj:
         ax_btn_tweak = plt.axes([0.85, 0.38, 0.13, 0.05])
         self.btn_tweak = Button(ax_btn_tweak, 'Vyladit (T)', color='plum')
         self.btn_tweak.on_clicked(self.toggle_tweak)
+
+        ax_btn_del_var = plt.axes([0.7, 0.31, 0.13, 0.05])
+        self.btn_del_var = Button(ax_btn_del_var, 'Zahodit var. (D)', color='salmon')
+        self.btn_del_var.on_clicked(self.toggle_del_var)
         
         # Info o poctu
-        self.ax_count = plt.axes([0.7, 0.25, 0.28, 0.1])
+        self.ax_count = plt.axes([0.7, 0.18, 0.28, 0.1])
         self.ax_count.axis('off')
         self.txt_count = self.ax_count.text(0.5, 0.5, "", va='center', ha='center', fontsize=14)
         
@@ -103,6 +110,7 @@ class KuratorNastroj:
             
         self.edit_mode = False
         self.tweak_mode = False
+        self.del_var_mode = False
         self.edit_points = []
         self.txt_count.set_text(f"Postup {self.current_idx + 1} / {len(self.json_files)}")
         self.vykresli_stav()
@@ -193,6 +201,8 @@ class KuratorNastroj:
                 ex, ey = zip(*self.edit_points)
                 (ep,) = self.ax_map.plot(ex, ey, 'yo-', markersize=8)
                 self.vykreslene_prvky.append(ep)
+        elif getattr(self, 'del_var_mode', False):
+            self.ax_map.set_title("Režim ZAHODIT VARIANTU: Klikni na variantu pro její smazání.")
         else:
             self.ax_map.set_title("Náhled postupu")
             
@@ -205,19 +215,40 @@ class KuratorNastroj:
         with open(dest, "w", encoding="utf-8") as f:
             json.dump(self.current_data, f, indent=4)
         print(f"✅ Postup uložen do: {dest}")
+        
+        # Přesuneme soubor do archivu
+        import shutil
+        try:
+            dest_json = os.path.join(self.archiv_dir, "schvaleno_" + fname)
+            if os.path.exists(dest_json): os.remove(dest_json)
+            shutil.move(self.json_files[self.current_idx], dest_json)
+            
+            png = self.json_files[self.current_idx].replace('.json', '.png')
+            if os.path.exists(png):
+                dest_png = os.path.join(self.archiv_dir, "schvaleno_" + fname.replace('.json', '.png'))
+                if os.path.exists(dest_png): os.remove(dest_png)
+                shutil.move(png, dest_png)
+        except Exception as e:
+            print(f"Chyba při přesunu souboru do archivu: {e}")
+            
         self.dalsi()
 
     def zahodit(self, event=None):
         print("❌ Postup zahozen.")
-        # Můžeme soubor i fyzicky smazat z postupy/
+        import shutil
         try:
-            os.remove(self.json_files[self.current_idx])
-            # Smazeme i PNG
+            fname = os.path.basename(self.json_files[self.current_idx])
+            dest_json = os.path.join(self.archiv_dir, "zahozeno_" + fname)
+            if os.path.exists(dest_json): os.remove(dest_json)
+            shutil.move(self.json_files[self.current_idx], dest_json)
+            
             png = self.json_files[self.current_idx].replace('.json', '.png')
             if os.path.exists(png):
-                os.remove(png)
+                dest_png = os.path.join(self.archiv_dir, "zahozeno_" + fname.replace('.json', '.png'))
+                if os.path.exists(dest_png): os.remove(dest_png)
+                shutil.move(png, dest_png)
         except Exception as e:
-            print(e)
+            print(f"Chyba při přesunu do archivu: {e}")
         self.dalsi()
         
     def toggle_edit(self, event=None):
@@ -228,7 +259,17 @@ class KuratorNastroj:
 
     def toggle_tweak(self, event=None):
         self.tweak_mode = not self.tweak_mode
-        if self.tweak_mode: self.edit_mode = False
+        if self.tweak_mode: 
+            self.edit_mode = False
+            self.del_var_mode = False
+        self.edit_points = []
+        self.vykresli_stav()
+
+    def toggle_del_var(self, event=None):
+        self.del_var_mode = not getattr(self, 'del_var_mode', False)
+        if getattr(self, 'del_var_mode', False):
+            self.edit_mode = False
+            self.tweak_mode = False
         self.edit_points = []
         self.vykresli_stav()
 
@@ -246,6 +287,11 @@ class KuratorNastroj:
         return max(0, min(self.height - 1, int(gy))), max(0, min(self.width - 1, int(gx)))
 
     def on_click(self, event):
+        if getattr(self, 'del_var_mode', False) and event.inaxes == self.ax_map:
+            if event.button == 1:
+                self.smazat_variantu_blizko(event.xdata, event.ydata)
+            return
+
         if not (self.edit_mode or self.tweak_mode) or event.inaxes != self.ax_map:
             return
         if event.button == 1: # Left click
@@ -255,6 +301,30 @@ class KuratorNastroj:
             if self.edit_points:
                 self.edit_points.pop()
                 self.vykresli_stav()
+
+    def smazat_variantu_blizko(self, x, y):
+        if not self.current_data or not self.current_data.get('variants'): return
+        
+        click_gy, click_gx = self.img_to_grid(x, y)
+        closest_var_idx = -1
+        min_dist = float('inf')
+        
+        for v_idx, var in enumerate(self.current_data['variants']):
+            path = np.array(var['cesta'])
+            diff = path - np.array([click_gy, click_gx])
+            dists = np.sum(diff**2, axis=1)
+            dist_min = np.min(dists)
+            
+            if dist_min < min_dist:
+                min_dist = dist_min
+                closest_var_idx = v_idx
+                
+        # tolerance kliknuti ~ 300 metru okoli
+        threshold = (300 / self.grid_size)**2
+        if min_dist < threshold and closest_var_idx != -1:
+            del self.current_data['variants'][closest_var_idx]
+            print(f"Varianta smazána.")
+            self.vykresli_stav()
 
     def on_scroll(self, event):
         if event.inaxes != self.ax_map: return
@@ -432,6 +502,7 @@ class KuratorNastroj:
         elif event.key.lower() == 'n': self.zahodit()
         elif event.key.lower() == 'e': self.toggle_edit()
         elif event.key.lower() == 't': self.toggle_tweak()
+        elif event.key.lower() == 'd': self.toggle_del_var()
         elif event.key == 'enter':
             if self.edit_mode: self.vypocti_vlastni_trasu()
             elif self.tweak_mode: self.vypocti_vyladenou_trasu()

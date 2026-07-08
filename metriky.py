@@ -54,12 +54,16 @@ def spocitat_metriky(cesta, working_grid_base, elev_grid, grid_size, nasobic_mer
         is_rc = working_grid_base[y1, x1] < 1.09
         is_rn = working_grid_base[y2, x2] < 1.09
         
+        c1 = min(3.0, working_grid_base[y1, x1])
+        c2 = min(3.0, working_grid_base[y2, x2])
+        
         if abs(dy_px) > 1.5 or abs(dx_px) > 1.5:
             mid_y, mid_x = y1 + int(dy_px / 2), x1 + int(dx_px / 2)
-            terren_cost = working_grid_base[y1, x1] * 0.2 + working_grid_base[mid_y, mid_x] * 0.3 + working_grid_base[y2, x2] * 0.5
+            c_mid = min(3.0, working_grid_base[mid_y, mid_x])
+            terren_cost = c1 * 0.2 + c_mid * 0.3 + c2 * 0.5
             is_rm = is_rn
         else:
-            terren_cost = working_grid_base[y1, x1] * 0.35 + working_grid_base[y2, x2] * 0.65
+            terren_cost = c1 * 0.35 + c2 * 0.65
             is_rm = is_rn
             
         is_runner_on_road = is_rc
