@@ -180,6 +180,7 @@ def vyhlad_cestu(cesta, grid, vyhlazeni=3):
     if len(cesta) < 3 or vyhlazeni < 1:
         return cesta
 
+    h, w = grid.shape
     vyhlazena = [cesta[0]]
     i = 0
     N = len(cesta)
@@ -201,6 +202,32 @@ def vyhlad_cestu(cesta, grid, vyhlazeni=3):
                         break
                         
                 if not wall_hit:
+                    # Ochrana cest: pokud puvodni usek vede po ceste/pesine,
+                    # nepovolime zkratku ktera opousti cestu do lesa
+                    on_road = True
+                    for k in range(jump + 1):
+                        idx = i + k
+                        if idx >= N:
+                            break
+                        ry = max(0, min(h - 1, int(cesta[idx][0])))
+                        rx = max(0, min(w - 1, int(cesta[idx][1])))
+                        if grid[ry, rx] > 1.05:
+                            on_road = False
+                            break
+                    
+                    if on_road and steps > 0:
+                        leaves_road = False
+                        for step in range(1, steps):
+                            r = int(pt1[0] + step * (pt2[0]-pt1[0]) / steps)
+                            c = int(pt1[1] + step * (pt2[1]-pt1[1]) / steps)
+                            r = max(0, min(h - 1, r))
+                            c = max(0, min(w - 1, c))
+                            if grid[r, c] > 1.15:
+                                leaves_road = True
+                                break
+                        if leaves_road:
+                            continue  # Preskocime tento skok, zkusime kratsi
+                    
                     best_jump = jump
                     break
                     
@@ -264,3 +291,50 @@ def merit_podobnost(cesta_nova, prijate_cesty, h, w, radius):
     px = np.clip(nova_arr[:, 1], 0, w - 1)
     sdil = np.sum(maska[py, px])
     return sdil / max(1, len(cesta_nova))
+
+
+def snap_na_cesty(cesta, grid, road_lines_grid, max_snap=1.5):
+    """
+    Vizualni snap: body trasy ktere lezi na ceste/pesine (cost < 1.05)
+    se posunuou na nejblizsi OMAP vektorovou osu cesty.
+    Lesni useky zustavaji beze zmeny. Metriky se nepocitaji z tohoto
+    vystupu, takze to neovlivni zadne vypocty.
+    
+    cesta: list of (gy, gx) grid coordinates
+    grid: cost grid
+    road_lines_grid: list of Shapely LineString v grid souradnicich
+    max_snap: max vzdalenost snapu v bunkach gridu (default 1.5 = 7.5m)
+    """
+    if not road_lines_grid or len(cesta) < 2:
+        return cesta
+
+    from shapely.geometry import Point as ShapelyPoint
+    from shapely.strtree import STRtree
+
+    tree = STRtree(road_lines_grid)
+
+    h, w = grid.shape
+    result = list(cesta)  # kopie - original zustava nezmenen
+
+    for i in range(1, len(result) - 1):  # Start a cil nesnappujeme
+        gy, gx = result[i]
+        y_int = max(0, min(h - 1, int(gy)))
+        x_int = max(0, min(w - 1, int(gx)))
+
+        # Snap jen na cestach/pesinach
+        if grid[y_int, x_int] > 1.05:
+            continue
+
+        pt = ShapelyPoint(gx, gy)
+
+        # Nejblizsi cesta (Shapely STRtree)
+        nearest_idx = tree.nearest(pt)
+        nearest_line = road_lines_grid[nearest_idx]
+        proj_dist = nearest_line.project(pt)
+        nearest_pt = nearest_line.interpolate(proj_dist)
+
+        dist = pt.distance(nearest_pt)
+        if dist < max_snap:
+            result[i] = (nearest_pt.y, nearest_pt.x)
+
+    return result

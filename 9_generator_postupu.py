@@ -42,6 +42,26 @@ except FileNotFoundError:
     print("❌ Soubory v cache nenalezeny. Spustte nejprve setup_mapa.py")
     sys.exit(1)
 
+# Nacteni vektorovych os cest pro vizualni snap
+road_lines_grid = []
+try:
+    import pickle
+    from shapely.geometry import LineString
+    with open(os.path.join(cache_dir, "cesty_vektory.pkl"), "rb") as f:
+        cesty_raw = pickle.load(f)
+    for pts_oom in cesty_raw:
+        if len(pts_oom) >= 2:
+            # OOM souradnice -> grid souradnice
+            pts_grid = []
+            for ox, oy in pts_oom:
+                gx = (ox - min_x) / grid_size
+                gy = (oy - min_y) / grid_size
+                pts_grid.append((gx, gy))  # Shapely: (x, y)
+            road_lines_grid.append(LineString(pts_grid))
+    print(f"📏 Načteno {len(road_lines_grid)} vektorových os cest pro vizuální snap.")
+except FileNotFoundError:
+    print("⚠️ Vektory cest nenalezeny, snap nebude aktivní. Spusťte setup_mapa.py.")
+
 def oom_to_grid(oom_x, oom_y):
     gx = (oom_x - min_x) / grid_size
     gy = (oom_y - min_y) / grid_size
@@ -99,7 +119,7 @@ for obj in root.iter():
         oom_x, oom_y = pts[0]
         gy, gx = oom_to_grid(oom_x, oom_y)
         if cost_grid[gy, gx] < 1.4: # Filtrujeme temne hustniky
-            valid_points.append({'isom': isom, 'gx': gx, 'gy': gy})
+            valid_points.append({'isom': isom, 'gx': gx, 'gy': gy, 'oom_x': oom_x, 'oom_y': oom_y})
 
 print(f"✅ Nalezeno {len(valid_points)} bodů ve sjízdném terénu.")
 
@@ -177,134 +197,302 @@ def draw_leg_image(p1, p2, routes, filename):
     crop.save(filename, "PNG", optimize=True)
 
 
-# 4. Generovani tras
-print("🚀 Hledám postupy...")
-random.seed() # Změněno z pevného seedu (123) na náhodný, ať to negeneruje dokola to samé!
+# ================================================================
+# 4. MASIVNÍ GENEROVÁNÍ POSTUPŮ – PLNÉ POKRYTÍ MAPY
+# ================================================================
+import time
 
-generated_count = 0
-attempts = 0
+DELKOVE_ROZSAHY = config.DELKOVE_ROZSAHY
+MAX_KANDIDATU = config.MAX_KANDIDATU
 
-print("Načítám historii již použitých kontrol (pro zajištění unikátnosti)...")
-forbidden_pts = []
-for folder in ["postupy", "schvalene_postupy", "archiv_postupu"]:
-    folder_path = os.path.join(cache_dir, folder)
-    if os.path.exists(folder_path):
-        import glob
-        for jfile in glob.glob(os.path.join(folder_path, "*.json")):
-            try:
-                with open(jfile, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    if "start" in data and "end" in data:
-                        forbidden_pts.append([data["start"]['gy'], data["start"]['gx']])
-                        forbidden_pts.append([data["end"]['gy'], data["end"]['gx']])
-            except Exception:
-                pass
 
-if forbidden_pts:
-    forbidden_pts = np.array(forbidden_pts)
-else:
-    forbidden_pts = np.empty((0, 2))
-    
-print("Filtruji páry s vhodnou vzdáleností...")
-valid_pairs = []
-for i in range(50000):
+def is_viable_pair(p1, p2):
+    """Odmítne páry kde >40% přímky je neprůchodná (zdi, voda)."""
+    n = 10
+    impassable = 0
+    for t in np.linspace(0.1, 0.9, n):
+        y = max(0, min(height - 1, int(p1['gy'] + t * (p2['gy'] - p1['gy']))))
+        x = max(0, min(width - 1, int(p1['gx'] + t * (p2['gx'] - p1['gx']))))
+        if cost_grid[y, x] >= 9000:
+            impassable += 1
+    return impassable < n * 0.4
+
+
+def vzdalenost_m_ctrl(c1, c2):
+    """Vzdálenost dvou kontrol v metrech."""
+    dy = (c1['gy'] - c2['gy']) * grid_size * config.NASOBIC_MERITKA
+    dx = (c1['gx'] - c2['gx']) * grid_size * config.NASOBIC_MERITKA
+    return np.sqrt(dy**2 + dx**2)
+
+
+def jsou_podobne(pos1, pos2):
+    """Dva postupy jsou podobné pokud mají blízké starty+cíle a podobnou délku."""
+    d_ss = vzdalenost_m_ctrl(pos1['p1'], pos2['p1'])
+    d_ee = vzdalenost_m_ctrl(pos1['p2'], pos2['p2'])
+    d_se = vzdalenost_m_ctrl(pos1['p1'], pos2['p2'])
+    d_es = vzdalenost_m_ctrl(pos1['p2'], pos2['p1'])
+
+    max_d = config.DEDUP_CTRL_RADIUS
+    similar_forward = d_ss < max_d and d_ee < max_d
+    similar_reverse = d_se < max_d and d_es < max_d
+
+    if not (similar_forward or similar_reverse):
+        return False
+
+    len_ratio = abs(pos1['dist_m'] - pos2['dist_m']) / max(pos1['dist_m'], pos2['dist_m'])
+    return len_ratio < config.DEDUP_LEN_RATIO
+
+
+# ── FÁZE 1: Generování kandidátních párů ──────────────────────
+
+print("Vytvářím mapu přírodního vlnění (low-frequency noise)...")
+np.random.seed(42) # Pevný seed pro konzistenci vlnění mezi běhy
+noise_raw = np.random.uniform(-1, 1, size=(height // 30 + 1, width // 30 + 1))
+from scipy.ndimage import zoom
+noise_smooth = zoom(noise_raw, 30)[:height, :width]
+noise_min, noise_max = noise_smooth.min(), noise_smooth.max()
+# Škálování na multiplier [0.97, 1.03] (+- 3%) pro rozbití přímek
+noise_scaled = 0.97 + (noise_smooth - noise_min) / (noise_max - noise_min) * 0.06
+dijkstra_base_grid = cost_grid * noise_scaled
+
+print("=" * 60)
+print("  MASIVNI GENEROVANI POSTUPU")
+print("=" * 60)
+print()
+print("Faze 1/4: Generuji kandidatni pary...")
+random.seed()
+
+candidates_by_range = {i: [] for i in range(len(DELKOVE_ROZSAHY))}
+SAMPLING_ATTEMPTS = 100_000
+
+for _ in range(SAMPLING_ATTEMPTS):
     p1, p2 = random.sample(valid_points, 2)
     dist_grid = np.sqrt((p1['gx'] - p2['gx'])**2 + (p1['gy'] - p2['gy'])**2)
-    dist_paper_mm = dist_grid * grid_size
-    dist_m = dist_paper_mm * config.NASOBIC_MERITKA
-    if 800 <= dist_m <= 1500:
-        valid_pairs.append((p1, p2, dist_m))
+    dist_m = dist_grid * grid_size * config.NASOBIC_MERITKA
 
-print(f"Nalezeno {len(valid_pairs)} kandidátů na postupy.")
+    for i, (lo, hi) in enumerate(DELKOVE_ROZSAHY):
+        if lo <= dist_m <= hi:
+            if is_viable_pair(p1, p2):
+                candidates_by_range[i].append((p1, p2, dist_m))
+            break
 
-for p1, p2, dist_m in valid_pairs:
-    if generated_count >= 5:
-        break
-        
-    # KONTROLA UNIKÁTNOSTI VŮČI HISTORII
-    if len(forbidden_pts) > 0:
-        p1_arr = np.array([p1['gy'], p1['gx']])
-        p2_arr = np.array([p2['gy'], p2['gx']])
-        
-        dist_p1 = np.sqrt(np.sum((forbidden_pts - p1_arr)**2, axis=1)) * grid_size * config.NASOBIC_MERITKA
-        dist_p2 = np.sqrt(np.sum((forbidden_pts - p2_arr)**2, axis=1)) * grid_size * config.NASOBIC_MERITKA
-        
-        # Pokud je Start nebo Cíl blíž než 150m k jakékoliv dříve použité kontrole, přeskočíme
-        if np.min(dist_p1) < 150 or np.min(dist_p2) < 150:
-            continue
+# Stratifikovaný výběr: rovnoměrně z každého rozsahu
+per_range = MAX_KANDIDATU // len(DELKOVE_ROZSAHY)
+candidates = []
+for i in range(len(DELKOVE_ROZSAHY)):
+    cands = candidates_by_range[i]
+    random.shuffle(cands)
+    selected_from_range = cands[:per_range]
+    lo, hi = DELKOVE_ROZSAHY[i]
+    print(f"   {lo:>4}-{hi:>4}m: {len(cands):>5} nalezeno, {len(selected_from_range):>3} vybrano")
+    candidates.extend(selected_from_range)
 
-    attempts += 1
-        
-    print(f"Hledám trasy pro {p1['isom']} -> {p2['isom']} ({dist_m:.0f}m)")
-    
-    mask = generator_engine.vytvor_masku_elipsy((p1['gy'], p1['gx']), (p2['gy'], p2['gx']), height, width, rozsireni=0.6)
-    
+# Doplnění zbývajících slotů z přebytku
+remaining_slots = MAX_KANDIDATU - len(candidates)
+if remaining_slots > 0:
+    overflow = []
+    for i in range(len(DELKOVE_ROZSAHY)):
+        overflow.extend(candidates_by_range[i][per_range:])
+    random.shuffle(overflow)
+    candidates.extend(overflow[:remaining_slots])
+
+random.shuffle(candidates)
+print(f"   Celkem: {len(candidates)} kandidatu k vyhodnoceni.\n")
+
+
+# ── FÁZE 2: Dijkstra analýza + skóre zajímavosti ─────────────
+print(f"Faze 2/4: Dijkstra analyza ({len(candidates)} kandidatu)...")
+t_start = time.time()
+
+scored_postupy = []
+skipped_boring = 0
+
+for idx, (p1, p2, dist_m) in enumerate(candidates):
+    # Progress
+    if idx % 25 == 0:
+        elapsed = time.time() - t_start
+        if idx > 0:
+            eta = (elapsed / idx) * (len(candidates) - idx)
+            print(f"   [{idx:>3}/{len(candidates)}] {len(scored_postupy)} zajimavych | ~{eta:.0f}s zbyva", flush=True)
+        else:
+            print(f"   [{idx:>3}/{len(candidates)}] Startuji...", flush=True)
+
+    mask = generator_engine.vytvor_masku_elipsy(
+        (p1['gy'], p1['gx']), (p2['gy'], p2['gx']),
+        height, width, rozsireni=0.6
+    )
+
     routes = []
     routes_metadata = []
-    penalized_grid = cost_grid.copy()
-    
+    penalized_grid = dijkstra_base_grid.copy()
+
     for v in range(3):
         dist_map, py, px = generator_engine.dijkstra_heatmap(
-            penalized_grid, elev_grid, (p1['gy'], p1['gx']), mask, grid_size, config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
+            penalized_grid, elev_grid,
+            (p1['gy'], p1['gx']), mask, grid_size,
+            config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
         )
-        
-        route = generator_engine.trasuj_cestu(py, px, (p1['gy'], p1['gx']), (p2['gy'], p2['gx']))
+
+        route = generator_engine.trasuj_cestu(
+            py, px, (p1['gy'], p1['gx']), (p2['gy'], p2['gx'])
+        )
         if not route:
             break
-            
+
         route_smooth = generator_engine.vyhlad_cestu(route, cost_grid, vyhlazeni=3)
-        
-        # Otestovat podobnost s předchozími (pokud se to moc neliší, končíme)
-        podobnost = generator_engine.merit_podobnost(route_smooth, routes, height, width, config.PODOBNOST_RADIUS)
-        if v > 0 and podobnost > 0.8: # Prilis podobne, nenaslo to 2. volbu
-            print(f"  Varianta {v+1} vyřazena (příliš podobná: {podobnost*100:.0f}%)")
-            continue
-            
-        routes.append(route_smooth)
-        
-        # Spocitat metriky
-        vzd, prev, usili, usili_real, road_ratio = metriky.spocitat_metriky(
-            route_smooth, cost_grid, elev_grid, grid_size, config.NASOBIC_MERITKA, val_kopce=5.0
+
+        podobnost = generator_engine.merit_podobnost(
+            route_smooth, routes, height, width, config.PODOBNOST_RADIUS
         )
-        cas_s = metriky.vypocti_cas(usili_real, config.ZAKLADNI_TEMPO_MIN, config.ZAKLADNI_TEMPO_SEC)
+        if v > 0 and podobnost > 0.8:
+            continue
+
+        routes.append(route_smooth)
+
+        vzd, prev, usili, usili_real, road_ratio = metriky.spocitat_metriky(
+            route_smooth, cost_grid, elev_grid,
+            grid_size, config.NASOBIC_MERITKA, val_kopce=5.0
+        )
+        cas_s = metriky.vypocti_cas(
+            usili_real, config.ZAKLADNI_TEMPO_MIN, config.ZAKLADNI_TEMPO_SEC
+        )
         tempo_s_na_km = (cas_s / vzd) * 1000 if vzd > 0 else 0
-        
+
         routes_metadata.append({
             "vzdal_m": round(vzd),
             "prevyseni_m": round(prev),
             "cas_s": round(cas_s),
             "tempo_str": metriky.formatuj_cas(tempo_s_na_km),
-            "cesta": route_smooth # List of (y,x) coords
+            "cesta": route_smooth
         })
-        
-        # Penalizovat pro dalsi hledani
-        penalized_grid = generator_engine.penalizuj_grid(penalized_grid, route_smooth, config.PODOBNOST_RADIUS * 2)
 
-    # Hodnotitel zajimavosti
-    if len(routes) >= 2:
-        print(f"  ✅ Nalezeny {len(routes)} smysluplné varianty! Generuji náhled a JSON...")
-        base_fname = os.path.join(OUTPUT_DIR, f"postup_{generated_count+1}_{int(dist_m)}m")
-        draw_leg_image(p1, p2, routes, base_fname + ".png")
-        
-        # Ulozit JSON
-        json_data = {
-            "start": p1,
-            "end": p2,
-            "dist_m": dist_m,
-            "variants": routes_metadata
-        }
-        with open(base_fname + ".json", "w", encoding="utf-8") as f:
-            json.dump(json_data, f, indent=4, cls=NumpyEncoder)
-            
-        # Přidat nové body do forbidden listu, ať se v tomto běhu neopakují
-        new_pts = np.array([[p1['gy'], p1['gx']], [p2['gy'], p2['gx']]])
-        if len(forbidden_pts) == 0:
-            forbidden_pts = new_pts
-        else:
-            forbidden_pts = np.vstack([forbidden_pts, new_pts])
-            
-        generated_count += 1
-    else:
-        print("  ❌ Postup nemá reálné alternativy (nudný).")
+        penalized_grid = generator_engine.penalizuj_grid(
+            penalized_grid, route_smooth, config.PODOBNOST_RADIUS * 2
+        )
 
-print(f"🎉 Hotovo! Vygenerováno {generated_count} zajímavých postupů v {OUTPUT_DIR}")
+    if len(routes) < 2:
+        skipped_boring += 1
+        continue
+
+    # Skóre zajímavosti
+    # 1. Divergence: symetrická průměrná nepodobnost
+    pairwise_sims = []
+    for i in range(len(routes)):
+        for j in range(i + 1, len(routes)):
+            s_ij = generator_engine.merit_podobnost(
+                routes[i], [routes[j]], height, width, config.PODOBNOST_RADIUS
+            )
+            s_ji = generator_engine.merit_podobnost(
+                routes[j], [routes[i]], height, width, config.PODOBNOST_RADIUS
+            )
+            pairwise_sims.append((s_ij + s_ji) / 2)
+    divergence = 1.0 - np.mean(pairwise_sims)
+
+    # 2. Vyváženost: poměr nejrychlejší/nejpomalejší
+    times = [rm['cas_s'] for rm in routes_metadata]
+    balance = min(times) / max(times) if max(times) > 0 else 0
+
+    # 3. Bonus za 3 varianty
+    count_bonus = 1.0 + 0.25 * (len(routes) - 2)
+
+    score = divergence * balance * count_bonus
+
+    if score < config.MIN_ZAJIMAVOST:
+        skipped_boring += 1
+        continue
+
+    scored_postupy.append({
+        'p1': p1,
+        'p2': p2,
+        'dist_m': dist_m,
+        'routes': routes,
+        'routes_metadata': routes_metadata,
+        'score': score,
+        'divergence': divergence,
+        'balance': balance,
+        'n_variants': len(routes)
+    })
+
+elapsed_phase2 = time.time() - t_start
+print(f"\n   Dokonceno za {elapsed_phase2:.0f}s.")
+print(f"   {len(scored_postupy)} postupu nad hranici zajimavosti ({skipped_boring} vyrazeno).\n")
+
+
+# ── FÁZE 3: Chytrý výběr (deduplikace) ───────────────────────
+print("Faze 3/4: Chytry vyber (deduplikace)...")
+
+scored_postupy.sort(key=lambda x: x['score'], reverse=True)
+
+selected = []
+remaining_pool = list(scored_postupy)
+
+while remaining_pool:
+    best = remaining_pool.pop(0)
+    selected.append(best)
+    remaining_pool = [p for p in remaining_pool if not jsou_podobne(best, p)]
+
+print(f"   {len(scored_postupy)} -> {len(selected)} unikatnich postupu")
+
+# Statistiky
+print(f"\n   Rozdeleni podle delky:")
+for lo, hi in DELKOVE_ROZSAHY:
+    in_range = [p for p in selected if lo <= p['dist_m'] <= hi]
+    if in_range:
+        avg_s = np.mean([p['score'] for p in in_range])
+        print(f"   {lo:>4}-{hi:>4}m: {len(in_range):>3} postupu (prumerne skore {avg_s:.2f})")
+print()
+
+
+# ── FÁZE 4: Export ────────────────────────────────────────────
+print(f"Faze 4/4: Ukladam {len(selected)} postupu...")
+
+# Smazat staré soubory
+old_count = 0
+for f in os.listdir(OUTPUT_DIR):
+    if f.startswith("postup_") and (f.endswith(".json") or f.endswith(".png")):
+        os.remove(os.path.join(OUTPUT_DIR, f))
+        old_count += 1
+if old_count:
+    print(f"   Smazano {old_count} starych souboru.")
+
+for i, postup in enumerate(selected):
+    p1, p2 = postup['p1'], postup['p2']
+
+    # Snap na vektorové osy cest (čistě vizuální)
+    routes_viz = []
+    for rm in postup['routes_metadata']:
+        snapped = generator_engine.snap_na_cesty(rm['cesta'], cost_grid, road_lines_grid)
+        rm['cesta'] = snapped
+        routes_viz.append(snapped)
+
+    score_pct = int(postup['score'] * 100)
+    base_fname = os.path.join(
+        OUTPUT_DIR,
+        f"postup_{i+1:03d}_{int(postup['dist_m'])}m_s{score_pct}"
+    )
+
+    draw_leg_image(p1, p2, routes_viz, base_fname + ".png")
+
+    json_data = {
+        "start": p1,
+        "end": p2,
+        "dist_m": postup['dist_m'],
+        "score": round(postup['score'], 3),
+        "divergence": round(postup['divergence'], 3),
+        "balance": round(postup['balance'], 3),
+        "n_variants": postup['n_variants'],
+        "variants": postup['routes_metadata']
+    }
+    with open(base_fname + ".json", "w", encoding="utf-8") as f:
+        json.dump(json_data, f, indent=4, cls=NumpyEncoder)
+
+    if (i + 1) % 25 == 0 or i + 1 == len(selected):
+        print(f"   [{i+1}/{len(selected)}] ulozeno...", flush=True)
+
+total_time = time.time() - t_start
+print(f"\n{'='*60}")
+print(f"  HOTOVO! {len(selected)} zajimavych postupu")
+print(f"  Cas: {total_time:.0f}s")
+print(f"  Slozka: {OUTPUT_DIR}")
+print(f"  Dalsi krok: python 10_kurator_nastroj.py")
+print(f"{'='*60}")

@@ -39,8 +39,8 @@ def convert_to_geojson():
     # Helper to convert (grid_y, grid_x) to (lng, lat) for CRS.Simple
     # Leaflet CRS.Simple maps (x, y) pixels at Zoom 0 to LngLat (x, -y)
     def to_lnglat(gy, gx):
-        OOM_x = min_x + gx * grid_size
-        OOM_y = min_y + gy * grid_size
+        OOM_x = min_x + (gx + 0.5) * grid_size
+        OOM_y = min_y + (gy + 0.5) * grid_size
         b = np.array([OOM_x - cal_c, OOM_y - cal_f])
         col, row = np.linalg.solve(A, b)
         
@@ -65,11 +65,22 @@ def convert_to_geojson():
         
         # 1. Start Point
         start_pt = data["start"]
+        if "oom_x" in start_pt and "oom_y" in start_pt:
+            OOM_x = start_pt["oom_x"]
+            OOM_y = start_pt["oom_y"]
+            b = np.array([OOM_x - cal_c, OOM_y - cal_f])
+            col, row = np.linalg.solve(A, b)
+            px_x = float(col) / scale
+            px_y = float(row) / scale
+            start_coord = [px_x, -px_y]
+        else:
+            start_coord = to_lnglat(start_pt["gy"], start_pt["gx"])
+
         features.append({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": to_lnglat(start_pt["gy"], start_pt["gx"])
+                "coordinates": start_coord
             },
             "properties": {
                 "type": "start",
@@ -79,11 +90,22 @@ def convert_to_geojson():
         
         # 2. End Point
         end_pt = data["end"]
+        if "oom_x" in end_pt and "oom_y" in end_pt:
+            OOM_x = end_pt["oom_x"]
+            OOM_y = end_pt["oom_y"]
+            b = np.array([OOM_x - cal_c, OOM_y - cal_f])
+            col, row = np.linalg.solve(A, b)
+            px_x = float(col) / scale
+            px_y = float(row) / scale
+            end_coord = [px_x, -px_y]
+        else:
+            end_coord = to_lnglat(end_pt["gy"], end_pt["gx"])
+
         features.append({
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": to_lnglat(end_pt["gy"], end_pt["gx"])
+                "coordinates": end_coord
             },
             "properties": {
                 "type": "end",

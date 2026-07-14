@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadData() {
-    fetch('postupy/postupy_index.json')
+    fetch('postupy/postupy_index.json?v=' + Date.now())
         .then(res => res.json())
         .then(data => {
             postupyData = data;
@@ -21,6 +21,9 @@ function loadData() {
                 document.getElementById('loader').style.opacity = 0;
                 setTimeout(() => document.getElementById('loader').remove(), 500);
             }, 500);
+        })
+        .catch(err => {
+            alert("Chyba při načítání dat: " + err);
         });
 }
 
@@ -37,13 +40,11 @@ function buildReels() {
             <div class="map-container" id="map-${index}"></div>
             <div class="reel-ui">
                 <div class="reel-header">
-                    <div>
-                        <div class="reel-title">Postup ${postup.id}</div>
-                        <div class="reel-subtitle">Vzdušně: ${postup.dist_m.toFixed(0)} m</div>
-                    </div>
-                    <button class="btn-primary" onclick="toggleVariants(${index})">Ukaž volby</button>
+                    <div class="reel-subtitle">${postup.dist_m.toFixed(0)} m vzdušně</div>
+                    <button class="btn-primary" onclick="toggleVariants(${index})">Volby</button>
                 </div>
             </div>
+            <div class="scroll-area">↑ Další postup ↓</div>
         `;
         
         container.appendChild(reel);
@@ -89,11 +90,28 @@ function toggleVariants(index) {
             <div class="variant-item">
                 <div class="variant-color" style="background-color: ${v.color}; color: ${v.color}"></div>
                 <div class="variant-stats">
-                    <div class="variant-main">Var ${v.id} • ${Math.floor(v.cas_s/60)}:${(v.cas_s%60).toString().padStart(2,'0')}</div>
-                    <div class="variant-sub">${v.vzdal_m.toFixed(0)} m • ${v.prevyseni_m.toFixed(0)} m přev. • ${v.tempo_str}</div>
+                    <div class="variant-main">V${v.id} • ${Math.floor(v.cas_s/60)}:${(v.cas_s%60).toString().padStart(2,'0')}</div>
+                    <div class="variant-sub">${v.vzdal_m.toFixed(0)}m • ${v.prevyseni_m.toFixed(0)}m↑<br>${v.tempo_str}</div>
                 </div>
             </div>
         `).join('');
+        
+        let panelClass = 'pos-top-right';
+        if (geojsonCache[postup.file]) {
+            let startC = null, endC = null;
+            geojsonCache[postup.file].features.forEach(f => {
+                if (f.properties && f.properties.type === 'start') startC = f.geometry.coordinates;
+                if (f.properties && f.properties.type === 'end') endC = f.geometry.coordinates;
+            });
+            if (startC && endC) {
+                let dx = endC[0] - startC[0];
+                let dy = endC[1] - startC[1];
+                if (dx * dy > 0) panelClass = 'pos-top-left';
+            }
+        }
+        
+        panel.className = 'variants-panel ' + panelClass;
+        void panel.offsetWidth; // force reflow
         
         document.getElementById('global-close-btn').onclick = () => {
             panel.classList.remove('active');
@@ -139,15 +157,17 @@ function activateReel(indexStr) {
     }
     
     const postup = postupyData[index];
-    
     if (geojsonCache[postup.file]) {
         renderMapData(index, geojsonCache[postup.file]);
     } else {
-        fetch('postupy/' + postup.file)
+        fetch('postupy/' + postup.file + '?v=' + Date.now())
             .then(res => res.json())
             .then(geojson => {
                 geojsonCache[postup.file] = geojson;
                 renderMapData(index, geojson);
+            })
+            .catch(err => {
+                console.error("GeoJSON load error:", err);
             });
     }
 }
@@ -156,11 +176,10 @@ function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple,
         minZoom: 0,
-        maxZoom: 7, // allowed to zoom in a bit more
+        maxZoom: 8, // reduced maxZoom slightly to prevent excessive overzoom
         zoomSnap: 0,
         zoomControl: false,
-        gestureHandling: true,
-        maxBoundsViscosity: 1.0
+        gestureHandling: false
     });
     
     L.control.zoom({ position: 'topleft' }).addTo(map);
@@ -168,13 +187,14 @@ function initMapForReel(index) {
     var bounds = [[-256, 0], [0, 256]];
     L.tileLayer('tiles/{z}/{x}/{y}.png', {
         minZoom: 0,
-        maxZoom: 6,
+        maxZoom: 8,
         maxNativeZoom: 6,
         noWrap: true,
         tms: false,
         bounds: bounds,
         keepBuffer: 8,
-        updateWhenZooming: false
+        updateWhenZooming: false,
+        detectRetina: true
     }).addTo(map);
     
     map.fitBounds(bounds);
@@ -283,17 +303,17 @@ function renderMapData(index, geojsonOriginal) {
         let latDiff = northEast.lat - southWest.lat;
         let lngDiff = northEast.lng - southWest.lng;
         
-        let newNorth = northEast.lat + latDiff * 0.02;
-        let newEast = northEast.lng + lngDiff * 0.02;
-        let newWest = southWest.lng - lngDiff * 0.02;
-        let newSouth = southWest.lat - latDiff * 0.02;
+        let newNorth = northEast.lat + latDiff * 0.30;
+        let newEast = northEast.lng + lngDiff * 0.30;
+        let newWest = southWest.lng - lngDiff * 0.30;
+        let newSouth = southWest.lat - latDiff * 0.30;
         
         let paddedBounds = L.latLngBounds([newSouth, newWest], [newNorth, newEast]);
         
         map.setMaxBounds(paddedBounds);
         
         let minZoom = map.getBoundsZoom(paddedBounds);
-        let maxZoom = map.getMaxZoom() || 7;
+        let maxZoom = map.getMaxZoom() || 8;
         if (minZoom > maxZoom) minZoom = maxZoom;
         map.setMinZoom(minZoom);
         

@@ -36,9 +36,10 @@ cache_cenova  = os.path.join(cache_dir, "cenova_mapa.npy")
 cache_meta    = os.path.join(cache_dir, "cenova_mapa_meta.npy")
 cache_vyskova = os.path.join(cache_dir, "vyskova_mapa.npy")
 cache_kalib   = os.path.join(cache_dir, "kalibrace.npy")
+cache_cesty   = os.path.join(cache_dir, "cesty_vektory.pkl")
 
 def vse_v_cache():
-    soubory = [cache_cenova, cache_meta, cache_vyskova, cache_kalib]
+    soubory = [cache_cenova, cache_meta, cache_vyskova, cache_kalib, cache_cesty]
     if not all(os.path.exists(s) for s in soubory):
         return False
     omap_mtime = os.path.getmtime(config.OMAP_FILE)
@@ -142,6 +143,7 @@ print("\n🗺️  Krok 2/3: Generuji cenovou mrizku terenu...")
 GRID_SIZE_M       = 0.5
 SIRKA_CESTY       = 0.5
 SIRKA_ZDI         = 1.0
+SIRKA_PLOTU       = 0.3    # Plot/oplocenka - uzsi buffer nez skala (realne max 1m sirka)
 
 COST_DICT = {
     "Cesta (Zpevnena)":        0.915,
@@ -174,6 +176,7 @@ symbol_map = {
 kategorie = {k: [] for k in COST_DICT}
 contour_lines_raw = []   # pro vyskovy model
 text_objects_raw  = []   # popisky vrstevnic
+cesty_centerlines = []   # vektorove osy cest pro vizualni snap
 
 for obj in root.iter():
     tag = obj.tag.lower()
@@ -235,8 +238,14 @@ for obj in root.iter():
         elif isom in ['508', '509']:         ter_lin = "Prusek"
         elif isom in ['201', '516', '518']: ter_lin = "Nepruchodna zed / plot"
         if ter_lin:
-            buf = SIRKA_ZDI if ter_lin == "Nepruchodna zed / plot" else SIRKA_CESTY
+            if ter_lin == "Nepruchodna zed / plot":
+                buf = SIRKA_PLOTU if isom in ['516', '518'] else SIRKA_ZDI
+            else:
+                buf = SIRKA_CESTY
             kategorie[ter_lin].append(LineString(pts).buffer(buf))
+            # Ulozit puvodni centerline (pred bufferovanim) pro vizualni snap
+            if ter_lin != "Nepruchodna zed / plot":
+                cesty_centerlines.append(pts)
 
     # --- Plošne objekty terenu ---
     if len(pts) >= 3:
@@ -265,6 +274,13 @@ for k, v in kategorie.items():
         u = unary_union(v)
         merged_geom[k]   = u
         prepared_geom[k] = prep(u)
+
+# Ulozeni vektorovych os cest pro vizualni snap (nezavisle na skip_krok2)
+import pickle
+cache_cesty_vektory = os.path.join(cache_dir, "cesty_vektory.pkl")
+with open(cache_cesty_vektory, "wb") as f:
+    pickle.dump(cesty_centerlines, f)
+print(f"   Ulozeno {len(cesty_centerlines)} centerlines cest/pesin pro vizualni snap.")
 
 # Zjistime rozsah mapy
 all_geoms = [g for g in merged_geom.values() if not g.is_empty]
@@ -314,6 +330,23 @@ if not skip_krok2:
                 if teren in prepared_geom and prepared_geom[teren].contains(pt):
                     cost_grid[y_idx, x_idx] = COST_DICT[teren]
                     break
+
+    # Ochrana cest/pesin: buffer zdi nesmi zakryt cestu vedle ni
+    print("   Kontroluji prekriti cest bufferem zdi...", flush=True)
+    path_keys_fix = ["Cesta (Zpevnena)", "Cesta (Lesni)", "Pesina", "Prusek"]
+    wall_ys, wall_xs = np.where(cost_grid >= 9000.0)
+    if len(wall_ys) > 0:
+        recovered = 0
+        for i in range(len(wall_ys)):
+            real_x = min_x + wall_xs[i] * GRID_SIZE_M
+            real_y = min_y + wall_ys[i] * GRID_SIZE_M
+            pt = Point(real_x, real_y)
+            for pk in path_keys_fix:
+                if pk in prepared_geom and prepared_geom[pk].contains(pt):
+                    cost_grid[wall_ys[i], wall_xs[i]] = COST_DICT[pk]
+                    recovered += 1
+                    break
+        print(f"   Obnoveno {recovered} buněk cest/pěšin pod bufferem zdí.")
 
     # Dilatace + eroze cest
     kernel = np.ones((3, 3), bool)

@@ -34,6 +34,15 @@ PODOBNOST_RADIUS        = 10     # 10 bunek = 50m: co se povazuje za "stejnou st
 MAX_SHODA               = 0.65   # Max 65% prostorova shoda s prijatymi trasami
 
 # ============================================================
+# PARAMETRY GENERATORU POSTUPU
+# ============================================================
+DELKOVE_ROZSAHY         = [(400, 700), (700, 1200), (1200, 2000), (2000, 3500)]
+MAX_KANDIDATU           = 500    # Max pocet paru vyhodnocenych Dijkstrou
+DEDUP_CTRL_RADIUS       = 200    # metry - dva postupy jsou "podobne" pokud starty/cile blize nez toto
+DEDUP_LEN_RATIO         = 0.30   # ...a delky se lisi mene nez 30%
+MIN_ZAJIMAVOST          = 0.15   # minimalni skore pro ulozeni
+
+# ============================================================
 # CACHE (nemenit)
 # ============================================================
 CACHE_DIR = "cache"

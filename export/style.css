@@ -59,45 +59,57 @@ html, body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 60px);
   z-index: 1;
+}
+
+/* Dedicated area for scrolling between reels */
+.scroll-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 60px;
+  background-color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  z-index: 3;
+  pointer-events: auto; /* Catch scroll touches */
+  border-top: 1px solid #333;
 }
 
 /* UI overlay at bottom of each slide */
 .reel-ui {
   position: absolute;
-  bottom: 0;
+  bottom: 60px;
   left: 0;
   width: 100%;
-  padding: 24px 20px 40px;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+  padding: 8px 12px 14px;
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%);
   display: flex;
   flex-direction: column;
-  gap: 15px;
   z-index: 2;
-  pointer-events: none; /* Let map receive events through UI background */
+  pointer-events: none;
 }
 
-/* But buttons inside UI must be clickable */
 .reel-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   pointer-events: auto;
 }
 
-.reel-title {
-  font-size: 2rem;
-  font-weight: 800;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-  margin-bottom: 5px;
-}
-
 .reel-subtitle {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #ccc;
-  text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+  color: #eee;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
 /* Primary Action Button */
@@ -105,46 +117,56 @@ html, body {
   background-color: var(--accent);
   color: white;
   border: none;
-  border-radius: 30px;
-  padding: 15px 24px;
-  font-size: 1.1rem;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(216, 30, 91, 0.4);
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  box-shadow: 0 2px 8px rgba(216, 30, 91, 0.4);
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .btn-primary:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
 }
 
-/* Glassmorphism panel for variants (Top Right Floating) */
+/* Glassmorphism panel for variants (Dynamic Positioning) */
 .variants-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
-  border-radius: 15px;
-  padding: 15px;
-  width: auto;
-  min-width: 280px;
-  max-width: 90vw;
-  max-height: 70vh;
+  border-radius: 12px;
+  padding: 8px 10px;
+  width: max-content;
+  max-width: 50vw;
+  max-height: 50vh;
   overflow-y: auto;
   
   position: fixed;
-  top: 20px;
-  right: 20px;
-  transform: translateX(120%);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  top: 10px;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   pointer-events: auto;
   z-index: 100;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
-.variants-panel.active {
+.variants-panel.pos-top-right {
+  right: 10px;
+  left: auto;
+  transform: translateX(120%);
+}
+.variants-panel.pos-top-right.active {
+  transform: translateX(0);
+}
+
+.variants-panel.pos-top-left {
+  left: 10px;
+  right: auto;
+  transform: translateX(-120%);
+}
+.variants-panel.pos-top-left.active {
   transform: translateX(0);
 }
 
@@ -152,30 +174,37 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 6px;
 }
 
 .panel-title {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #aaa;
 }
 
 .close-btn {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
   border: none;
   color: white;
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
+  font-size: 0.75rem;
   font-weight: bold;
   cursor: pointer;
-}
-
-/* Variant item list */
-.variant-item {
   display: flex;
   align-items: center;
-  padding: 12px 0;
+  justify-content: center;
+}
+
+/* Variant item list — compact single-line rows */
+.variant-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .variant-item:last-child {
@@ -183,28 +212,32 @@ html, body {
 }
 
 .variant-color {
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  margin-right: 12px;
-  box-shadow: 0 0 10px currentColor;
+  margin-right: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+  margin-top: 4px;
 }
 
 .variant-stats {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .variant-main {
-  font-weight: 600;
-  font-size: 1.05rem;
-  margin-bottom: 3px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.1;
 }
 
 .variant-sub {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   color: #aaa;
+  line-height: 1.2;
 }
 
 /* Overlay loading */
@@ -231,4 +264,11 @@ html, body {
   opacity: 0;
   transition: opacity 0.5s;
   pointer-events: none;
+}
+
+
+/* Ensure crisp rendering for map tiles on all devices */
+.leaflet-tile {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
