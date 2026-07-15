@@ -7,7 +7,7 @@ echo.
 
 :: Spustíme lokální server ve vlastním novém okně
 echo 1) Spoustim lokalni webovy server...
-start "Lokalni Web Server" cmd /c "cd export && ..\.venv\Scripts\python -m http.server 8000 --bind 0.0.0.0"
+start "Lokalni Web Server" cmd /c "cd export && python -m http.server 8000 --bind 0.0.0.0"
 
 :: Spustíme Cloudflare tunel v tomto hlavním okně
 echo 2) Vytvarim zabezpeceny tunel pres Cloudflare...

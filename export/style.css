@@ -267,8 +267,18 @@ html, body {
 }
 
 
-/* Ensure crisp rendering for map tiles on all devices */
+/* Start triangle icon styling */
+.start-triangle-icon {
+  background: transparent;
+  border: none;
+}
+.start-triangle-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Allow smooth interpolation for map tiles when zoomed out */
 .leaflet-tile {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  /* Removed crisp-edges to fix blurry/noisy rendering on long legs */
 }

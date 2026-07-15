@@ -179,7 +179,8 @@ function initMapForReel(index) {
         maxZoom: 8, // reduced maxZoom slightly to prevent excessive overzoom
         zoomSnap: 0,
         zoomControl: false,
-        gestureHandling: false
+        gestureHandling: false,
+        maxBoundsViscosity: 1.0
     });
     
     L.control.zoom({ position: 'topleft' }).addTo(map);
@@ -256,36 +257,37 @@ function renderMapData(index, geojsonOriginal) {
         },
         style: function (feature) {
             if (feature.properties && feature.properties.type === 'variant') {
-                return { color: feature.properties.color, weight: 6, opacity: 0.8 };
+                return { color: feature.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             }
             if (feature.properties && feature.properties.type === 'spojnice') {
-                return { color: iofPurple, weight: 3, opacity: 0.8 };
+                return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             }
         },
         pointToLayer: function (feature, latlng) {
             if (feature.properties && feature.properties.type === 'end') {
-                let rEnd = 0.55;
-                let outer = L.circle(latlng, {radius: rEnd, color: iofPurple, weight: 3, fill: false, opacity: 0.9});
-                let inner = L.circle(latlng, {radius: rEnd * 0.6, color: iofPurple, weight: 3, fill: false, opacity: 0.9});
+                let outer = L.circleMarker(latlng, {radius: 12, color: iofPurple, weight: 3, fill: false, opacity: 0.9, pane: 'markerPane'});
+                let inner = L.circleMarker(latlng, {radius: 8, color: iofPurple, weight: 3, fill: false, opacity: 0.9, pane: 'markerPane'});
                 return L.featureGroup([outer, inner]);
             }
             
             if (feature.properties && feature.properties.type === 'start' && endCoords) {
-                let rStart = 0.75;
                 let dx = endCoords[0] - startCoords[0];
                 let dy = endCoords[1] - startCoords[1];
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist > 0) {
-                    let ux = dx / dist;
-                    let uy = dy / dist;
-                    let vx = -uy;
-                    let vy = ux;
-                    
-                    let p1 = [startCoords[1] + uy * rStart, startCoords[0] + ux * rStart];
-                    let p2 = [startCoords[1] - 0.5 * uy * rStart + 0.866 * vy * rStart, startCoords[0] - 0.5 * ux * rStart + 0.866 * vx * rStart];
-                    let p3 = [startCoords[1] - 0.5 * uy * rStart - 0.866 * vy * rStart, startCoords[0] - 0.5 * ux * rStart - 0.866 * vx * rStart];
-                    
-                    return L.polygon([p1, p2, p3], {color: iofPurple, weight: 3, fill: false, opacity: 0.9});
+                    let angle = Math.atan2(-dy, dx) * (180 / Math.PI);
+                    let size = 28;
+                    let html = `<svg viewBox="-14 -14 28 28" style="transform: rotate(${angle}deg); overflow: visible;">
+                                  <polygon points="12,0 -8,-10 -8,10" fill="none" stroke="${iofPurple}" stroke-width="3" stroke-linejoin="round" />
+                                </svg>`;
+                    return L.marker(latlng, {
+                        icon: L.divIcon({
+                            className: 'start-triangle-icon',
+                            html: html,
+                            iconSize: [size, size],
+                            iconAnchor: [size/2, size/2]
+                        })
+                    });
                 }
             }
             
@@ -298,23 +300,17 @@ function renderMapData(index, geojsonOriginal) {
     
     let bounds = layer.getBounds();
     if (bounds.isValid()) {
-        let southWest = bounds.getSouthWest();
-        let northEast = bounds.getNorthEast();
-        let latDiff = northEast.lat - southWest.lat;
-        let lngDiff = northEast.lng - southWest.lng;
-        
-        let newNorth = northEast.lat + latDiff * 0.30;
-        let newEast = northEast.lng + lngDiff * 0.30;
-        let newWest = southWest.lng - lngDiff * 0.30;
-        let newSouth = southWest.lat - latDiff * 0.30;
-        
-        let paddedBounds = L.latLngBounds([newSouth, newWest], [newNorth, newEast]);
-        
+        let paddedBounds = bounds.pad(0.1);
         map.setMaxBounds(paddedBounds);
         
         let minZoom = map.getBoundsZoom(paddedBounds);
+        // Zabrání úplnému zmenšení pro extra dlouhé postupy (jako 3 km)
+        let HARD_MIN_ZOOM = 3; 
+        if (minZoom < HARD_MIN_ZOOM) minZoom = HARD_MIN_ZOOM;
+        
         let maxZoom = map.getMaxZoom() || 8;
         if (minZoom > maxZoom) minZoom = maxZoom;
+        
         map.setMinZoom(minZoom);
         
         map.fitBounds(paddedBounds, {
