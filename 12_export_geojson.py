@@ -44,8 +44,8 @@ def convert_to_geojson():
         b = np.array([OOM_x - cal_c, OOM_y - cal_f])
         col, row = np.linalg.solve(A, b)
         
-        px_x = float(col) / scale
-        px_y = float(row) / scale
+        px_x = (float(col) + config.MAP_OFFSET_X) / scale
+        px_y = (float(row) + config.MAP_OFFSET_Y) / scale
         return [px_x, -px_y]
         
     files = glob.glob(os.path.join(input_dir, "*.json"))
@@ -70,8 +70,8 @@ def convert_to_geojson():
             OOM_y = start_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = float(col) / scale
-            px_y = float(row) / scale
+            px_x = (float(col) + config.MAP_OFFSET_X) / scale
+            px_y = (float(row) + config.MAP_OFFSET_Y) / scale
             start_coord = [px_x, -px_y]
         else:
             start_coord = to_lnglat(start_pt["gy"], start_pt["gx"])
@@ -95,8 +95,8 @@ def convert_to_geojson():
             OOM_y = end_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = float(col) / scale
-            px_y = float(row) / scale
+            px_x = (float(col) + config.MAP_OFFSET_X) / scale
+            px_y = (float(row) + config.MAP_OFFSET_Y) / scale
             end_coord = [px_x, -px_y]
         else:
             end_coord = to_lnglat(end_pt["gy"], end_pt["gx"])

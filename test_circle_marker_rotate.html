@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html><head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.1.4/dist/leaflet-rotate.js"></script>
+<style>
+.my-div-icon {
+    font-size: 24px;
+    font-weight: bold;
+    color: red;
+    text-align: center;
+    line-height: 40px;
+}
+</style>
+</head>
+<body><div id="map" style="width:600px; height:600px;"></div>
+<script>
+var map = L.map('map', {crs: L.CRS.Simple, rotate: true, bearing: 45}).setView([0,0], 2);
+L.tileLayer('').addTo(map);
+var circle = L.circle([0, 0], {radius: 50, color: 'blue'}).addTo(map);
+var icon = L.divIcon({html: '<div class="my-div-icon">1</div>', className: '', iconSize: [40, 40], iconAnchor: [20, 20]});
+L.marker([50, 0], {icon: icon}).addTo(map);
+</script></body></html>

@@ -51,15 +51,18 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  overflow: hidden;
 }
 
 /* Map inside each reel */
 .map-container {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: calc(100vh - 60px);
+  /* Zvětšený kontejner pro bezpečnou rotaci bez černých rohů */
+  width: 150vmax;
+  height: 150vmax;
+  /* Vycentrování vůči viditelné oblasti (100vw x (100vh - 60px)) */
+  top: calc((100vh - 60px) / 2 - 75vmax);
+  left: calc(50vw - 75vmax);
   z-index: 1;
 }
 
@@ -281,4 +284,26 @@ html, body {
 /* Allow smooth interpolation for map tiles when zoomed out */
 .leaflet-tile {
   /* Removed crisp-edges to fix blurry/noisy rendering on long legs */
+}
+
+
+/* Kalibracni Nastroj */
+#calibration-ui {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: sans-serif;
+  z-index: 10000;
+  text-align: center;
+  pointer-events: none;
+}
+#calibration-ui span {
+  color: #b300ff;
+  font-weight: bold;
 }

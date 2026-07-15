@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.1.4/dist/leaflet-rotate.js"></script>
+</head>
+<body><div id="map" style="width:600px; height:600px;"></div>
+<script>
+var map = L.map('map', {crs: L.CRS.Simple, rotate: true, bearing: 45}).setView([0,0], 2);
+L.tileLayer('').addTo(map);
+var svgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svgCircle.setAttribute('viewBox', '0 0 100 100');
+svgCircle.innerHTML = '<circle cx="50" cy="50" r="50" fill="red"/>';
+L.svgOverlay(svgCircle, [[-10,-10], [10,10]]).addTo(map);
+</script></body></html>

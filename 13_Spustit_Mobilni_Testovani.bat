@@ -6,8 +6,8 @@ echo ==========================================================
 echo.
 
 :: Spustíme lokální server ve vlastním novém okně
-echo 1) Spoustim lokalni webovy server...
-start "Lokalni Web Server" cmd /c "cd export && python -m http.server 8000 --bind 0.0.0.0"
+echo 1) Spoustim lokalni webovy server (vicevlaknovy pro rychlejsi nacitani dlazdic)...
+start "Lokalni Web Server" cmd /c "cd export && python -c ""import http.server; http.server.test(HandlerClass=http.server.SimpleHTTPRequestHandler, ServerClass=http.server.ThreadingHTTPServer, port=8000, bind='0.0.0.0')"""
 
 :: Spustíme Cloudflare tunel v tomto hlavním okně
 echo 2) Vytvarim zabezpeceny tunel pres Cloudflare...

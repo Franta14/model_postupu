@@ -10,11 +10,22 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
     <!-- Custom PWA Styles -->
-    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="style.css?v=20"/>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
         window.onerror = function(message, source, lineno, colno, error) {
             alert("JS Error: " + message + " at " + lineno + ":" + colno);
             return true;
@@ -26,6 +37,12 @@
 </head>
 <body>
     <div id="loader">Načítám postupy...</div>
+    
+    <div id="calibration-ui">
+        KALIBRAČNÍ MÓD ZAPNUT<br>
+        Šipkami posouvej trasu.<br>
+        X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
+    </div>
     
     <!-- Foreground scroll-snapping reels -->
     <div id="reels-container">
@@ -42,6 +59,6 @@
     </div>
     
     <!-- Custom Logic -->
-    <script src="app.js"></script>
+    <script src="app.js?v=20"></script>
 </body>
 </html>

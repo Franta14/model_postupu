@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script></head>
+<body><div id="map" style="width:600px; height:600px;"></div>
+<script>
+var map = L.map('map').setView([0,0], 2);
+L.tileLayer('').addTo(map);
+var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svg.innerHTML = '<circle cx="50" cy="50" r="50" fill="red"/>';
+var overlay = L.svgOverlay(svg, [[-10,-10], [10,10]], {pane: 'markerPane'}).addTo(map);
+console.log(overlay.getPane() === map.getPane('markerPane'));
+</script></body></html>

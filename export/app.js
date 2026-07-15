@@ -2,10 +2,41 @@ let postupyData = [];
 let geojsonCache = {};
 let mapInstances = {}; // stores { index: L.map }
 let currentLayers = {}; // stores { index: L.geoJSON }
+let currentOverlays = {}; // stores { index: L.featureGroup }
 
 const iofPurple = "#D81E5B";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Monkey-patch pro správné posouvání mapy při CSS rotaci
+    let originalUpdatePosition = L.Draggable.prototype._updatePosition;
+    L.Draggable.prototype._updatePosition = function () {
+        if (this._element && this._element.classList && this._element.classList.contains('leaflet-map-pane')) {
+            let mapDiv = this._element.closest('.map-container');
+            if (mapDiv && mapDiv.style.transform) {
+                let match = mapDiv.style.transform.match(/rotate\(([\-\d\.]+)deg\)/);
+                if (match) {
+                    let theta = parseFloat(match[1]) * Math.PI / 180;
+                    let cos = Math.cos(-theta);
+                    let sin = Math.sin(-theta);
+                    
+                    let dx_screen = this._newPos.x - this._startPos.x;
+                    let dy_screen = this._newPos.y - this._startPos.y;
+                    
+                    let dx_local = dx_screen * cos - dy_screen * sin;
+                    let dy_local = dx_screen * sin + dy_screen * cos;
+                    
+                    this._newPos = new L.Point(
+                        this._startPos.x + dx_local,
+                        this._startPos.y + dy_local
+                    );
+                }
+            }
+        }
+        originalUpdatePosition.call(this);
+    };
+
+    // panBy patch was removed because it caused internal coordinate desync during setView
+
     loadData();
 });
 
@@ -51,18 +82,21 @@ function buildReels() {
     });
 }
 
+let scrollTimeout = null;
 function setupObserver() {
-    const options = {
-        root: document.getElementById('reels-container'),
+    let options = {
+        root: document.getElementById('app'),
         rootMargin: '0px',
         threshold: 0.5
     };
-    
-    const observer = new IntersectionObserver((entries) => {
+    let observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const index = entry.target.dataset.index;
-                activateReel(index);
+                if (scrollTimeout) clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    activateReel(index);
+                }, 250);
             }
         });
     }, options);
@@ -152,25 +186,53 @@ function activateReel(indexStr) {
         activeIndex = index;
     }
     
-    if (!mapInstances[index]) {
-        initMapForReel(index);
+    preloadReel(index);
+    
+    // Předvykreslení následujícího a předchozího postupu na pozadí,
+    // čímž dosáhneme naprosto plynulého scrollování bez zpoždění.
+    setTimeout(() => {
+        preloadReel(index + 1);
+        preloadReel(index - 1);
+    }, 200);
+}
+
+function preloadReel(i) {
+    if (i < 0 || i >= postupyData.length) return;
+    
+    if (!mapInstances[i]) {
+        initMapForReel(i);
     }
     
-    const postup = postupyData[index];
+    const postup = postupyData[i];
     if (geojsonCache[postup.file]) {
-        renderMapData(index, geojsonCache[postup.file]);
+        if (!currentLayers[i]) {
+            renderMapData(i, geojsonCache[postup.file]);
+        }
     } else {
         fetch('postupy/' + postup.file + '?v=' + Date.now())
             .then(res => res.json())
             .then(geojson => {
                 geojsonCache[postup.file] = geojson;
-                renderMapData(index, geojson);
+                if (!currentLayers[i]) {
+                    renderMapData(i, geojson);
+                }
             })
-            .catch(err => {
-                console.error("GeoJSON load error:", err);
-            });
+            .catch(err => console.error("GeoJSON load error:", err));
     }
 }
+
+// Hack to force Leaflet to always pick the higher integer zoom level for tiles
+// This ensures downscaling (sharper) instead of upscaling (blurry) during fractional zoom.
+const originalSetView = L.GridLayer.prototype._setView;
+L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
+    let oldRound = Math.round;
+    Math.round = Math.ceil;
+    try {
+        originalSetView.call(this, center, zoom, noPrune, noUpdate);
+    } finally {
+        Math.round = oldRound;
+    }
+};
 
 function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
@@ -180,7 +242,8 @@ function initMapForReel(index) {
         zoomSnap: 0,
         zoomControl: false,
         gestureHandling: false,
-        maxBoundsViscosity: 1.0
+        maxBoundsViscosity: 1.0,
+        inertia: false
     });
     
     L.control.zoom({ position: 'topleft' }).addTo(map);
@@ -193,12 +256,12 @@ function initMapForReel(index) {
         noWrap: true,
         tms: false,
         bounds: bounds,
-        keepBuffer: 8,
+        keepBuffer: 1,
         updateWhenZooming: false,
         detectRetina: true
     }).addTo(map);
     
-    map.fitBounds(bounds);
+    map.on('zoomend', updateCalibrationShift);
     mapInstances[index] = map;
 }
 
@@ -210,8 +273,13 @@ function renderMapData(index, geojsonOriginal) {
     if (currentLayers[index]) {
         map.removeLayer(currentLayers[index]);
     }
+    if (currentOverlays[index]) {
+        map.removeLayer(currentOverlays[index]);
+    }
     
     let geojson = JSON.parse(JSON.stringify(geojsonOriginal));
+    let overlays = L.featureGroup().addTo(map);
+    currentOverlays[index] = overlays;
     
     let startCoords = null;
     let endCoords = null;
@@ -221,38 +289,14 @@ function renderMapData(index, geojsonOriginal) {
         if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
     });
     
-    if (startCoords && endCoords) {
-        let dx = endCoords[0] - startCoords[0];
-        let dy = endCoords[1] - startCoords[1];
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist > 0) {
-            let ux = dx / dist;
-            let uy = dy / dist;
-            
-            let rStart = 0.75; 
-            let rEnd = 0.55;   
-            
-            let lineStart = [startCoords[0] + ux * rStart * 1.5, startCoords[1] + uy * rStart * 1.5];
-            let lineEnd = [endCoords[0] - ux * rEnd * 1.2, endCoords[1] - uy * rEnd * 1.2];
-            
-            geojson.features.push({
-                "type": "Feature",
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": [lineStart, lineEnd]
-                },
-                "properties": {"type": "spojnice"}
-            });
-        }
-    }
+    
     
     let showVariants = showVariantsForIndex[index] || false;
 
     let layer = L.geoJSON(geojson, {
         filter: function(feature) {
-            if (feature.properties && feature.properties.type === 'variant' && !showVariants) {
-                return false;
-            }
+            if (feature.properties && feature.properties.type === 'variant' && !showVariants) return false;
+            if (feature.properties && ['start', 'end', 'spojnice'].includes(feature.properties.type)) return false;
             return true;
         },
         style: function (feature) {
@@ -263,62 +307,129 @@ function renderMapData(index, geojsonOriginal) {
                 return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             }
         },
-        pointToLayer: function (feature, latlng) {
-            if (feature.properties && feature.properties.type === 'end') {
-                let outer = L.circleMarker(latlng, {radius: 12, color: iofPurple, weight: 3, fill: false, opacity: 0.9, pane: 'markerPane'});
-                let inner = L.circleMarker(latlng, {radius: 8, color: iofPurple, weight: 3, fill: false, opacity: 0.9, pane: 'markerPane'});
-                return L.featureGroup([outer, inner]);
-            }
-            
-            if (feature.properties && feature.properties.type === 'start' && endCoords) {
-                let dx = endCoords[0] - startCoords[0];
-                let dy = endCoords[1] - startCoords[1];
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist > 0) {
-                    let angle = Math.atan2(-dy, dx) * (180 / Math.PI);
-                    let size = 28;
-                    let html = `<svg viewBox="-14 -14 28 28" style="transform: rotate(${angle}deg); overflow: visible;">
-                                  <polygon points="12,0 -8,-10 -8,10" fill="none" stroke="${iofPurple}" stroke-width="3" stroke-linejoin="round" />
-                                </svg>`;
-                    return L.marker(latlng, {
-                        icon: L.divIcon({
-                            className: 'start-triangle-icon',
-                            html: html,
-                            iconSize: [size, size],
-                            iconAnchor: [size/2, size/2]
-                        })
-                    });
-                }
-            }
-            
-            return L.circleMarker(latlng, {radius: 5, color: "red"});
-        }
     });
+    
+    if (startCoords && endCoords) {
+        let dx = endCoords[0] - startCoords[0];
+        let dy = endCoords[1] - startCoords[1];
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > 0) {
+            let R = 0.55; 
+            let gap = 0.05;
+            let ux = dx / dist;
+            let uy = dy / dist;
+            let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
+            document.getElementById(`map-${index}`).style.transform = `rotate(${targetBearing}deg)`;
+            let lineWeight = Math.max(2.5, Math.min(3.5, 2.5 + dist / 100));
+            let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
+            let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
+            if (dist > R*2 + gap*2) {
+                let polyline = L.polyline([
+                    [lineStart[1], lineStart[0]],
+                    [lineEnd[1], lineEnd[0]]
+                ], {color: iofPurple, weight: lineWeight, pane: 'markerPane', interactive: false});
+                layer.addLayer(polyline);
+            }
+            [startCoords, endCoords].forEach((coords, idx) => {
+                let num = idx === 0 ? "1" : "2";
+                let strokeW = Math.max(8, Math.min(12, 8 + dist/50));
+                // 1. Circle Overlay
+                let svgCircle = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svgCircle.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                svgCircle.setAttribute('viewBox', "0 0 100 100");
+                svgCircle.innerHTML = `<circle cx="50" cy="50" r="${50 - strokeW/2}" fill="none" stroke="${iofPurple}" stroke-width="${strokeW}" />`;
+                let boundsCircle = [[coords[1] - R, coords[0] - R], [coords[1] + R, coords[0] + R]];
+                overlays.addLayer(L.svgOverlay(svgCircle, boundsCircle, {interactive: false, pane: 'markerPane'}));
+                
+                // 2. Text Overlay (Offset)
+                let nx = -uy, ny = ux;
+                let textDist = R + 0.40;
+                let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
+                
+                let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                svgText.setAttribute('viewBox', "0 0 100 100");
+                svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
+                let halfSizeText = 0.45;
+                let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
+                overlays.addLayer(L.svgOverlay(svgText, boundsText, {interactive: false, pane: 'markerPane'}));
+            });
+        }
+    }
     
     layer.addTo(map);
     currentLayers[index] = layer;
     
     let bounds = layer.getBounds();
-    if (bounds.isValid()) {
-        let paddedBounds = bounds.pad(0.1);
-        map.setMaxBounds(paddedBounds);
+    if (bounds.isValid() && startCoords && endCoords) {
+        let w = window.innerWidth;
+        let h = window.innerHeight - 60; // visible height
         
-        let minZoom = map.getBoundsZoom(paddedBounds);
-        // Zabrání úplnému zmenšení pro extra dlouhé postupy (jako 3 km)
-        let HARD_MIN_ZOOM = 3; 
-        if (minZoom < HARD_MIN_ZOOM) minZoom = HARD_MIN_ZOOM;
+        let dx = endCoords[0] - startCoords[0];
+        let dy = endCoords[1] - startCoords[1];
+        let dist = Math.sqrt(dx*dx + dy*dy);
         
+        // Cílová délka postupu na obrazovce v pixelech (např. 90% výšky displeje)
+        let targetPixelsY = h * 0.90;
+        let idealZoom = 0;
+        if (dist > 0) {
+            idealZoom = Math.log2(targetPixelsY / dist);
+        }
+        
+        let HARD_MIN_ZOOM = 2; 
         let maxZoom = map.getMaxZoom() || 8;
-        if (minZoom > maxZoom) minZoom = maxZoom;
+        idealZoom = Math.max(HARD_MIN_ZOOM, Math.min(maxZoom, idealZoom));
         
-        map.setMinZoom(minZoom);
+        let midX = (startCoords[0] + endCoords[0]) / 2;
+        let midY = (startCoords[1] + endCoords[1]) / 2;
         
-        map.fitBounds(paddedBounds, {
-            animate: true,
-            duration: 0.5
-        });
+        map.setMinZoom(idealZoom);
+        
+        setTimeout(() => {
+            map.invalidateSize();
+            map.setView([midY, midX], idealZoom, {
+                animate: false
+            });
+        }, 50);
     }
     } catch (e) {
         alert("renderMapData Error at index " + index + ": " + e.message + "\nStack: " + e.stack);
     }
+}
+
+let calibMode = false;
+let calibX = 400;
+let calibY = -300;
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'k') {
+        calibMode = !calibMode;
+        let ui = document.getElementById('calibration-ui');
+        if(ui) ui.style.display = calibMode ? 'block' : 'none';
+        if (calibMode) updateCalibrationShift();
+        return;
+    }
+    if (!calibMode) return;
+    if (e.key === 'ArrowLeft') calibX -= 1;
+    else if (e.key === 'ArrowRight') calibX += 1;
+    else if (e.key === 'ArrowUp') calibY -= 1;
+    else if (e.key === 'ArrowDown') calibY += 1;
+    else return;
+    e.preventDefault();
+    let xspan = document.getElementById('calib-x');
+    let yspan = document.getElementById('calib-y');
+    if (xspan) xspan.innerText = calibX;
+    if (yspan) yspan.innerText = calibY;
+    updateCalibrationShift();
+});
+
+function updateCalibrationShift() {
+    if (typeof activeIndex === 'undefined') return;
+    let map = mapInstances[activeIndex];
+    if (!map) return;
+    let pane = map.getPane('markerPane');
+    let shiftXConfig = calibX - 400;
+    let shiftYConfig = calibY - (-300);
+    let scale = Math.pow(2, map.getZoom()) / 64;
+    pane.style.marginLeft = (shiftXConfig * scale) + 'px';
+    pane.style.marginTop = (shiftYConfig * scale) + 'px';
 }

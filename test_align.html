@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>#map {width: 1000px; height: 1000px;}</style>
+</head>
+<body><div id="map"></div>
+<script>
+var map = L.map('map', {crs: L.CRS.Simple}).setView([0,0], 2);
+var R = 5.55;
+var coords = [10, -10];
+var polyline = L.polyline([[coords[1], coords[0]], [-20, 20]], {color: 'blue'}).addTo(map);
+
+var svgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+svgCircle.setAttribute('viewBox', '0 0 100 100');
+svgCircle.innerHTML = '<circle cx="50" cy="50" r="50" fill="red"/>';
+var boundsCircle = [[coords[1] - R, coords[0] - R], [coords[1] + R, coords[0] + R]];
+L.svgOverlay(svgCircle, boundsCircle).addTo(map);
+
+map.fitBounds([[-30, 0], [0, 30]]);
+</script></body></html>

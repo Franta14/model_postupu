@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body><div id="map" style="width:600px;height:600px"></div>
+<script>
+const originalSetView = L.GridLayer.prototype._setView;
+L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
+    var oldRound = Math.round;
+    Math.round = Math.ceil;
+    try {
+        originalSetView.call(this, center, zoom, noPrune, noUpdate);
+    } finally {
+        Math.round = oldRound;
+    }
+};
+
+var map = L.map('map', {crs: L.CRS.Simple, zoomSnap: 0}).setView([0,0], 2.4);
+var layer = L.tileLayer('').addTo(map);
+console.log(layer._tileZoom); // Should be 3, not 2!
+</script></body></html>
