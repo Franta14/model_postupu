@@ -675,10 +675,6 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Special behavior pro tlačítko "Scrolluj"
             if (targetId === 'screen-scroll') {
-                if (appState.selectedTerrains.length === 0) {
-                    appState.selectedTerrains = ['*'];
-                    document.querySelector('.terrain-card.random-mix').classList.add('selected');
-                }
                 // Tady by v budoucnu bylo filtrování postupyData podle vybraných terénů a zavolání buildReels()
             }
 
@@ -697,61 +693,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 2. Tlačítko na Explore obrazovce
-    const btnExploreScroll = document.getElementById('btn-explore-scroll');
-    if (btnExploreScroll) {
-        btnExploreScroll.addEventListener('click', () => {
-            const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
-            if (scrollNavBtn) scrollNavBtn.click();
-        });
+    // 2. Tlačítko na Explore obrazovce (odstraněno ve v3 IG redesignu)
+    // const btnExploreScroll = document.getElementById('btn-explore-scroll');
+
+    // 3. Logika karet terénů (IG Grid)
+    const igSquares = document.querySelectorAll('.ig-square');
+    const navBadge = document.getElementById('nav-badge');
+
+    function updateBadge() {
+        const selectedCount = document.querySelectorAll('.ig-square.selected').length;
+        if (selectedCount > 0) {
+            navBadge.innerText = selectedCount;
+            navBadge.style.display = 'flex';
+        } else {
+            navBadge.style.display = 'none';
+        }
+        
+        // Aktualizace stavu aplikace
+        if (selectedCount === 0) {
+            appState.selectedTerrains = ['*'];
+        } else {
+            appState.selectedTerrains = Array.from(document.querySelectorAll('.ig-square.selected'))
+                .map(sq => sq.getAttribute('data-terrain'));
+        }
     }
 
-    // 3. Logika karet terénů
-    const terrainCards = document.querySelectorAll('.terrain-card');
-    terrainCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const terrain = card.getAttribute('data-terrain');
-            const isRandom = terrain === '*';
-
-            if (isRandom) {
-                // Vybrán random mix -> zrušit ostatní
-                terrainCards.forEach(c => {
-                    c.classList.remove('selected');
-                    c.querySelector('.checkmark').innerText = '☐';
-                });
-                card.classList.add('selected');
-                card.querySelector('.checkmark').innerText = '✅';
-                appState.selectedTerrains = ['*'];
-            } else {
-                // Vybrán konkrétní terén -> zrušit random mix
-                const randomCard = document.querySelector('.terrain-card.random-mix');
-                if (randomCard) {
-                    randomCard.classList.remove('selected');
-                    randomCard.querySelector('.checkmark').innerText = '☐';
-                }
-
-                // Toggle aktuální karty
-                card.classList.toggle('selected');
-                const check = card.querySelector('.checkmark');
-                if (card.classList.contains('selected')) {
-                    check.innerText = '✅';
-                } else {
-                    check.innerText = '☐';
-                }
-
-                // Přepočítat stav
-                appState.selectedTerrains = Array.from(document.querySelectorAll('.terrain-card.selected:not(.random-mix)'))
-                    .map(c => c.getAttribute('data-terrain'));
-                
-                // Pokud uživatel vše odznačí, automaticky vybrat random
-                if (appState.selectedTerrains.length === 0) {
-                    appState.selectedTerrains = ['*'];
-                    if (randomCard) {
-                        randomCard.classList.add('selected');
-                        randomCard.querySelector('.checkmark').innerText = '✅';
-                    }
-                }
-            }
+    igSquares.forEach(square => {
+        square.addEventListener('click', () => {
+            square.classList.toggle('selected');
+            updateBadge();
         });
     });
+    
+    // Inicializace badge
+    updateBadge();
 });

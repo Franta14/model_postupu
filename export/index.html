@@ -45,46 +45,66 @@
                 <h2>Objevuj terény</h2>
                 <input type="text" placeholder="🔍 Hledat terén..." class="explore-search">
             </div>
-            <div class="explore-grid">
-                <!-- Speciální karta pro náhodný výběr ze všech -->
-                <div class="terrain-card random-mix selected" data-terrain="*">
-                    <div class="card-bg"></div>
-                    <div class="card-content">
-                        <span class="icon">🎲</span>
-                        <div class="card-info">
-                            <h3>Náhodný mix</h3>
-                            <p>Všechny terény</p>
-                        </div>
-                        <span class="checkmark">✅</span>
+            <div class="ig-grid">
+                <!-- IG Style Karta 1 -->
+                <div class="ig-square" data-terrain="cesky-les">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Jizersk%C3%A9_hory_%284%29.jpg/800px-Jizersk%C3%A9_hory_%284%29.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇨🇿 Český les</span>
                     </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
                 </div>
                 
-                <!-- Demo karta 1 -->
-                <div class="terrain-card" data-terrain="cesky-les">
-                    <div class="card-bg" style="background: linear-gradient(135deg, #2b5a2b, #1e3f1e);"></div>
-                    <div class="card-content">
-                        <div class="card-info">
-                            <h3>Český les</h3>
-                            <p>Ukázkový terén</p>
-                        </div>
-                        <span class="checkmark">☐</span>
+                <!-- IG Style Karta 2 -->
+                <div class="ig-square" data-terrain="skandinavie">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Forest_in_Sweden.jpg/800px-Forest_in_Sweden.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇸🇪 Skandinávie</span>
                     </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
                 </div>
                 
-                <!-- Demo karta 2 -->
-                <div class="terrain-card" data-terrain="skandinavie">
-                    <div class="card-bg" style="background: linear-gradient(135deg, #3a5c76, #243c4f);"></div>
-                    <div class="card-content">
-                        <div class="card-info">
-                            <h3>Skandinávie</h3>
-                            <p>Ukázkový terén</p>
-                        </div>
-                        <span class="checkmark">☐</span>
+                <!-- IG Style Karta 3 -->
+                <div class="ig-square" data-terrain="madarsko">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/B%C3%BCkk_National_Park.jpg/800px-B%C3%BCkk_National_Park.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇭🇺 Maďarsko</span>
                     </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
                 </div>
-            </div>
-            <div class="explore-actions">
-                <button id="btn-explore-scroll" class="btn-primary">▶️ SCROLLOVAT</button>
+                
+                <!-- IG Style Karta 4 -->
+                <div class="ig-square" data-terrain="piskovce">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Pravcicka_brana.jpg/800px-Pravcicka_brana.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🧗 Pískovce</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 5 -->
+                <div class="ig-square" data-terrain="alpy">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Matterhorn_from_Domh%C3%BCtte_-_2.jpg/800px-Matterhorn_from_Domh%C3%BCtte_-_2.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇨🇭 Alpy</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 6 -->
+                <div class="ig-square" data-terrain="mesto">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Prague_Old_Town_Square.jpg/800px-Prague_Old_Town_Square.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🏙️ Městský sprint</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
             </div>
         </div>
 
@@ -179,7 +199,10 @@
             <span class="nav-label">Objevuj</span>
         </button>
         <button class="nav-btn" data-target="screen-scroll">
-            <span class="nav-icon">▶️</span>
+            <div style="position: relative;">
+                <span class="nav-icon">▶️</span>
+                <span id="nav-badge" class="nav-badge">0</span>
+            </div>
             <span class="nav-label">Scrolluj</span>
         </button>
         <button class="nav-btn" data-target="screen-profile">

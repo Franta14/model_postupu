@@ -555,94 +555,120 @@ html, body {
   border-color: var(--accent);
 }
 
-.explore-grid {
-  padding: 0 20px 80px 20px; /* bottom padding for the button */
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 0 80px 0; /* bottom padding for nav */
+  background: var(--bg-color);
 }
 
-.terrain-card {
+.ig-square {
   position: relative;
-  border-radius: 16px;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  min-height: 100px;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s;
   background: #2a2a2a;
 }
-.terrain-card.selected {
-  border-color: var(--accent);
-  transform: scale(0.98);
-}
-.card-bg {
+
+.ig-bg {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  opacity: 0.7;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 10s linear;
+  animation: kenBurns 20s infinite alternate ease-in-out;
+}
+
+/* Subtle pan and zoom for professional feel */
+@keyframes kenBurns {
+  0% { transform: scale(1.0) translate(0, 0); }
+  100% { transform: scale(1.12) translate(-2%, 2%); }
+}
+
+.ig-overlay {
+  position: absolute;
+  bottom: 0; left: 0; width: 100%; height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
   z-index: 1;
-}
-.terrain-card.random-mix .card-bg {
-  background: linear-gradient(135deg, #8E2DE2, #4A00E0);
-  background-size: 200% 200%;
-  animation: gradientShift 5s ease infinite;
-}
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  pointer-events: none;
 }
 
-.card-content {
-  position: relative;
+.ig-info {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
   z-index: 2;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  height: 100%;
-  background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
-}
-.card-content .icon {
-  font-size: 2rem;
-  margin-right: 15px;
-}
-.card-info h3 {
-  font-size: 1.2rem;
-  margin-bottom: 4px;
-}
-.card-info p {
-  font-size: 0.8rem;
-  color: #ccc;
-}
-.checkmark {
-  margin-left: auto;
-  font-size: 1.2rem;
-}
-.terrain-card:not(.selected) .checkmark {
-  opacity: 0.5;
-  filter: grayscale(1);
+  pointer-events: none;
+  max-width: 90%;
 }
 
-.explore-actions {
-  position: fixed;
-  bottom: 80px;
-  left: 0;
-  width: 100%;
-  padding: 0 20px;
-  display: flex;
-  justify-content: center;
-  z-index: 10;
+.ig-country {
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
-#btn-explore-scroll {
-  width: 100%;
-  padding: 16px;
-  font-size: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(216, 30, 91, 0.5);
+
+/* Instagram-style checkmark circle */
+.ig-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.3);
+  z-index: 3;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  opacity: 0.8;
+  transition: all 0.2s;
+}
+
+.ig-square.selected .ig-check {
+  background: #0095f6; /* IG blue color, or var(--accent) */
+  border-color: #0095f6;
+  opacity: 1;
+}
+
+.ig-square.selected .ig-check::after {
+  content: '';
+  width: 3px;
+  height: 7px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.ig-square.selected .ig-bg {
+  filter: brightness(0.7);
+}
+
+/* Notification Badge on Bottom Nav */
+.nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  background-color: var(--accent);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid rgba(20, 20, 20, 0.95);
+  z-index: 10;
 }
 
 /* Generic Screen Header */
