@@ -78,7 +78,9 @@ function buildReels() {
                     <button class="btn-primary" onclick="toggleVariants(${index})">Volby</button>
                 </div>
             </div>
-            <div class="scroll-area">↑ Další postup ↓</div>
+            <div class="scroll-area">
+                <div class="scroll-btn">↓ Další postup ↓</div>
+            </div>
         `;
         
         container.appendChild(reel);
@@ -350,7 +352,6 @@ function renderMapData(index, geojsonOriginal) {
             maxNativeZoom: 5,
             noWrap: true,
             tms: false,
-            bounds: tileBounds,
             keepBuffer: 4,
             updateWhenIdle: false,
             updateWhenZooming: true,
@@ -472,76 +473,6 @@ function renderMapData(index, geojsonOriginal) {
         
         map.setMinZoom(idealZoom);
         
-        // === VÝPOČET CHYTRÉ MASKY ===
-        let ux = dx / dist;
-        let uy = dy / dist;
-        let vx = -uy; // kolmice
-        let vy = ux;
-        let maxAbsX = 0;
-        
-        // Zjistit, jak daleko od osy jsou varianty
-        allLngs.forEach((lng, idx) => {
-            let px = lng - midX;
-            let py = allLats[idx] - midY;
-            let localX = px * vx + py * vy;
-            if (Math.abs(localX) > maxAbsX) {
-                maxAbsX = Math.abs(localX);
-            }
-        });
-        
-        let pixelScale = Math.pow(2, idealZoom); // Převod z mapových jednotek na pixely displeje na úvodním zoomu
-        
-        // Polovina šířky/výšky displeje v mapových jednotkách
-        let screenHalfW = (w / 2) / pixelScale;
-        let screenHalfH = (h / 2) / pixelScale;
-        
-        // Rozměry postupu včetně rezervy (60px šířka, 80px výška na displeji)
-        let routeHalfW = maxAbsX + (60 / pixelScale);
-        let routeHalfH = (dist / 2) + (80 / pixelScale);
-        
-        // Díra musí pokrýt displej, ale i celou trasu s rezervou
-        let holeHalfW = Math.max(screenHalfW, routeHalfW);
-        let holeHalfH = Math.max(screenHalfH, routeHalfH);
-        
-        // 4 rohy vnitřní díry (v mapových souřadnicích)
-        let p1x = midX + ux * holeHalfH + vx * holeHalfW;
-        let p1y = midY + uy * holeHalfH + vy * holeHalfW;
-        
-        let p2x = midX + ux * holeHalfH - vx * holeHalfW;
-        let p2y = midY + uy * holeHalfH - vy * holeHalfW;
-        
-        let p3x = midX - ux * holeHalfH - vx * holeHalfW;
-        let p3y = midY - uy * holeHalfH - vy * holeHalfW;
-        
-        let p4x = midX - ux * holeHalfH + vx * holeHalfW;
-        let p4y = midY - uy * holeHalfH + vy * holeHalfW;
-        
-        // Ring pro Leaflet Polygon (formát [Lat, Lng] tedy [Y, X])
-        let innerRing = [
-            [p1y, p1x],
-            [p2y, p2x],
-            [p3y, p3x],
-            [p4y, p4x]
-        ];
-        
-        // Obrovský čtverec tvořící vnější hranu masky (pokryje celou mapu)
-        let outerRing = [
-            [-50000, -50000],
-            [-50000, 50000],
-            [50000, 50000],
-            [50000, -50000]
-        ];
-        
-        // Vykreslení masky (polygon s dírou)
-        let mask = L.polygon([outerRing, innerRing], {
-            color: 'transparent',
-            fillColor: '#2a2a2a',
-            fillOpacity: 1.0,
-            interactive: false,
-            pane: 'maskPane'
-        });
-        overlays.addLayer(mask);
-        // === KONEC VÝPOČTU MASKY ===
         
         setTimeout(() => {
             map.invalidateSize();
