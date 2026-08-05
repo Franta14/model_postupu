@@ -308,6 +308,57 @@ html, body {
   color: #aaa;
 }
 
+.settings-group h3 {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: #D81E5B;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   LIGHT THEME
+   ========================================= */
+body.light-theme {
+  background-color: #f0f0f0;
+  color: #222;
+}
+body.light-theme #bottom-nav {
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid #ddd;
+}
+body.light-theme .nav-btn {
+  color: #666;
+}
+body.light-theme .nav-btn.active {
+  color: #D81E5B;
+}
+body.light-theme .screen-header,
+body.light-theme .settings-group,
+body.light-theme .screen-content {
+  background-color: #fff;
+  border-color: #eee;
+}
+body.light-theme .setting-item {
+  border-bottom: 1px solid #eee;
+}
+body.light-theme select {
+  background-color: #fff;
+  color: #222;
+  border: 1px solid #ccc;
+}
+body.light-theme .map-clip,
+body.light-theme .map-container {
+  background-color: #f0f0f0;
+}
+body.light-theme .reel-ui {
+  background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.5) 60%, rgba(255,255,255,0) 100%);
+  color: #222;
+}
+body.light-theme .reel-subtitle {
+  color: #555;
+}
+
 .toggle-btn {
   background: rgba(255,255,255,0.15);
   border: none;

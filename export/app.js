@@ -38,6 +38,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // panBy patch was removed because it caused internal coordinate desync during setView
 
+    const themeSelect = document.getElementById('theme-select');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'Světlý') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        });
+    }
+
     loadData();
 });
 
@@ -343,7 +354,7 @@ function renderMapData(index, geojsonOriginal) {
         let dy = endCoords[1] - startCoords[1];
         let dist = Math.sqrt(dx*dx + dy*dy);
         
-        let targetPixelsY = (h - 60) * 0.90;
+        let targetPixelsY = (h - 150) * 0.75; // Větší rezerva nahoře a dole (aby kontroly nezajely za okraj)
         let idealZoom = dist > 0 ? Math.log2(targetPixelsY / dist) : 0;
         let maxZoom = map.getMaxZoom() || 8;
         idealZoom = Math.max(0, Math.min(maxZoom, idealZoom));
