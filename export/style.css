@@ -15,13 +15,14 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: 'Inter', sans-serif;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 /* Foreground reels container (Scroll snapping) */
@@ -37,6 +38,7 @@ html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 #reels-container::-webkit-scrollbar {
   display: none;
 }
@@ -60,7 +62,8 @@ html, body {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%; /* Mapa vizuálně až dolů pod lištu */
+  height: 100%;
+  /* Mapa vizuálně až dolů pod lištu */
   overflow: hidden;
   z-index: 1;
   background-color: #2a2a2a;
@@ -72,9 +75,9 @@ html, body {
   /* Zvětšený kontejner pro bezpečnou rotaci bez černých rohů */
   width: 150vmax;
   height: 150vmax;
-  /* Vycentrování uvnitř map-clip: střed posunut nahoru, aby postup nekolidoval se spodkem */
+  /* Vycentrování uvnitř map-clip: střed posunut tak, aby byl v polovině viditelného prostoru nad lištou */
   left: 50%;
-  top: calc(50% - 60px); 
+  top: calc(50% - 30px);
   margin-left: -75vmax;
   margin-top: -75vmax;
   background-color: #2a2a2a;
@@ -83,16 +86,19 @@ html, body {
 /* Dedicated area for scrolling between reels */
 .scroll-area {
   position: absolute;
-  bottom: 60px; /* Posunuto nad spodní navigační lištu */
+  bottom: 60px;
+  /* Posunuto nad spodní navigační lištu */
   left: 0;
   width: 100vw;
-  height: 90px; /* Zóna pro swipe */
+  height: 90px;
+  /* Zóna pro swipe */
   background: transparent;
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
   z-index: 3;
-  pointer-events: auto; /* Záchyt swipe gest */
+  pointer-events: auto;
+  /* Záchyt swipe gest */
   border-top: none;
 }
 
@@ -106,8 +112,8 @@ html, body {
   bottom: 60px; /* Úplně dole u navigační lišty */
   left: 0;
   width: 100%;
-  padding: 15px 12px 14px; /* Větší padding nahoře pro delší gradient */
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%);
+  padding: 10px 15px 15px; 
+  background: none; /* Zrušen přechod/stín dole */
   display: flex;
   flex-direction: column;
   z-index: 5;
@@ -144,15 +150,20 @@ html, body {
   -webkit-backdrop-filter: blur(5px);
   transition: all 0.2s;
 }
+
 .sync-btn:active {
   transform: scale(0.95);
   background: rgba(255, 255, 255, 0.2);
 }
 
 .sync-progress-overlay {
-  display: none; /* hidden by default */
+  display: none;
+  /* hidden by default */
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   z-index: 3000;
   justify-content: center;
@@ -160,6 +171,7 @@ html, body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
 .sync-progress-overlay.active {
   display: flex;
 }
@@ -172,12 +184,14 @@ html, body {
   text-align: center;
   width: 80%;
   max-width: 300px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
 .sync-box h4 {
   margin: 0 0 15px 0;
   font-size: 1rem;
 }
+
 .progress-bar {
   width: 100%;
   height: 10px;
@@ -186,12 +200,14 @@ html, body {
   overflow: hidden;
   margin-bottom: 10px;
 }
+
 .progress-fill {
   width: 0%;
   height: 100%;
   background: var(--iof-purple);
   transition: width 0.1s linear;
 }
+
 #sync-text {
   font-size: 0.8rem;
   color: #aaa;
@@ -207,7 +223,7 @@ html, body {
   font-size: 0.85rem;
   font-weight: 600;
   color: #eee;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 /* Primary Action Button */
@@ -241,12 +257,12 @@ html, body {
   max-width: 45vw;
   max-height: 40vh;
   overflow-y: auto;
-  
+
   position: fixed;
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   pointer-events: auto;
   z-index: 100;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
 }
 
 .variants-panel.pos-top-right {
@@ -256,6 +272,7 @@ html, body {
   bottom: auto;
   transform: translateX(120%);
 }
+
 .variants-panel.pos-top-right.active {
   transform: translateX(0);
 }
@@ -267,6 +284,7 @@ html, body {
   bottom: auto;
   transform: translateX(-120%);
 }
+
 .variants-panel.pos-top-left.active {
   transform: translateX(0);
 }
@@ -278,6 +296,7 @@ html, body {
   top: auto;
   transform: translateX(120%);
 }
+
 .variants-panel.pos-bottom-right.active {
   transform: translateX(0);
 }
@@ -289,6 +308,7 @@ html, body {
   top: auto;
   transform: translateX(-120%);
 }
+
 .variants-panel.pos-bottom-left.active {
   transform: translateX(0);
 }
@@ -320,41 +340,43 @@ html, body {
    LIGHT THEME
    ========================================= */
 body.light-theme {
-  --bg-color: #f0f0f0;
-  --text-color: #222;
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: #f0f0f0;
+  color: #222;
 }
-body.light-theme .app-screen {
-  background-color: var(--bg-color);
-}
+
 body.light-theme #bottom-nav {
   background: rgba(255, 255, 255, 0.9);
   border-top: 1px solid #ddd;
 }
+
+body.light-theme .nav-icon {
+  filter: grayscale(100%) brightness(0%); /* Černá */
+  opacity: 0.4;
+}
+body.light-theme .nav-btn.active .nav-icon {
+  filter: grayscale(100%) brightness(0%);
+  opacity: 1;
+}
+
 body.light-theme .nav-btn {
   color: #666;
 }
+
 body.light-theme .nav-btn.active {
-  color: var(--accent);
+  color: #D81E5B;
 }
-body.light-theme .nav-icon {
-  filter: invert(0.8);
-}
-body.light-theme .nav-btn.active .nav-icon {
-  filter: none;
-}
+
 body.light-theme .screen-header,
 body.light-theme .settings-group,
 body.light-theme .screen-content {
   background-color: #fff;
   border-color: #eee;
 }
+
 body.light-theme .setting-item {
   border-bottom: 1px solid #eee;
 }
+
 body.light-theme select {
   background-color: #fff;
   color: #222;
@@ -366,23 +388,38 @@ body.light-theme .explore-search {
 body.light-theme .ig-square {
   background-color: #ddd;
 }
+
 body.light-theme .map-clip,
 body.light-theme .map-container {
   background-color: #f0f0f0;
 }
+
 body.light-theme .reel-ui {
-  background: linear-gradient(to top, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+  background: none;
   color: #222;
 }
+
 body.light-theme .reel-subtitle {
-  color: #555;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8); /* Aby byl bílý text na mapě čitelný i ve světlém režimu */
 }
 body.light-theme .profile-placeholder {
   color: #555;
 }
+body.light-theme .variants-panel {
+  background: rgba(255, 255, 255, 0.95);
+  color: #222;
+  border-color: #ddd;
+}
+body.light-theme .variants-panel .panel-title {
+  color: #222;
+}
+body.light-theme .variant-row {
+  border-bottom: 1px solid #eee;
+}
 
 .toggle-btn {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   border: none;
   color: white;
   width: 22px;
@@ -409,8 +446,9 @@ body.light-theme .profile-placeholder {
   display: flex;
   align-items: flex-start;
   padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 .variant-item:last-child {
   border-bottom: none;
 }
@@ -446,7 +484,10 @@ body.light-theme .profile-placeholder {
 /* Overlay loading */
 #loader {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: var(--bg-color);
   z-index: 9999;
   display: flex;
@@ -461,8 +502,11 @@ body.light-theme .profile-placeholder {
 .leaflet-container:after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
   opacity: 0;
   transition: opacity 0.5s;
@@ -475,6 +519,7 @@ body.light-theme .profile-placeholder {
   background: transparent;
   border: none;
 }
+
 .start-triangle-icon svg {
   display: block;
   width: 100%;
@@ -503,6 +548,7 @@ body.light-theme .profile-placeholder {
   text-align: center;
   pointer-events: none;
 }
+
 #calibration-ui span {
   color: #b300ff;
   font-weight: bold;
@@ -514,7 +560,8 @@ body.light-theme .profile-placeholder {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 60px); /* minus bottom nav */
+  height: calc(100vh - 60px);
+  /* minus bottom nav */
   position: relative;
   overflow: hidden;
 }
@@ -533,8 +580,15 @@ body.light-theme .profile-placeholder {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .app-screen.active {
@@ -543,11 +597,14 @@ body.light-theme .profile-placeholder {
 
 /* Special full-height treatment for scroll screen so map goes under nav if wanted */
 #screen-scroll {
-  height: 100vh; /* It can span full height because bottom nav is fixed */
-  overflow: hidden; 
+  height: 100vh;
+  /* It can span full height because bottom nav is fixed */
+  overflow: hidden;
 }
+
 #screen-scroll #reels-container {
-  height: 100vh; /* override */
+  height: 100vh;
+  /* override */
 }
 
 /* Bottom Navigation */
@@ -592,26 +649,35 @@ body.light-theme .profile-placeholder {
 }
 
 .nav-icon {
-  font-size: 1.3rem;
-  margin-bottom: 4px;
+  font-size: 1.8rem; /* Větší ikony pro minimalistický vzhled */
+  margin-bottom: 0;
+  filter: grayscale(100%) brightness(150%); /* Šedá/Bílá */
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+
+.nav-btn.active .nav-icon {
+  opacity: 1;
+  filter: grayscale(100%) brightness(200%); /* Čistě bílá v dark mode */
 }
 
 .nav-label {
-  font-size: 0.65rem;
-  font-weight: 600;
+  display: none; /* Skryto úplně */
 }
 
 /* Explore Screen */
 .explore-header {
   padding: 20px;
   padding-top: max(20px, env(safe-area-inset-top));
-  background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
 }
+
 .explore-header h2 {
   font-size: 1.5rem;
   margin-bottom: 15px;
   font-weight: 800;
 }
+
 .explore-search {
   width: 100%;
   padding: 12px 16px;
@@ -623,6 +689,7 @@ body.light-theme .profile-placeholder {
   font-family: inherit;
   outline: none;
 }
+
 .explore-search:focus {
   border-color: var(--accent);
 }
@@ -631,7 +698,8 @@ body.light-theme .profile-placeholder {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2px;
-  padding: 0 0 80px 0; /* bottom padding for nav */
+  padding: 0 0 80px 0;
+  /* bottom padding for nav */
   background: var(--bg-color);
 }
 
@@ -645,7 +713,10 @@ body.light-theme .profile-placeholder {
 
 .ig-bg {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-size: cover;
   background-position: center;
   transition: transform 10s linear;
@@ -654,14 +725,22 @@ body.light-theme .profile-placeholder {
 
 /* Subtle pan and zoom for professional feel */
 @keyframes kenBurns {
-  0% { transform: scale(1.0) translate(0, 0); }
-  100% { transform: scale(1.12) translate(-2%, 2%); }
+  0% {
+    transform: scale(1.0) translate(0, 0);
+  }
+
+  100% {
+    transform: scale(1.12) translate(-2%, 2%);
+  }
 }
 
 .ig-overlay {
   position: absolute;
-  bottom: 0; left: 0; width: 100%; height: 50%;
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -679,7 +758,7 @@ body.light-theme .profile-placeholder {
   color: white;
   font-size: 0.65rem;
   font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -694,8 +773,8 @@ body.light-theme .profile-placeholder {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.7);
-  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 3;
   display: flex;
   justify-content: center;
@@ -705,7 +784,8 @@ body.light-theme .profile-placeholder {
 }
 
 .ig-square.selected .ig-check {
-  background: #0095f6; /* IG blue color, or var(--accent) */
+  background: #0095f6;
+  /* IG blue color, or var(--accent) */
   border-color: #0095f6;
   opacity: 1;
 }
@@ -749,6 +829,7 @@ body.light-theme .profile-placeholder {
   padding-top: max(20px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--glass-border);
 }
+
 .screen-content {
   padding: 20px;
 }
@@ -758,6 +839,7 @@ body.light-theme .profile-placeholder {
   text-align: center;
   padding-top: 40px;
 }
+
 .profile-placeholder .avatar {
   font-size: 4rem;
   background: var(--glass-bg);
@@ -775,6 +857,7 @@ body.light-theme .profile-placeholder {
 .settings-group {
   margin-bottom: 30px;
 }
+
 .settings-group h3 {
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -782,20 +865,24 @@ body.light-theme .profile-placeholder {
   margin-bottom: 15px;
   letter-spacing: 1px;
 }
+
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
+
 .setting-item label {
   font-weight: 600;
 }
+
 .setting-item input[type="range"] {
   flex: 1;
   margin: 0 15px;
 }
+
 .setting-item select {
   background: var(--glass-bg);
   color: white;
@@ -804,6 +891,7 @@ body.light-theme .profile-placeholder {
   border-radius: 8px;
   outline: none;
 }
+
 .btn-secondary {
   background: var(--glass-bg);
   color: white;
