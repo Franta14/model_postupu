@@ -60,7 +60,7 @@ html, body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 60px); /* Celá výška minus spodní scroll panel */
+  height: 100%; /* Mapa vizuálně až dolů pod lištu */
   overflow: hidden;
   z-index: 1;
   background-color: #2a2a2a;
@@ -72,9 +72,9 @@ html, body {
   /* Zvětšený kontejner pro bezpečnou rotaci bez černých rohů */
   width: 150vmax;
   height: 150vmax;
-  /* Vycentrování uvnitř map-clip: střed map-containeru (75vmax) = střed clipu (50%) */
+  /* Vycentrování uvnitř map-clip: střed posunut nahoru, aby postup nekolidoval se spodkem */
   left: 50%;
-  top: 50%;
+  top: calc(50% - 60px); 
   margin-left: -75vmax;
   margin-top: -75vmax;
   background-color: #2a2a2a;
@@ -86,19 +86,20 @@ html, body {
   bottom: 60px; /* Posunuto nad spodní navigační lištu */
   left: 0;
   width: 100vw;
-  height: 60px;
-  background-color: #1a1a1a;
+  height: 90px; /* Vyšší pro pohodlný swipe, ale průhledné */
+  background: linear-gradient(to top, rgba(20, 20, 20, 0.95) 0%, rgba(20, 20, 20, 0) 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* Text dole */
   justify-content: center;
-  color: #888;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding-bottom: 15px; /* Kousek nad spodní lištou */
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
   z-index: 3;
   pointer-events: auto; /* Catch scroll touches */
-  border-top: 1px solid #333;
+  border-top: none;
 }
 
 /* UI overlay at bottom of each slide */
