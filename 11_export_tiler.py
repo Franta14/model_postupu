@@ -6,7 +6,7 @@ import time
 
 Image.MAX_IMAGE_PIXELS = None # OCAD maps can be huge
 
-def generate_tiles(input_png, output_dir, tile_size=256):
+def generate_tiles(input_png, output_dir, tile_size=512):
     print(f"Loading image {input_png}...")
     start_time = time.time()
     img = Image.open(input_png).convert("RGBA")

@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Scrollienteering</title>
     
     <!-- Leaflet CSS & JS -->
@@ -53,12 +55,25 @@
     <div class="variants-panel pos-top-right" id="global-variants-panel">
         <div class="panel-header">
             <div class="panel-title">Ideální postupy</div>
-            <button class="close-btn" id="global-close-btn">×</button>
+            <button class="toggle-btn" id="global-toggle-btn">▼</button>
         </div>
         <div id="global-variants-content"></div>
     </div>
     
-    <!-- Custom Logic -->
-    <script src="app.js?v=20"></script>
+    <!-- Offline Sync Button -->
+    <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
+        💾
+    </button>
+    
+    <!-- Sync Progress Overlay -->
+    <div id="sync-progress" class="sync-progress-overlay">
+        <div class="sync-box">
+            <h4>Stahování dat...</h4>
+            <div class="progress-bar"><div id="sync-bar" class="progress-fill"></div></div>
+            <div id="sync-text">0 / 0</div>
+        </div>
+    </div>
+    
+    <script src="app.js?v=21"></script>
 </body>
 </html>

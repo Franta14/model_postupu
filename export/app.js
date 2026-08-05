@@ -3,6 +3,7 @@ let geojsonCache = {};
 let mapInstances = {}; // stores { index: L.map }
 let currentLayers = {}; // stores { index: L.geoJSON }
 let currentOverlays = {}; // stores { index: L.featureGroup }
+let currentTileLayers = {}; // stores { index: L.tileLayer }
 
 const iofPurple = "#D81E5B";
 
@@ -68,7 +69,9 @@ function buildReels() {
         reel.dataset.index = index;
 
         reel.innerHTML = `
-            <div class="map-container" id="map-${index}"></div>
+            <div class="map-clip" id="clip-${index}">
+                <div class="map-container" id="map-${index}"></div>
+            </div>
             <div class="reel-ui">
                 <div class="reel-header">
                     <div class="reel-subtitle">${postup.dist_m.toFixed(0)} m vzdušně</div>
@@ -116,6 +119,7 @@ function toggleVariants(index) {
     
     if (isPanelOpen) {
         panel.classList.remove('active');
+        panel.classList.remove('collapsed');
         isPanelOpen = false;
         showVariantsForIndex[index] = false;
     } else {
@@ -130,7 +134,7 @@ function toggleVariants(index) {
             </div>
         `).join('');
         
-        let panelClass = 'pos-top-right';
+        let panelClass = 'pos-top-right'; // default
         if (geojsonCache[postup.file]) {
             let startC = null, endC = null;
             geojsonCache[postup.file].features.forEach(f => {
@@ -140,20 +144,57 @@ function toggleVariants(index) {
             if (startC && endC) {
                 let dx = endC[0] - startC[0];
                 let dy = endC[1] - startC[1];
-                if (dx * dy > 0) panelClass = 'pos-top-left';
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > 0) {
+                    let ux = dx / dist;
+                    let uy = dy / dist;
+                    let vx = -uy; // kolmice (ukazuje vlevo na obrazovce po rotaci)
+                    let vy = ux;
+                    
+                    let maxLeftTop = 0, maxRightTop = 0;
+                    let maxLeftBot = 0, maxRightBot = 0;
+                    
+                    geojsonCache[postup.file].features.forEach(f => {
+                        if (f.properties && f.properties.type === 'variant' && f.geometry.type === 'LineString') {
+                            f.geometry.coordinates.forEach(c => {
+                                let px = c[0] - startC[0];
+                                let py = c[1] - startC[1];
+                                let localY = px * ux + py * uy; // 0 u startu, dist u cíle
+                                let localX = px * vx + py * vy; // kladné je vlevo, záporné vpravo na obrazovce
+                                
+                                if (localY > dist * 0.6) { // Měříme jen v horních 40 % obrazovky (tam kde fyzicky tabulka je)
+                                    if (localX > maxLeftTop) maxLeftTop = localX;
+                                    if (-localX > maxRightTop) maxRightTop = -localX;
+                                } else if (localY < dist * 0.4) { // Měříme jen v dolních 40 % obrazovky
+                                    if (localX > maxLeftBot) maxLeftBot = localX;
+                                    if (-localX > maxRightBot) maxRightBot = -localX;
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Hodnoty reprezentují, jak moc do daného rohu varianty zasahují.
+                    // Vybereme roh s nejmenším zásahem.
+                    let bulges = [
+                        { corner: 'pos-top-left', val: maxLeftTop },
+                        { corner: 'pos-top-right', val: maxRightTop },
+                        { corner: 'pos-bottom-left', val: maxLeftBot },
+                        { corner: 'pos-bottom-right', val: maxRightBot }
+                    ];
+                    bulges.sort((a, b) => a.val - b.val);
+                    panelClass = bulges[0].corner;
+                }
             }
         }
         
         panel.className = 'variants-panel ' + panelClass;
         void panel.offsetWidth; // force reflow
         
-        document.getElementById('global-close-btn').onclick = () => {
-            panel.classList.remove('active');
-            isPanelOpen = false;
-            showVariantsForIndex[index] = false;
-            renderMapData(index, geojsonCache[postup.file]); // redraw to hide variants
+        document.getElementById('global-toggle-btn').onclick = () => {
+            panel.classList.toggle('collapsed');
         };
         
+        panel.classList.remove('collapsed'); // always start expanded
         panel.classList.add('active');
         isPanelOpen = true;
         showVariantsForIndex[index] = true;
@@ -174,6 +215,7 @@ function activateReel(indexStr) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
             panel.classList.remove('active');
+            panel.classList.remove('collapsed');
             isPanelOpen = false;
             showVariantsForIndex[activeIndex] = false;
             
@@ -188,12 +230,9 @@ function activateReel(indexStr) {
     
     preloadReel(index);
     
-    // Předvykreslení následujícího a předchozího postupu na pozadí,
-    // čímž dosáhneme naprosto plynulého scrollování bez zpoždění.
-    setTimeout(() => {
-        preloadReel(index + 1);
-        preloadReel(index - 1);
-    }, 200);
+    // O chytré předvykreslení (smart preloading) se teď stará událost 'load'
+    // přímo na L.tileLayer v renderMapData, takže se další mapa začne stahovat
+    // až ve chvíli, kdy má uživatel ostrou mapu před sebou.
 }
 
 function preloadReel(i) {
@@ -226,7 +265,12 @@ function preloadReel(i) {
 const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
-    Math.round = Math.ceil;
+    // Cílený hack: změníme Math.round na Math.ceil POUZE pro hodnotu zoomu,
+    // čímž zabráníme nechtěnému posunu (rozhození) pixelové mřížky mapy (pixelOrigin).
+    Math.round = function(val) {
+        if (val === zoom) return Math.ceil(val);
+        return oldRound(val);
+    };
     try {
         originalSetView.call(this, center, zoom, noPrune, noUpdate);
     } finally {
@@ -238,28 +282,18 @@ function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple,
         minZoom: 0,
-        maxZoom: 8, // reduced maxZoom slightly to prevent excessive overzoom
+        maxZoom: 8,
         zoomSnap: 0,
         zoomControl: false,
         gestureHandling: false,
-        maxBoundsViscosity: 1.0,
         inertia: false
     });
     
+    map.createPane('maskPane');
+    map.getPane('maskPane').style.zIndex = 250; // Nad dlaždicemi (200), pod overlay (400)
+    
     L.control.zoom({ position: 'topleft' }).addTo(map);
-
-    var bounds = [[-256, 0], [0, 256]];
-    L.tileLayer('tiles/{z}/{x}/{y}.png', {
-        minZoom: 0,
-        maxZoom: 8,
-        maxNativeZoom: 6,
-        noWrap: true,
-        tms: false,
-        bounds: bounds,
-        keepBuffer: 1,
-        updateWhenZooming: false,
-        detectRetina: true
-    }).addTo(map);
+    // Tile layer se přidá až v renderMapData — potřebujeme GeoJSON data pro ořez
     
     map.on('zoomend', updateCalibrationShift);
     mapInstances[index] = map;
@@ -284,11 +318,61 @@ function renderMapData(index, geojsonOriginal) {
     let startCoords = null;
     let endCoords = null;
     
+    // Sesbírat VŠECHNY souřadnice pro výpočet bounding boxu
+    let allLngs = [], allLats = [];
     geojson.features.forEach(f => {
         if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
         if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
+        
+        if (f.geometry.type === 'Point') {
+            allLngs.push(f.geometry.coordinates[0]);
+            allLats.push(f.geometry.coordinates[1]);
+        } else if (f.geometry.type === 'LineString') {
+            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
+        }
     });
     
+    // Tile layer s ořezem na bounding box postupu + 30% margin
+    if (!currentTileLayers[index] && allLngs.length > 0) {
+        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+        let marginLng = (maxLng - minLng) * 0.30;
+        let marginLat = (maxLat - minLat) * 0.30;
+        let tileBounds = [
+            [minLat - marginLat, minLng - marginLng],
+            [maxLat + marginLat, maxLng + marginLng]
+        ];
+        
+        let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
+            tileSize: 512,
+            minZoom: 0,
+            maxZoom: 8,
+            maxNativeZoom: 5,
+            noWrap: true,
+            tms: false,
+            bounds: tileBounds,
+            keepBuffer: 4,
+            updateWhenIdle: false,
+            updateWhenZooming: true,
+            detectRetina: true
+        }).addTo(map);
+        currentTileLayers[index] = tl;
+        
+        // Smart Preloading: pokud je tohle aktivní postup,
+        // počkejme na stažení všech dlaždic, a teprve PAK začněme stahovat
+        // na pozadí dlaždice pro následující postup. Zabrání to síťové zácpě.
+        if (index === activeIndex) {
+            tl.once('load', () => {
+                preloadReel(index + 1);
+                preloadReel(index - 1);
+            });
+            // Bezpečnostní pojistka: pokud by se událost neodpálila (např. vše je v cache)
+            setTimeout(() => {
+                preloadReel(index + 1);
+                preloadReel(index - 1);
+            }, 500);
+        }
+    }
     
     
     let showVariants = showVariantsForIndex[index] || false;
@@ -314,13 +398,15 @@ function renderMapData(index, geojsonOriginal) {
         let dy = endCoords[1] - startCoords[1];
         let dist = Math.sqrt(dx*dx + dy*dy);
         if (dist > 0) {
-            let R = 0.55; 
-            let gap = 0.05;
+            // R: Dvojnásobek oproti předchozímu stavu, protože jsme zjemnili mapovou mřížku (scale z 32 na 16)
+            let distM = postupyData[index].dist_m || 0;
+            let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
+            let gap = 0.10;
             let ux = dx / dist;
             let uy = dy / dist;
             let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
             document.getElementById(`map-${index}`).style.transform = `rotate(${targetBearing}deg)`;
-            let lineWeight = Math.max(2.5, Math.min(3.5, 2.5 + dist / 100));
+            let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
             let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
             let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
             if (dist > R*2 + gap*2) {
@@ -332,25 +418,27 @@ function renderMapData(index, geojsonOriginal) {
             }
             [startCoords, endCoords].forEach((coords, idx) => {
                 let num = idx === 0 ? "1" : "2";
-                let strokeW = Math.max(8, Math.min(12, 8 + dist/50));
-                // 1. Circle Overlay
-                let svgCircle = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svgCircle.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-                svgCircle.setAttribute('viewBox', "0 0 100 100");
-                svgCircle.innerHTML = `<circle cx="50" cy="50" r="${50 - strokeW/2}" fill="none" stroke="${iofPurple}" stroke-width="${strokeW}" />`;
-                let boundsCircle = [[coords[1] - R, coords[0] - R], [coords[1] + R, coords[0] + R]];
-                overlays.addLayer(L.svgOverlay(svgCircle, boundsCircle, {interactive: false, pane: 'markerPane'}));
+                // 1. L.circle — matematicky dokonalá kružnice, přidaná do stejné vrstvy jako spojnice
+                layer.addLayer(L.circle([coords[1], coords[0]], {
+                    radius: R,
+                    color: iofPurple,
+                    weight: lineWeight,
+                    fill: false,
+                    pane: 'markerPane',
+                    interactive: false
+                }));
                 
                 // 2. Text Overlay (Offset)
                 let nx = -uy, ny = ux;
-                let textDist = R + 0.40;
+                let textDist = R + 0.90;
                 let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
                 
                 let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
                 svgText.setAttribute('viewBox', "0 0 100 100");
+                svgText.setAttribute('preserveAspectRatio', 'none');
                 svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
-                let halfSizeText = 0.45;
+                let halfSizeText = 1.0;
                 let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
                 overlays.addLayer(L.svgOverlay(svgText, boundsText, {interactive: false, pane: 'markerPane'}));
             });
@@ -360,8 +448,7 @@ function renderMapData(index, geojsonOriginal) {
     layer.addTo(map);
     currentLayers[index] = layer;
     
-    let bounds = layer.getBounds();
-    if (bounds.isValid() && startCoords && endCoords) {
+    if (startCoords && endCoords) {
         let w = window.innerWidth;
         let h = window.innerHeight - 60; // visible height
         
@@ -376,7 +463,7 @@ function renderMapData(index, geojsonOriginal) {
             idealZoom = Math.log2(targetPixelsY / dist);
         }
         
-        let HARD_MIN_ZOOM = 2; 
+        let HARD_MIN_ZOOM = 0; 
         let maxZoom = map.getMaxZoom() || 8;
         idealZoom = Math.max(HARD_MIN_ZOOM, Math.min(maxZoom, idealZoom));
         
@@ -384,6 +471,77 @@ function renderMapData(index, geojsonOriginal) {
         let midY = (startCoords[1] + endCoords[1]) / 2;
         
         map.setMinZoom(idealZoom);
+        
+        // === VÝPOČET CHYTRÉ MASKY ===
+        let ux = dx / dist;
+        let uy = dy / dist;
+        let vx = -uy; // kolmice
+        let vy = ux;
+        let maxAbsX = 0;
+        
+        // Zjistit, jak daleko od osy jsou varianty
+        allLngs.forEach((lng, idx) => {
+            let px = lng - midX;
+            let py = allLats[idx] - midY;
+            let localX = px * vx + py * vy;
+            if (Math.abs(localX) > maxAbsX) {
+                maxAbsX = Math.abs(localX);
+            }
+        });
+        
+        let pixelScale = Math.pow(2, idealZoom); // Převod z mapových jednotek na pixely displeje na úvodním zoomu
+        
+        // Polovina šířky/výšky displeje v mapových jednotkách
+        let screenHalfW = (w / 2) / pixelScale;
+        let screenHalfH = (h / 2) / pixelScale;
+        
+        // Rozměry postupu včetně rezervy (60px šířka, 80px výška na displeji)
+        let routeHalfW = maxAbsX + (60 / pixelScale);
+        let routeHalfH = (dist / 2) + (80 / pixelScale);
+        
+        // Díra musí pokrýt displej, ale i celou trasu s rezervou
+        let holeHalfW = Math.max(screenHalfW, routeHalfW);
+        let holeHalfH = Math.max(screenHalfH, routeHalfH);
+        
+        // 4 rohy vnitřní díry (v mapových souřadnicích)
+        let p1x = midX + ux * holeHalfH + vx * holeHalfW;
+        let p1y = midY + uy * holeHalfH + vy * holeHalfW;
+        
+        let p2x = midX + ux * holeHalfH - vx * holeHalfW;
+        let p2y = midY + uy * holeHalfH - vy * holeHalfW;
+        
+        let p3x = midX - ux * holeHalfH - vx * holeHalfW;
+        let p3y = midY - uy * holeHalfH - vy * holeHalfW;
+        
+        let p4x = midX - ux * holeHalfH + vx * holeHalfW;
+        let p4y = midY - uy * holeHalfH + vy * holeHalfW;
+        
+        // Ring pro Leaflet Polygon (formát [Lat, Lng] tedy [Y, X])
+        let innerRing = [
+            [p1y, p1x],
+            [p2y, p2x],
+            [p3y, p3x],
+            [p4y, p4x]
+        ];
+        
+        // Obrovský čtverec tvořící vnější hranu masky (pokryje celou mapu)
+        let outerRing = [
+            [-50000, -50000],
+            [-50000, 50000],
+            [50000, 50000],
+            [50000, -50000]
+        ];
+        
+        // Vykreslení masky (polygon s dírou)
+        let mask = L.polygon([outerRing, innerRing], {
+            color: 'transparent',
+            fillColor: '#2a2a2a',
+            fillOpacity: 1.0,
+            interactive: false,
+            pane: 'maskPane'
+        });
+        overlays.addLayer(mask);
+        // === KONEC VÝPOČTU MASKY ===
         
         setTimeout(() => {
             map.invalidateSize();
@@ -432,4 +590,70 @@ function updateCalibrationShift() {
     let scale = Math.pow(2, map.getZoom()) / 64;
     pane.style.marginLeft = (shiftXConfig * scale) + 'px';
     pane.style.marginTop = (shiftYConfig * scale) + 'px';
+}
+
+// === OFFLINE SYNC ===
+async function startOfflineSync() {
+    if (!('serviceWorker' in navigator)) {
+        alert("Offline režim není podporován (chybí Service Worker). Ujistěte se, že používáte HTTPS.");
+        return;
+    }
+    
+    const overlay = document.getElementById('sync-progress');
+    const bar = document.getElementById('sync-bar');
+    const text = document.getElementById('sync-text');
+    const btn = document.getElementById('offline-sync-btn');
+    
+    overlay.classList.add('active');
+    
+    try {
+        let urlsToFetch = [];
+        urlsToFetch.push('postupy/postupy_index.json');
+        
+        postupyData.forEach(p => {
+            urlsToFetch.push('postupy/' + p.file);
+        });
+        
+        text.innerText = "Získávám index dlaždic...";
+        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
+        if (tilesResponse.ok) {
+            let tiles = await tilesResponse.json();
+            urlsToFetch = urlsToFetch.concat(tiles);
+        } else {
+            console.warn("tiles_index.json nenalezen, dlaždice nebudou staženy.");
+        }
+        
+        let total = urlsToFetch.length;
+        let done = 0;
+        
+        // Fetch in chunks of 20 to avoid exhausting connection pool
+        const chunkSize = 20;
+        for (let i = 0; i < total; i += chunkSize) {
+            let chunk = urlsToFetch.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (url) => {
+                try {
+                    // SW will intercept this and put it in cache automatically
+                    let res = await fetch(url, { cache: 'no-store' }); 
+                } catch(e) {
+                    console.error("Failed to fetch", url, e);
+                }
+                done++;
+            }));
+            
+            let percent = Math.floor((done / total) * 100);
+            bar.style.width = percent + '%';
+            text.innerText = `${done} / ${total}`;
+        }
+        
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            btn.innerHTML = "✅";
+            btn.style.background = "rgba(46, 204, 113, 0.8)";
+            btn.onclick = null;
+        }, 500);
+        
+    } catch (err) {
+        alert("Chyba při stahování: " + err.message);
+        overlay.classList.remove('active');
+    }
 }

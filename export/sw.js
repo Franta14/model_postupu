@@ -1,4 +1,4 @@
-const CACHE_NAME = 'model-postupu-cache-v22';
+const CACHE_NAME = 'scrollienteering-v24';
 
 self.addEventListener('install', event => {
     // Instalace proběhne rychle, nebudeme čekat na obří preload

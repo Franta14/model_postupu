@@ -31,6 +31,11 @@ COST_DICT = {
     "Hustnik 3 (Tmave)": 2.200,   # Výrazně zdraženo z 1.830
     "Kamenne pole": 1.840,
     
+    "Kamen (Bod)": 2.500,         # Drobné kameny a srázky (1-2 metry vteřiny zpoždění při přímém přeběhu)
+    "Velky kamen (Bod)": 3.000,   # Větší kameny (výraznější zpomalení)
+    "Ryha / Potok": 5.000,        # Úzká linie. Přeskočení sebere běžci cca 1.5 - 2 vteřiny
+    "Nebezpecna bazina": 4.000,   # ISOM 310, silně zpomalující bažina
+    
     # 🧱 NEPRŮCHODNÉ PŘEKÁŽKY (Zeď)
     "Nepruchodna zed / plot": 9999.0,
     "Nepruchodna budova / zakaz": 9999.0,
@@ -65,6 +70,21 @@ for obj in root.iter():
                 break
         if not pts: continue
         
+        # 📍 BODOVÉ OBJEKTY (Kameny, kupky)
+        if len(pts) == 1:
+            ter_bod = None
+            buffer_size = 0.5
+            if isom in ['204', '112', '113']: # Kámen, kupka, prohlubeň
+                ter_bod = "Kamen (Bod)"
+                buffer_size = 1.0  # rádius 1m
+            elif isom in ['205', '206']: # Velký kámen, obrovský kámen
+                ter_bod = "Velky kamen (Bod)"
+                buffer_size = 1.5  # rádius 1.5m
+
+            if ter_bod:
+                # Obalíme bod bufferem a přidáme jako polygon
+                kategorie[ter_bod].append(Point(pts[0]).buffer(buffer_size))
+
         # 📏 ČÁROVÉ OBJEKTY
         if len(pts) >= 2:
             ter_lin = None
@@ -72,12 +92,16 @@ for obj in root.iter():
             elif isom == '504': ter_lin = "Cesta (Lesni)"
             elif isom in ['505', '506', '507']: ter_lin = "Pesina"
             elif isom in ['508', '509']: ter_lin = "Prusek"
+            elif isom in ['114', '115', '304', '305', '306']: ter_lin = "Ryha / Potok"
             # 🧱 Přidány neprůchodné čáry: Sráz(201), Vysoký plot(516), Zeď(518)
             elif isom in ['201', '516', '518']: ter_lin = "Nepruchodna zed / plot"
             
             if ter_lin: 
                 if ter_lin == "Nepruchodna zed / plot":
                     kategorie[ter_lin].append(LineString(pts).buffer(SIRKA_ZDI_BUFFER))
+                elif ter_lin == "Ryha / Potok":
+                    # Potok/Rýha má úzký buffer, funguje jako ostrá bariéra
+                    kategorie[ter_lin].append(LineString(pts).buffer(0.3))
                 else:
                     kategorie[ter_lin].append(LineString(pts).buffer(SIRKA_CESTY_BUFFER))
 
@@ -94,6 +118,7 @@ for obj in root.iter():
             elif isom in ['407', '409']: ter_pol = "Podrost (Srafy)"
             elif isom in ['208', '209', '210', '211', '212']: ter_pol = "Kamenne pole"
             elif isom == '311': ter_pol = "Bazina" 
+            elif isom == '310': ter_pol = "Nebezpecna bazina" 
             # 🧱 Přidána neprůchodná voda
             elif isom in ['301', '302']: ter_pol = "Nepruchodna voda"
             elif isom.startswith('30'): ter_pol = "Voda"
@@ -138,7 +163,8 @@ start_time = time.time()
 priority_order = [
     "Nepruchodna zed / plot", "Nepruchodna budova / zakaz", "Nepruchodna voda",
     "Cesta (Zpevnena)", "Cesta (Lesni)", "Pesina", "Prusek", 
-    "Voda", "Kamenne pole", "Bazina", 
+    "Ryha / Potok", "Velky kamen (Bod)", "Kamen (Bod)",
+    "Voda", "Nebezpecna bazina", "Kamenne pole", "Bazina", 
     "Hustnik 3 (Tmave)", "Hustnik 2 (Stredni)", "Podrost (Srafy)", 
     "Hustnik 1 (Svetly)", "Paseky"
 ]

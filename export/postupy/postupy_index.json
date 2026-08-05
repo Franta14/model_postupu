@@ -1,2281 +1,241 @@
 [
   {
     "id": 1,
-    "file": "postup_001_3174m_s113.geojson",
-    "dist_m": 3174.3070109868077,
+    "file": "postup_001_2948m_s91.geojson",
+    "dist_m": 2948.0926037015865,
     "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 3284,
-        "prevyseni_m": 38,
-        "cas_s": 836,
-        "tempo_str": "4:14"
+        "vzdal_m": 3350,
+        "prevyseni_m": 34,
+        "cas_s": 612,
+        "tempo_str": "3:02"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 3524,
-        "prevyseni_m": 35,
-        "cas_s": 854,
-        "tempo_str": "4:02"
+        "vzdal_m": 3397,
+        "prevyseni_m": 9,
+        "cas_s": 602,
+        "tempo_str": "2:57"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 3321,
-        "prevyseni_m": 36,
-        "cas_s": 853,
-        "tempo_str": "4:16"
+        "vzdal_m": 3169,
+        "prevyseni_m": 29,
+        "cas_s": 616,
+        "tempo_str": "3:14"
       }
     ]
   },
   {
     "id": 2,
-    "file": "postup_002_3060m_s111.geojson",
-    "dist_m": 3060.8005488760614,
+    "file": "postup_002_2896m_s90.geojson",
+    "dist_m": 2896.571248907922,
     "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 3293,
-        "prevyseni_m": 67,
-        "cas_s": 902,
-        "tempo_str": "4:33"
+        "vzdal_m": 3200,
+        "prevyseni_m": 58,
+        "cas_s": 610,
+        "tempo_str": "3:10"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 3335,
-        "prevyseni_m": 96,
-        "cas_s": 904,
-        "tempo_str": "4:31"
+        "vzdal_m": 3337,
+        "prevyseni_m": 66,
+        "cas_s": 631,
+        "tempo_str": "3:08"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 3291,
-        "prevyseni_m": 76,
-        "cas_s": 907,
-        "tempo_str": "4:35"
+        "vzdal_m": 3189,
+        "prevyseni_m": 60,
+        "cas_s": 639,
+        "tempo_str": "3:20"
       }
     ]
   },
   {
     "id": 3,
-    "file": "postup_004_1506m_s108.geojson",
-    "dist_m": 1506.8924978245796,
-    "variants_count": 3,
+    "file": "postup_003_1710m_s82.geojson",
+    "dist_m": 1710.4677722775136,
+    "variants_count": 2,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 1637,
-        "prevyseni_m": 37,
-        "cas_s": 418,
-        "tempo_str": "4:15"
+        "vzdal_m": 1992,
+        "prevyseni_m": 32,
+        "cas_s": 415,
+        "tempo_str": "3:28"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 1589,
-        "prevyseni_m": 35,
-        "cas_s": 429,
-        "tempo_str": "4:30"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1674,
-        "prevyseni_m": 34,
-        "cas_s": 429,
-        "tempo_str": "4:16"
+        "vzdal_m": 1955,
+        "prevyseni_m": 25,
+        "cas_s": 419,
+        "tempo_str": "3:34"
       }
     ]
   },
   {
     "id": 4,
-    "file": "postup_005_2251m_s107.geojson",
-    "dist_m": 2251.0053309577033,
+    "file": "postup_004_1021m_s81.geojson",
+    "dist_m": 1021.3349107907749,
     "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 2488,
-        "prevyseni_m": 101,
-        "cas_s": 756,
-        "tempo_str": "5:03"
+        "vzdal_m": 1140,
+        "prevyseni_m": 26,
+        "cas_s": 241,
+        "tempo_str": "3:31"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 2461,
-        "prevyseni_m": 96,
-        "cas_s": 764,
-        "tempo_str": "5:10"
+        "vzdal_m": 1098,
+        "prevyseni_m": 29,
+        "cas_s": 237,
+        "tempo_str": "3:36"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 2429,
-        "prevyseni_m": 104,
-        "cas_s": 760,
-        "tempo_str": "5:12"
+        "vzdal_m": 1176,
+        "prevyseni_m": 25,
+        "cas_s": 239,
+        "tempo_str": "3:23"
       }
     ]
   },
   {
     "id": 5,
-    "file": "postup_006_1633m_s107.geojson",
-    "dist_m": 1633.5926664869671,
+    "file": "postup_005_1300m_s77.geojson",
+    "dist_m": 1300.9611831257687,
     "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 1851,
-        "prevyseni_m": 97,
-        "cas_s": 617,
-        "tempo_str": "5:33"
+        "vzdal_m": 1452,
+        "prevyseni_m": 24,
+        "cas_s": 283,
+        "tempo_str": "3:14"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 2019,
-        "prevyseni_m": 101,
-        "cas_s": 629,
-        "tempo_str": "5:11"
+        "vzdal_m": 1399,
+        "prevyseni_m": 20,
+        "cas_s": 295,
+        "tempo_str": "3:31"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 1818,
-        "prevyseni_m": 100,
-        "cas_s": 595,
-        "tempo_str": "5:27"
+        "vzdal_m": 1451,
+        "prevyseni_m": 24,
+        "cas_s": 289,
+        "tempo_str": "3:19"
       }
     ]
   },
   {
     "id": 6,
-    "file": "postup_008_2314m_s106.geojson",
-    "dist_m": 2314.524789238603,
-    "variants_count": 4,
+    "file": "postup_006_2448m_s69.geojson",
+    "dist_m": 2448.724157597176,
+    "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 2425,
-        "prevyseni_m": 32,
-        "cas_s": 633,
-        "tempo_str": "4:21"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 2693,
-        "prevyseni_m": 18,
-        "cas_s": 641,
-        "tempo_str": "3:57"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 2457,
-        "prevyseni_m": 48,
-        "cas_s": 650,
-        "tempo_str": "4:24"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 2564,
-        "prevyseni_m": 51,
-        "cas_s": 674,
-        "tempo_str": "4:22"
-      }
-    ]
-  },
-  {
-    "id": 7,
-    "file": "postup_009_2482m_s106.geojson",
-    "dist_m": 2482.1160327430302,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 2718,
-        "prevyseni_m": 30,
-        "cas_s": 706,
-        "tempo_str": "4:19"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 2607,
+        "vzdal_m": 2684,
         "prevyseni_m": 35,
-        "cas_s": 706,
-        "tempo_str": "4:30"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 2605,
-        "prevyseni_m": 36,
-        "cas_s": 701,
-        "tempo_str": "4:29"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 3090,
-        "prevyseni_m": 58,
-        "cas_s": 796,
-        "tempo_str": "4:17"
-      }
-    ]
-  },
-  {
-    "id": 8,
-    "file": "postup_011_1887m_s105.geojson",
-    "dist_m": 1887.3261509341728,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 2119,
-        "prevyseni_m": 31,
-        "cas_s": 519,
-        "tempo_str": "4:04"
+        "cas_s": 530,
+        "tempo_str": "3:17"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 1952,
-        "prevyseni_m": 42,
-        "cas_s": 528,
-        "tempo_str": "4:30"
+        "vzdal_m": 2955,
+        "prevyseni_m": 29,
+        "cas_s": 531,
+        "tempo_str": "2:59"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 1971,
-        "prevyseni_m": 34,
-        "cas_s": 520,
-        "tempo_str": "4:23"
-      }
-    ]
-  },
-  {
-    "id": 9,
-    "file": "postup_012_1923m_s105.geojson",
-    "dist_m": 1923.1484602078956,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 2018,
-        "prevyseni_m": 58,
-        "cas_s": 563,
-        "tempo_str": "4:38"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 2040,
-        "prevyseni_m": 60,
-        "cas_s": 594,
-        "tempo_str": "4:51"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 2144,
-        "prevyseni_m": 59,
-        "cas_s": 588,
-        "tempo_str": "4:34"
-      }
-    ]
-  },
-  {
-    "id": 10,
-    "file": "postup_015_1146m_s104.geojson",
-    "dist_m": 1146.320199595209,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1220,
-        "prevyseni_m": 0,
-        "cas_s": 292,
-        "tempo_str": "3:59"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1197,
-        "prevyseni_m": 0,
-        "cas_s": 297,
-        "tempo_str": "4:08"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1254,
-        "prevyseni_m": 0,
-        "cas_s": 304,
-        "tempo_str": "4:02"
-      }
-    ]
-  },
-  {
-    "id": 11,
-    "file": "postup_016_1725m_s104.geojson",
-    "dist_m": 1725.0072463615913,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1785,
-        "prevyseni_m": 0,
-        "cas_s": 442,
-        "tempo_str": "4:07"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1884,
-        "prevyseni_m": 0,
-        "cas_s": 453,
-        "tempo_str": "4:00"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1824,
-        "prevyseni_m": 0,
-        "cas_s": 447,
-        "tempo_str": "4:04"
-      }
-    ]
-  },
-  {
-    "id": 12,
-    "file": "postup_018_2707m_s103.geojson",
-    "dist_m": 2707.803537925158,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 2826,
-        "prevyseni_m": 9,
-        "cas_s": 743,
-        "tempo_str": "4:23"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 2844,
-        "prevyseni_m": 15,
-        "cas_s": 743,
-        "tempo_str": "4:21"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 3128,
-        "prevyseni_m": 5,
-        "cas_s": 739,
-        "tempo_str": "3:56"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 3235,
-        "prevyseni_m": 5,
-        "cas_s": 737,
-        "tempo_str": "3:47"
-      }
-    ]
-  },
-  {
-    "id": 13,
-    "file": "postup_019_3379m_s103.geojson",
-    "dist_m": 3379.5450877300036,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 3589,
-        "prevyseni_m": 85,
-        "cas_s": 924,
-        "tempo_str": "4:17"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 3848,
-        "prevyseni_m": 61,
-        "cas_s": 920,
-        "tempo_str": "3:59"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 3514,
-        "prevyseni_m": 87,
-        "cas_s": 949,
-        "tempo_str": "4:29"
-      }
-    ]
-  },
-  {
-    "id": 14,
-    "file": "postup_021_1505m_s102.geojson",
-    "dist_m": 1505.0332222246789,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1685,
-        "prevyseni_m": 60,
-        "cas_s": 463,
-        "tempo_str": "4:35"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1584,
-        "prevyseni_m": 56,
-        "cas_s": 475,
-        "tempo_str": "4:59"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1730,
-        "prevyseni_m": 59,
-        "cas_s": 487,
-        "tempo_str": "4:41"
-      }
-    ]
-  },
-  {
-    "id": 15,
-    "file": "postup_1_1120m.geojson",
-    "dist_m": 1120.580206857144,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1241,
-        "prevyseni_m": 5,
-        "cas_s": 253,
-        "tempo_str": "3:23"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1348,
-        "prevyseni_m": 10,
-        "cas_s": 250,
+        "vzdal_m": 2871,
+        "prevyseni_m": 23,
+        "cas_s": 533,
         "tempo_str": "3:05"
       }
     ]
   },
   {
-    "id": 16,
-    "file": "postup_1_1236m.geojson",
-    "dist_m": 1236.06229616472,
+    "id": 7,
+    "file": "postup_007_1595m_s68.geojson",
+    "dist_m": 1595.7208402474412,
     "variants_count": 3,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 1272,
-        "prevyseni_m": 5,
-        "cas_s": 329,
-        "tempo_str": "4:18"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1263,
-        "prevyseni_m": 0,
-        "cas_s": 336,
-        "tempo_str": "4:26"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1336,
-        "prevyseni_m": 10,
-        "cas_s": 338,
-        "tempo_str": "4:13"
-      }
-    ]
-  },
-  {
-    "id": 17,
-    "file": "postup_1_1240m.geojson",
-    "dist_m": 1240.100802354389,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1289,
-        "prevyseni_m": 5,
-        "cas_s": 315,
-        "tempo_str": "4:04"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1274,
-        "prevyseni_m": 10,
-        "cas_s": 328,
-        "tempo_str": "4:17"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1288,
-        "prevyseni_m": 9,
-        "cas_s": 327,
-        "tempo_str": "4:14"
-      }
-    ]
-  },
-  {
-    "id": 18,
-    "file": "postup_1_1349m.geojson",
-    "dist_m": 1349.7036711811966,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1425,
-        "prevyseni_m": 70,
-        "cas_s": 436,
-        "tempo_str": "5:05"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1403,
-        "prevyseni_m": 65,
-        "cas_s": 419,
-        "tempo_str": "4:58"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1518,
-        "prevyseni_m": 76,
-        "cas_s": 485,
-        "tempo_str": "5:19"
-      }
-    ]
-  },
-  {
-    "id": 19,
-    "file": "postup_1_1422m.geojson",
-    "dist_m": 1422.8228983257193,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1593,
-        "prevyseni_m": 5,
-        "cas_s": 415,
-        "tempo_str": "4:20"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1600,
-        "prevyseni_m": 5,
-        "cas_s": 51705,
-        "tempo_str": "538:28"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1687,
-        "prevyseni_m": 0,
-        "cas_s": 436,
-        "tempo_str": "4:18"
-      }
-    ]
-  },
-  {
-    "id": 20,
-    "file": "postup_1_1430m.geojson",
-    "dist_m": 1430.952479993658,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1571,
-        "prevyseni_m": 10,
-        "cas_s": 402,
-        "tempo_str": "4:16"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1508,
-        "prevyseni_m": 14,
-        "cas_s": 408,
-        "tempo_str": "4:30"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1595,
-        "prevyseni_m": 9,
-        "cas_s": 391,
-        "tempo_str": "4:05"
-      }
-    ]
-  },
-  {
-    "id": 21,
-    "file": "postup_1_1460m.geojson",
-    "dist_m": 1460.2910668767372,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1523,
-        "prevyseni_m": 16,
-        "cas_s": 382,
-        "tempo_str": "4:10"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1514,
-        "prevyseni_m": 20,
-        "cas_s": 397,
-        "tempo_str": "4:22"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1496,
-        "prevyseni_m": 16,
-        "cas_s": 394,
-        "tempo_str": "4:23"
-      }
-    ]
-  },
-  {
-    "id": 22,
-    "file": "postup_1_846m.geojson",
-    "dist_m": 846.8323328735152,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 891,
-        "prevyseni_m": 5,
-        "cas_s": 241,
-        "tempo_str": "4:30"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 940,
-        "prevyseni_m": 9,
-        "cas_s": 246,
-        "tempo_str": "4:22"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 948,
-        "prevyseni_m": 10,
-        "cas_s": 254,
-        "tempo_str": "4:27"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 959,
-        "prevyseni_m": 5,
-        "cas_s": 257,
-        "tempo_str": "4:27"
-      }
-    ]
-  },
-  {
-    "id": 23,
-    "file": "postup_1_880m.geojson",
-    "dist_m": 880.5679985100527,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 929,
-        "prevyseni_m": 0,
-        "cas_s": 267,
-        "tempo_str": "4:46"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 911,
-        "prevyseni_m": 5,
-        "cas_s": 258,
-        "tempo_str": "4:43"
-      }
-    ]
-  },
-  {
-    "id": 24,
-    "file": "postup_1_892m.geojson",
-    "dist_m": 892.3144064734134,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 918,
-        "prevyseni_m": 0,
-        "cas_s": 241,
-        "tempo_str": "4:22"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 975,
-        "prevyseni_m": 0,
-        "cas_s": 253,
-        "tempo_str": "4:19"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 978,
-        "prevyseni_m": 0,
-        "cas_s": 248,
-        "tempo_str": "4:13"
-      }
-    ]
-  },
-  {
-    "id": 25,
-    "file": "postup_1_924m.geojson",
-    "dist_m": 924.837823620985,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1002,
-        "prevyseni_m": 5,
-        "cas_s": 246,
-        "tempo_str": "4:05"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 973,
-        "prevyseni_m": 5,
-        "cas_s": 257,
-        "tempo_str": "4:24"
-      }
-    ]
-  },
-  {
-    "id": 26,
-    "file": "postup_2_1005m.geojson",
-    "dist_m": 1005.0994975623059,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1051,
-        "prevyseni_m": 0,
-        "cas_s": 281,
-        "tempo_str": "4:27"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1083,
-        "prevyseni_m": 5,
-        "cas_s": 292,
-        "tempo_str": "4:29"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1083,
-        "prevyseni_m": 0,
-        "cas_s": 296,
-        "tempo_str": "4:33"
-      }
-    ]
-  },
-  {
-    "id": 27,
-    "file": "postup_2_1226m.geojson",
-    "dist_m": 1226.560230889621,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1316,
-        "prevyseni_m": 0,
-        "cas_s": 313,
-        "tempo_str": "3:58"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1257,
-        "prevyseni_m": 0,
-        "cas_s": 314,
-        "tempo_str": "4:09"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1315,
-        "prevyseni_m": 0,
-        "cas_s": 308,
-        "tempo_str": "3:54"
-      }
-    ]
-  },
-  {
-    "id": 28,
-    "file": "postup_2_1290m.geojson",
-    "dist_m": 1290.658746532173,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1366,
-        "prevyseni_m": 0,
-        "cas_s": 17777,
-        "tempo_str": "216:55"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1446,
-        "prevyseni_m": 0,
-        "cas_s": 373,
-        "tempo_str": "4:18"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1362,
-        "prevyseni_m": 5,
-        "cas_s": 341,
-        "tempo_str": "4:10"
-      }
-    ]
-  },
-  {
-    "id": 29,
-    "file": "postup_2_1297m.geojson",
-    "dist_m": 1297.044717810454,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1350,
-        "prevyseni_m": 14,
-        "cas_s": 337,
-        "tempo_str": "4:09"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1377,
-        "prevyseni_m": 19,
-        "cas_s": 345,
-        "tempo_str": "4:10"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1379,
-        "prevyseni_m": 14,
-        "cas_s": 349,
-        "tempo_str": "4:13"
-      }
-    ]
-  },
-  {
-    "id": 30,
-    "file": "postup_2_1298m.geojson",
-    "dist_m": 1298.345100502944,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1464,
-        "prevyseni_m": 19,
-        "cas_s": 347,
-        "tempo_str": "3:57"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1420,
-        "prevyseni_m": 20,
-        "cas_s": 343,
-        "tempo_str": "4:01"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1712,
-        "prevyseni_m": 5,
-        "cas_s": 444,
-        "tempo_str": "4:19"
-      }
-    ]
-  },
-  {
-    "id": 31,
-    "file": "postup_2_1359m.geojson",
-    "dist_m": 1359.0529790997848,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1429,
-        "prevyseni_m": 25,
-        "cas_s": 344,
-        "tempo_str": "4:00"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1397,
-        "prevyseni_m": 25,
-        "cas_s": 346,
-        "tempo_str": "4:07"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1468,
-        "prevyseni_m": 24,
-        "cas_s": 383,
-        "tempo_str": "4:20"
-      }
-    ]
-  },
-  {
-    "id": 32,
-    "file": "postup_2_1377m.geojson",
-    "dist_m": 1377.1800898938382,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1428,
-        "prevyseni_m": 0,
-        "cas_s": 352,
-        "tempo_str": "4:06"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1437,
-        "prevyseni_m": 0,
-        "cas_s": 354,
-        "tempo_str": "4:06"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1453,
-        "prevyseni_m": 0,
-        "cas_s": 376,
-        "tempo_str": "4:18"
-      }
-    ]
-  },
-  {
-    "id": 33,
-    "file": "postup_2_1468m.geojson",
-    "dist_m": 1468.2046860026023,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1536,
-        "prevyseni_m": 35,
-        "cas_s": 412,
-        "tempo_str": "4:28"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1521,
-        "prevyseni_m": 35,
-        "cas_s": 420,
-        "tempo_str": "4:35"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1499,
-        "prevyseni_m": 37,
-        "cas_s": 421,
-        "tempo_str": "4:40"
-      }
-    ]
-  },
-  {
-    "id": 34,
-    "file": "postup_2_1494m.geojson",
-    "dist_m": 1494.2974938077089,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1578,
-        "prevyseni_m": 0,
-        "cas_s": 366,
-        "tempo_str": "3:51"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1537,
-        "prevyseni_m": 0,
-        "cas_s": 372,
-        "tempo_str": "4:02"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1593,
-        "prevyseni_m": 0,
-        "cas_s": 381,
-        "tempo_str": "3:59"
-      }
-    ]
-  },
-  {
-    "id": 35,
-    "file": "postup_2_880m.geojson",
-    "dist_m": 880.6957476904269,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 931,
-        "prevyseni_m": 25,
-        "cas_s": 251,
-        "tempo_str": "4:29"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 921,
-        "prevyseni_m": 24,
-        "cas_s": 259,
-        "tempo_str": "4:40"
-      }
-    ]
-  },
-  {
-    "id": 36,
-    "file": "postup_2_901m.geojson",
-    "dist_m": 901.1797822854217,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 945,
-        "prevyseni_m": 21,
-        "cas_s": 262,
-        "tempo_str": "4:36"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 947,
-        "prevyseni_m": 15,
-        "cas_s": 261,
-        "tempo_str": "4:35"
-      }
-    ]
-  },
-  {
-    "id": 37,
-    "file": "postup_3_1008m.geojson",
-    "dist_m": 1008.2286447031744,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1043,
-        "prevyseni_m": 0,
-        "cas_s": 261,
-        "tempo_str": "4:10"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1072,
-        "prevyseni_m": 5,
-        "cas_s": 259,
-        "tempo_str": "4:01"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1036,
-        "prevyseni_m": 0,
-        "cas_s": 262,
-        "tempo_str": "4:13"
-      }
-    ]
-  },
-  {
-    "id": 38,
-    "file": "postup_3_1031m.geojson",
-    "dist_m": 1031.7097460041755,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1097,
-        "prevyseni_m": 0,
-        "cas_s": 270,
-        "tempo_str": "4:06"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1073,
-        "prevyseni_m": 0,
-        "cas_s": 265,
-        "tempo_str": "4:07"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1138,
-        "prevyseni_m": 0,
-        "cas_s": 286,
-        "tempo_str": "4:11"
-      }
-    ]
-  },
-  {
-    "id": 39,
-    "file": "postup_3_1044m.geojson",
-    "dist_m": 1044.8444860360798,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1235,
+        "vzdal_m": 1783,
         "prevyseni_m": 31,
-        "cas_s": 306,
-        "tempo_str": "4:07"
+        "cas_s": 375,
+        "tempo_str": "3:30"
       },
       {
         "id": 2,
         "color": "#4444ff",
-        "vzdal_m": 1116,
-        "prevyseni_m": 26,
-        "cas_s": 321,
-        "tempo_str": "4:47"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1103,
-        "prevyseni_m": 26,
-        "cas_s": 320,
-        "tempo_str": "4:49"
-      }
-    ]
-  },
-  {
-    "id": 40,
-    "file": "postup_3_1062m.geojson",
-    "dist_m": 1062.5676449054902,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1153,
-        "prevyseni_m": 0,
-        "cas_s": 265,
-        "tempo_str": "3:50"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1081,
-        "prevyseni_m": 0,
-        "cas_s": 270,
-        "tempo_str": "4:10"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1114,
-        "prevyseni_m": 0,
-        "cas_s": 277,
-        "tempo_str": "4:08"
-      }
-    ]
-  },
-  {
-    "id": 41,
-    "file": "postup_3_1127m.geojson",
-    "dist_m": 1127.0869531673234,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1239,
-        "prevyseni_m": 0,
-        "cas_s": 283,
-        "tempo_str": "3:48"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1287,
-        "prevyseni_m": 0,
-        "cas_s": 282,
-        "tempo_str": "3:38"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1309,
-        "prevyseni_m": 10,
-        "cas_s": 282,
-        "tempo_str": "3:35"
-      }
-    ]
-  },
-  {
-    "id": 42,
-    "file": "postup_3_1143m.geojson",
-    "dist_m": 1143.2519407374737,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1216,
-        "prevyseni_m": 9,
-        "cas_s": 312,
-        "tempo_str": "4:16"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1243,
-        "prevyseni_m": 11,
-        "cas_s": 327,
-        "tempo_str": "4:22"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1218,
-        "prevyseni_m": 15,
-        "cas_s": 310,
-        "tempo_str": "4:14"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 1440,
-        "prevyseni_m": 36,
-        "cas_s": 368,
-        "tempo_str": "4:15"
-      }
-    ]
-  },
-  {
-    "id": 43,
-    "file": "postup_3_1307m.geojson",
-    "dist_m": 1307.2585819186654,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1424,
-        "prevyseni_m": 101,
-        "cas_s": 485,
-        "tempo_str": "5:40"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1483,
-        "prevyseni_m": 98,
-        "cas_s": 475,
-        "tempo_str": "5:20"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1363,
-        "prevyseni_m": 94,
-        "cas_s": 485,
-        "tempo_str": "5:55"
-      }
-    ]
-  },
-  {
-    "id": 44,
-    "file": "postup_3_1446m.geojson",
-    "dist_m": 1446.8759449240974,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1507,
-        "prevyseni_m": 52,
-        "cas_s": 430,
-        "tempo_str": "4:45"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1505,
-        "prevyseni_m": 54,
-        "cas_s": 431,
-        "tempo_str": "4:46"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1522,
-        "prevyseni_m": 56,
-        "cas_s": 444,
-        "tempo_str": "4:52"
-      }
-    ]
-  },
-  {
-    "id": 45,
-    "file": "postup_3_1474m.geojson",
-    "dist_m": 1474.347313220328,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1542,
-        "prevyseni_m": 10,
-        "cas_s": 397,
-        "tempo_str": "4:17"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1620,
-        "prevyseni_m": 21,
-        "cas_s": 413,
-        "tempo_str": "4:15"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1540,
-        "prevyseni_m": 9,
-        "cas_s": 399,
-        "tempo_str": "4:19"
-      }
-    ]
-  },
-  {
-    "id": 46,
-    "file": "postup_3_813m.geojson",
-    "dist_m": 813.2957641596322,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 821,
-        "prevyseni_m": 0,
-        "cas_s": 207,
-        "tempo_str": "4:12"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 835,
-        "prevyseni_m": 0,
-        "cas_s": 216,
-        "tempo_str": "4:18"
-      }
-    ]
-  },
-  {
-    "id": 47,
-    "file": "postup_3_872m.geojson",
-    "dist_m": 872.7685833025844,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 936,
-        "prevyseni_m": 19,
-        "cas_s": 232,
-        "tempo_str": "4:07"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1012,
-        "prevyseni_m": 20,
-        "cas_s": 242,
-        "tempo_str": "3:58"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 921,
-        "prevyseni_m": 14,
-        "cas_s": 254,
-        "tempo_str": "4:35"
-      }
-    ]
-  },
-  {
-    "id": 48,
-    "file": "postup_3_981m.geojson",
-    "dist_m": 981.5294188153507,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1113,
-        "prevyseni_m": 53,
-        "cas_s": 349,
-        "tempo_str": "5:13"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1234,
-        "prevyseni_m": 48,
-        "cas_s": 355,
-        "tempo_str": "4:47"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1130,
-        "prevyseni_m": 47,
-        "cas_s": 346,
-        "tempo_str": "5:06"
-      }
-    ]
-  },
-  {
-    "id": 49,
-    "file": "postup_3_983m.geojson",
-    "dist_m": 983.5141076771599,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1016,
-        "prevyseni_m": 31,
-        "cas_s": 288,
-        "tempo_str": "4:43"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 996,
-        "prevyseni_m": 32,
-        "cas_s": 289,
-        "tempo_str": "4:49"
-      }
-    ]
-  },
-  {
-    "id": 50,
-    "file": "postup_4_1126m.geojson",
-    "dist_m": 1126.454615153225,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1200,
-        "prevyseni_m": 27,
-        "cas_s": 307,
-        "tempo_str": "4:15"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1177,
-        "prevyseni_m": 27,
-        "cas_s": 312,
-        "tempo_str": "4:25"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1184,
-        "prevyseni_m": 31,
-        "cas_s": 340,
-        "tempo_str": "4:47"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 1182,
-        "prevyseni_m": 23,
-        "cas_s": 309,
-        "tempo_str": "4:21"
-      }
-    ]
-  },
-  {
-    "id": 51,
-    "file": "postup_4_1140m.geojson",
-    "dist_m": 1140.570032922135,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1199,
-        "prevyseni_m": 29,
-        "cas_s": 319,
-        "tempo_str": "4:26"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1182,
-        "prevyseni_m": 30,
-        "cas_s": 325,
-        "tempo_str": "4:34"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1235,
-        "prevyseni_m": 29,
-        "cas_s": 332,
-        "tempo_str": "4:28"
-      }
-    ]
-  },
-  {
-    "id": 52,
-    "file": "postup_4_1199m.geojson",
-    "dist_m": 1199.426946504038,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1241,
-        "prevyseni_m": 0,
-        "cas_s": 295,
-        "tempo_str": "3:57"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1234,
-        "prevyseni_m": 0,
-        "cas_s": 304,
-        "tempo_str": "4:06"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1315,
-        "prevyseni_m": 0,
-        "cas_s": 35126,
-        "tempo_str": "445:02"
-      }
-    ]
-  },
-  {
-    "id": 53,
-    "file": "postup_4_1319m.geojson",
-    "dist_m": 1319.280106724876,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1363,
-        "prevyseni_m": 0,
-        "cas_s": 329,
-        "tempo_str": "4:01"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1399,
-        "prevyseni_m": 0,
-        "cas_s": 331,
-        "tempo_str": "3:56"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1381,
-        "prevyseni_m": 0,
-        "cas_s": 343,
-        "tempo_str": "4:08"
-      }
-    ]
-  },
-  {
-    "id": 54,
-    "file": "postup_4_1370m.geojson",
-    "dist_m": 1370.7114940788963,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1541,
-        "prevyseni_m": 9,
-        "cas_s": 389,
-        "tempo_str": "4:12"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1485,
-        "prevyseni_m": 9,
-        "cas_s": 414,
-        "tempo_str": "4:38"
-      }
-    ]
-  },
-  {
-    "id": 55,
-    "file": "postup_4_1407m.geojson",
-    "dist_m": 1407.2402069298616,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1494,
-        "prevyseni_m": 24,
-        "cas_s": 391,
-        "tempo_str": "4:21"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1491,
-        "prevyseni_m": 19,
+        "vzdal_m": 1865,
+        "prevyseni_m": 38,
         "cas_s": 385,
-        "tempo_str": "4:18"
-      }
-    ]
-  },
-  {
-    "id": 56,
-    "file": "postup_4_1445m.geojson",
-    "dist_m": 1445.1384016764623,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1657,
-        "prevyseni_m": 15,
-        "cas_s": 383,
-        "tempo_str": "3:50"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1595,
-        "prevyseni_m": 25,
-        "cas_s": 364,
-        "tempo_str": "3:48"
+        "tempo_str": "3:26"
       },
       {
         "id": 3,
         "color": "#44ff44",
-        "vzdal_m": 1645,
-        "prevyseni_m": 14,
-        "cas_s": 391,
-        "tempo_str": "3:57"
+        "vzdal_m": 1765,
+        "prevyseni_m": 35,
+        "cas_s": 379,
+        "tempo_str": "3:34"
       }
     ]
   },
   {
-    "id": 57,
-    "file": "postup_4_1472m.geojson",
-    "dist_m": 1472.2856380471828,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1655,
-        "prevyseni_m": 84,
-        "cas_s": 519,
-        "tempo_str": "5:13"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1560,
-        "prevyseni_m": 90,
-        "cas_s": 528,
-        "tempo_str": "5:38"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1719,
-        "prevyseni_m": 88,
-        "cas_s": 535,
-        "tempo_str": "5:11"
-      }
-    ]
-  },
-  {
-    "id": 58,
-    "file": "postup_4_820m.geojson",
-    "dist_m": 820.3657720797473,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 839,
-        "prevyseni_m": 5,
-        "cas_s": 215,
-        "tempo_str": "4:16"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 890,
-        "prevyseni_m": 9,
-        "cas_s": 217,
-        "tempo_str": "4:04"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 862,
-        "prevyseni_m": 5,
-        "cas_s": 220,
-        "tempo_str": "4:15"
-      }
-    ]
-  },
-  {
-    "id": 59,
-    "file": "postup_4_908m.geojson",
-    "dist_m": 908.9829481348921,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 962,
-        "prevyseni_m": 0,
-        "cas_s": 223,
-        "tempo_str": "3:52"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 958,
-        "prevyseni_m": 0,
-        "cas_s": 242,
-        "tempo_str": "4:12"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 996,
-        "prevyseni_m": 0,
-        "cas_s": 230,
-        "tempo_str": "3:51"
-      }
-    ]
-  },
-  {
-    "id": 60,
-    "file": "postup_4_913m.geojson",
-    "dist_m": 913.6328584283733,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 925,
-        "prevyseni_m": 30,
-        "cas_s": 261,
-        "tempo_str": "4:41"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1042,
-        "prevyseni_m": 27,
-        "cas_s": 262,
-        "tempo_str": "4:11"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 958,
-        "prevyseni_m": 31,
-        "cas_s": 276,
-        "tempo_str": "4:48"
-      }
-    ]
-  },
-  {
-    "id": 61,
-    "file": "postup_4_938m.geojson",
-    "dist_m": 938.735852090459,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 989,
-        "prevyseni_m": 0,
-        "cas_s": 230,
-        "tempo_str": "3:52"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1027,
-        "prevyseni_m": 0,
-        "cas_s": 21571,
-        "tempo_str": "350:02"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 983,
-        "prevyseni_m": 0,
-        "cas_s": 234,
-        "tempo_str": "3:58"
-      }
-    ]
-  },
-  {
-    "id": 62,
-    "file": "postup_4_977m.geojson",
-    "dist_m": 977.6630298829959,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1056,
-        "prevyseni_m": 32,
-        "cas_s": 298,
-        "tempo_str": "4:42"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1024,
-        "prevyseni_m": 28,
-        "cas_s": 300,
-        "tempo_str": "4:53"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1003,
-        "prevyseni_m": 27,
-        "cas_s": 296,
-        "tempo_str": "4:55"
-      }
-    ]
-  },
-  {
-    "id": 63,
-    "file": "postup_5_1202m.geojson",
-    "dist_m": 1202.8299963003915,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1246,
-        "prevyseni_m": 20,
-        "cas_s": 315,
-        "tempo_str": "4:12"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1254,
-        "prevyseni_m": 19,
-        "cas_s": 327,
-        "tempo_str": "4:21"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1246,
-        "prevyseni_m": 16,
-        "cas_s": 318,
-        "tempo_str": "4:15"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 1396,
-        "prevyseni_m": 24,
-        "cas_s": 346,
-        "tempo_str": "4:07"
-      }
-    ]
-  },
-  {
-    "id": 64,
-    "file": "postup_5_1304m.geojson",
-    "dist_m": 1304.645545732633,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1399,
-        "prevyseni_m": 19,
-        "cas_s": 338,
-        "tempo_str": "4:01"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1358,
-        "prevyseni_m": 20,
-        "cas_s": 348,
-        "tempo_str": "4:16"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1367,
-        "prevyseni_m": 14,
-        "cas_s": 338,
-        "tempo_str": "4:07"
-      }
-    ]
-  },
-  {
-    "id": 65,
-    "file": "postup_5_1368m.geojson",
-    "dist_m": 1368.3018672792928,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1457,
-        "prevyseni_m": 26,
-        "cas_s": 360,
-        "tempo_str": "4:06"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1446,
-        "prevyseni_m": 24,
-        "cas_s": 378,
-        "tempo_str": "4:21"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1480,
-        "prevyseni_m": 25,
-        "cas_s": 381,
-        "tempo_str": "4:17"
-      }
-    ]
-  },
-  {
-    "id": 66,
-    "file": "postup_5_1449m.geojson",
-    "dist_m": 1449.310180741169,
-    "variants_count": 4,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 1545,
-        "prevyseni_m": 21,
-        "cas_s": 405,
-        "tempo_str": "4:22"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1615,
-        "prevyseni_m": 11,
-        "cas_s": 405,
-        "tempo_str": "4:10"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 1524,
-        "prevyseni_m": 26,
-        "cas_s": 405,
-        "tempo_str": "4:25"
-      },
-      {
-        "id": 4,
-        "color": "#ffaa00",
-        "vzdal_m": 3539,
-        "prevyseni_m": 19,
-        "cas_s": 805,
-        "tempo_str": "3:47"
-      }
-    ]
-  },
-  {
-    "id": 67,
-    "file": "postup_5_1450m.geojson",
-    "dist_m": 1450.551619212498,
+    "id": 8,
+    "file": "postup_008_1088m_s59.geojson",
+    "dist_m": 1088.9674007976548,
     "variants_count": 2,
     "variants": [
       {
         "id": 1,
         "color": "#ff4444",
-        "vzdal_m": 1485,
-        "prevyseni_m": 19,
-        "cas_s": 394,
-        "tempo_str": "4:25"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1543,
-        "prevyseni_m": 19,
-        "cas_s": 404,
-        "tempo_str": "4:21"
-      }
-    ]
-  },
-  {
-    "id": 68,
-    "file": "postup_5_812m.geojson",
-    "dist_m": 812.603839518372,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 831,
-        "prevyseni_m": 5,
-        "cas_s": 217,
-        "tempo_str": "4:20"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 874,
-        "prevyseni_m": 10,
-        "cas_s": 221,
-        "tempo_str": "4:13"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 862,
+        "vzdal_m": 1227,
         "prevyseni_m": 0,
-        "cas_s": 243,
-        "tempo_str": "4:42"
-      }
-    ]
-  },
-  {
-    "id": 69,
-    "file": "postup_5_847m.geojson",
-    "dist_m": 847.7322690566875,
-    "variants_count": 3,
-    "variants": [
+        "cas_s": 239,
+        "tempo_str": "3:15"
+      },
       {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 881,
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1133,
         "prevyseni_m": 0,
-        "cas_s": 229,
-        "tempo_str": "4:19"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 893,
-        "prevyseni_m": 5,
-        "cas_s": 231,
-        "tempo_str": "4:19"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 885,
-        "prevyseni_m": 5,
-        "cas_s": 229,
-        "tempo_str": "4:19"
-      }
-    ]
-  },
-  {
-    "id": 70,
-    "file": "postup_5_850m.geojson",
-    "dist_m": 850.0,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 859,
-        "prevyseni_m": 26,
-        "cas_s": 257,
-        "tempo_str": "4:59"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1054,
-        "prevyseni_m": 25,
-        "cas_s": 269,
-        "tempo_str": "4:15"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 911,
-        "prevyseni_m": 26,
-        "cas_s": 286,
-        "tempo_str": "5:13"
-      }
-    ]
-  },
-  {
-    "id": 71,
-    "file": "postup_5_926m.geojson",
-    "dist_m": 926.6741606411608,
-    "variants_count": 3,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 955,
-        "prevyseni_m": 46,
-        "cas_s": 312,
-        "tempo_str": "5:26"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1026,
-        "prevyseni_m": 51,
-        "cas_s": 337,
-        "tempo_str": "5:27"
-      },
-      {
-        "id": 3,
-        "color": "#44ff44",
-        "vzdal_m": 998,
-        "prevyseni_m": 45,
-        "cas_s": 311,
-        "tempo_str": "5:11"
-      }
-    ]
-  },
-  {
-    "id": 72,
-    "file": "postup_5_938m.geojson",
-    "dist_m": 938.735852090459,
-    "variants_count": 2,
-    "variants": [
-      {
-        "id": 1,
-        "color": "#ff4444",
-        "vzdal_m": 989,
-        "prevyseni_m": 0,
-        "cas_s": 236,
-        "tempo_str": "3:59"
-      },
-      {
-        "id": 2,
-        "color": "#4444ff",
-        "vzdal_m": 1038,
-        "prevyseni_m": 0,
-        "cas_s": 252,
-        "tempo_str": "4:02"
+        "cas_s": 235,
+        "tempo_str": "3:27"
       }
     ]
   }

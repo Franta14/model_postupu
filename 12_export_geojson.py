@@ -33,7 +33,7 @@ def convert_to_geojson():
     Image.MAX_IMAGE_PIXELS = None
     img = Image.open(config.PNG_FILE)
     w, h = img.size
-    max_zoom = math.ceil(math.log2(max(w, h) / 256))
+    max_zoom = math.ceil(math.log2(max(w, h) / 512)) # Změněno na 512px
     scale = 2 ** max_zoom
     
     # Helper to convert (grid_y, grid_x) to (lng, lat) for CRS.Simple
