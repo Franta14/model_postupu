@@ -97,32 +97,20 @@ html, body {
 }
 
 .scroll-btn {
-  background: rgba(30, 30, 30, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 10px 20px;
-  border-radius: 25px;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-  pointer-events: none; /* Swipe chytá parent */
+  display: none;
 }
 
 /* UI overlay at bottom of each slide */
 .reel-ui {
   position: absolute;
-  bottom: 120px; /* Posunuto nad scroll-area (60px) + navigační lištu (60px) */
+  bottom: 60px; /* Úplně dole u navigační lišty */
   left: 0;
   width: 100%;
-  padding: 8px 12px 14px;
-  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%);
+  padding: 15px 12px 14px; /* Větší padding nahoře pro delší gradient */
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%);
   display: flex;
   flex-direction: column;
-  z-index: 2;
+  z-index: 5;
   pointer-events: none;
 }
 

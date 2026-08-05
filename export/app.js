@@ -334,15 +334,37 @@ function renderMapData(index, geojsonOriginal) {
         }
     });
     
-    // Tile layer s ořezem na bounding box postupu + 30% margin
-    if (!currentTileLayers[index] && allLngs.length > 0) {
-        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-        let marginLng = (maxLng - minLng) * 0.30;
-        let marginLat = (maxLat - minLat) * 0.30;
+    // Map calculation for tileBounds based on ideal screen bounds
+    if (!currentTileLayers[index] && startCoords && endCoords) {
+        let w = window.innerWidth;
+        let h = window.innerHeight; // Full visual height
+        
+        let dx = endCoords[0] - startCoords[0];
+        let dy = endCoords[1] - startCoords[1];
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        
+        let targetPixelsY = (h - 60) * 0.90;
+        let idealZoom = dist > 0 ? Math.log2(targetPixelsY / dist) : 0;
+        let maxZoom = map.getMaxZoom() || 8;
+        idealZoom = Math.max(0, Math.min(maxZoom, idealZoom));
+        
+        let pixelScale = Math.pow(2, idealZoom);
+        
+        // Compute the map bounds that exactly cover the rotated screen
+        let rad = (Math.atan2(dy, dx) - Math.PI/2);
+        let cosA = Math.abs(Math.cos(rad));
+        let sinA = Math.abs(Math.sin(rad));
+        
+        let w_map = (w * cosA + h * sinA) / pixelScale;
+        let h_map = (w * sinA + h * cosA) / pixelScale;
+        
+        let midX = (startCoords[0] + endCoords[0]) / 2;
+        let midY = (startCoords[1] + endCoords[1]) / 2;
+        
+        // Bounding box of the visible screen in unrotated Leaflet coords
         let tileBounds = [
-            [minLat - marginLat, minLng - marginLng],
-            [maxLat + marginLat, maxLng + marginLng]
+            [midY - h_map/2, midX - w_map/2],
+            [midY + h_map/2, midX + w_map/2]
         ];
         
         let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
@@ -352,6 +374,7 @@ function renderMapData(index, geojsonOriginal) {
             maxNativeZoom: 5,
             noWrap: true,
             tms: false,
+            bounds: tileBounds, // Přesně ořízne dlaždice na původní obrazovku!
             keepBuffer: 4,
             updateWhenIdle: false,
             updateWhenZooming: true,
@@ -359,15 +382,12 @@ function renderMapData(index, geojsonOriginal) {
         }).addTo(map);
         currentTileLayers[index] = tl;
         
-        // Smart Preloading: pokud je tohle aktivní postup,
-        // počkejme na stažení všech dlaždic, a teprve PAK začněme stahovat
-        // na pozadí dlaždice pro následující postup. Zabrání to síťové zácpě.
+        // Smart Preloading
         if (index === activeIndex) {
             tl.once('load', () => {
                 preloadReel(index + 1);
                 preloadReel(index - 1);
             });
-            // Bezpečnostní pojistka: pokud by se událost neodpálila (např. vše je v cache)
             setTimeout(() => {
                 preloadReel(index + 1);
                 preloadReel(index - 1);
