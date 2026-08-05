@@ -38,41 +38,159 @@
     </script>
 </head>
 <body>
-    <div id="loader">Načítám postupy...</div>
-    
-    <div id="calibration-ui">
-        KALIBRAČNÍ MÓD ZAPNUT<br>
-        Šipkami posouvej trasu.<br>
-        X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
-    </div>
-    
-    <!-- Foreground scroll-snapping reels -->
-    <div id="reels-container">
-        <!-- JS will inject .reel elements here -->
-    </div>
-    
-    <!-- Global Variants Panel (Bottom Sheet) -->
-    <div class="variants-panel pos-top-right" id="global-variants-panel">
-        <div class="panel-header">
-            <div class="panel-title">Ideální postupy</div>
-            <button class="toggle-btn" id="global-toggle-btn">▼</button>
+    <main id="app-content">
+        <!-- 1. OBRAZOVKA: OBJEVUJ -->
+        <div id="screen-explore" class="app-screen active">
+            <div class="explore-header">
+                <h2>Objevuj terény</h2>
+                <input type="text" placeholder="🔍 Hledat terén..." class="explore-search">
+            </div>
+            <div class="explore-grid">
+                <!-- Speciální karta pro náhodný výběr ze všech -->
+                <div class="terrain-card random-mix selected" data-terrain="*">
+                    <div class="card-bg"></div>
+                    <div class="card-content">
+                        <span class="icon">🎲</span>
+                        <div class="card-info">
+                            <h3>Náhodný mix</h3>
+                            <p>Všechny terény</p>
+                        </div>
+                        <span class="checkmark">✅</span>
+                    </div>
+                </div>
+                
+                <!-- Demo karta 1 -->
+                <div class="terrain-card" data-terrain="cesky-les">
+                    <div class="card-bg" style="background: linear-gradient(135deg, #2b5a2b, #1e3f1e);"></div>
+                    <div class="card-content">
+                        <div class="card-info">
+                            <h3>Český les</h3>
+                            <p>Ukázkový terén</p>
+                        </div>
+                        <span class="checkmark">☐</span>
+                    </div>
+                </div>
+                
+                <!-- Demo karta 2 -->
+                <div class="terrain-card" data-terrain="skandinavie">
+                    <div class="card-bg" style="background: linear-gradient(135deg, #3a5c76, #243c4f);"></div>
+                    <div class="card-content">
+                        <div class="card-info">
+                            <h3>Skandinávie</h3>
+                            <p>Ukázkový terén</p>
+                        </div>
+                        <span class="checkmark">☐</span>
+                    </div>
+                </div>
+            </div>
+            <div class="explore-actions">
+                <button id="btn-explore-scroll" class="btn-primary">▶️ SCROLLOVAT</button>
+            </div>
         </div>
-        <div id="global-variants-content"></div>
-    </div>
-    
-    <!-- Offline Sync Button -->
-    <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
-        💾
-    </button>
-    
-    <!-- Sync Progress Overlay -->
-    <div id="sync-progress" class="sync-progress-overlay">
-        <div class="sync-box">
-            <h4>Stahování dat...</h4>
-            <div class="progress-bar"><div id="sync-bar" class="progress-fill"></div></div>
-            <div id="sync-text">0 / 0</div>
+
+        <!-- 2. OBRAZOVKA: SCROLLUJ (Původní aplikace) -->
+        <div id="screen-scroll" class="app-screen">
+            <div id="loader">Načítám postupy...</div>
+            
+            <div id="calibration-ui">
+                KALIBRAČNÍ MÓD ZAPNUT<br>
+                Šipkami posouvej trasu.<br>
+                X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
+            </div>
+            
+            <!-- Foreground scroll-snapping reels -->
+            <div id="reels-container">
+                <!-- JS will inject .reel elements here -->
+            </div>
+            
+            <!-- Global Variants Panel (Bottom Sheet) -->
+            <div class="variants-panel pos-top-right" id="global-variants-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Ideální postupy</div>
+                    <button class="toggle-btn" id="global-toggle-btn">▼</button>
+                </div>
+                <div id="global-variants-content"></div>
+            </div>
+            
+            <!-- Offline Sync Button -->
+            <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
+                💾
+            </button>
+            
+            <!-- Sync Progress Overlay -->
+            <div id="sync-progress" class="sync-progress-overlay">
+                <div class="sync-box">
+                    <h4>Stahování dat...</h4>
+                    <div class="progress-bar"><div id="sync-bar" class="progress-fill"></div></div>
+                    <div id="sync-text">0 / 0</div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- 3. OBRAZOVKA: PROFIL -->
+        <div id="screen-profile" class="app-screen">
+            <div class="screen-header"><h2>Profil</h2></div>
+            <div class="screen-content">
+                <div class="profile-placeholder">
+                    <div class="avatar">👤</div>
+                    <h3>Nepřihlášený uživatel</h3>
+                    <p>Zde se budou ukládat tvé oblíbené postupy.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. OBRAZOVKA: NASTAVENÍ -->
+        <div id="screen-settings" class="app-screen">
+            <div class="screen-header"><h2>Nastavení</h2></div>
+            <div class="screen-content">
+                <div class="settings-group">
+                    <h3>🏃 Běžec</h3>
+                    <div class="setting-item">
+                        <label>Tempo na cestě</label>
+                        <input type="range" min="3" max="5" step="0.1" value="3.6">
+                        <span class="value">3:40 min/km</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>📱 Aplikace</h3>
+                    <div class="setting-item">
+                        <label>Jazyk</label>
+                        <select><option>Čeština</option><option>English</option></select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Vzhled</label>
+                        <select><option>Systémový</option><option>Tmavý</option><option>Světlý</option></select>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>💾 Mapy</h3>
+                    <div class="setting-item">
+                        <button class="btn-secondary" onclick="alert('Cache vymazána')">Vymazat cache (0 MB)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SPODNÍ NAVIGACE -->
+    <nav id="bottom-nav">
+        <button class="nav-btn active" data-target="screen-explore">
+            <span class="nav-icon">🧭</span>
+            <span class="nav-label">Objevuj</span>
+        </button>
+        <button class="nav-btn" data-target="screen-scroll">
+            <span class="nav-icon">▶️</span>
+            <span class="nav-label">Scrolluj</span>
+        </button>
+        <button class="nav-btn" data-target="screen-profile">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Profil</span>
+        </button>
+        <button class="nav-btn" data-target="screen-settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Nastavení</span>
+        </button>
+    </nav>
     
     <script src="app.js?v=21"></script>
 </body>

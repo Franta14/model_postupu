@@ -657,3 +657,101 @@ async function startOfflineSync() {
         overlay.classList.remove('active');
     }
 }
+
+// === SPA ROUTER A LOGIKA VÝBĚRU ===
+
+let appState = {
+    selectedTerrains: ['*'] // Výchozí: Náhodný mix
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Spodní navigace
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const screens = document.querySelectorAll('.app-screen');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
+            
+            // Special behavior pro tlačítko "Scrolluj"
+            if (targetId === 'screen-scroll') {
+                if (appState.selectedTerrains.length === 0) {
+                    appState.selectedTerrains = ['*'];
+                    document.querySelector('.terrain-card.random-mix').classList.add('selected');
+                }
+                // Tady by v budoucnu bylo filtrování postupyData podle vybraných terénů a zavolání buildReels()
+            }
+
+            // Přepnutí tlačítek
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Přepnutí obrazovek
+            screens.forEach(screen => {
+                if (screen.id === targetId) {
+                    screen.classList.add('active');
+                } else {
+                    screen.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // 2. Tlačítko na Explore obrazovce
+    const btnExploreScroll = document.getElementById('btn-explore-scroll');
+    if (btnExploreScroll) {
+        btnExploreScroll.addEventListener('click', () => {
+            const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
+            if (scrollNavBtn) scrollNavBtn.click();
+        });
+    }
+
+    // 3. Logika karet terénů
+    const terrainCards = document.querySelectorAll('.terrain-card');
+    terrainCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const terrain = card.getAttribute('data-terrain');
+            const isRandom = terrain === '*';
+
+            if (isRandom) {
+                // Vybrán random mix -> zrušit ostatní
+                terrainCards.forEach(c => {
+                    c.classList.remove('selected');
+                    c.querySelector('.checkmark').innerText = '☐';
+                });
+                card.classList.add('selected');
+                card.querySelector('.checkmark').innerText = '✅';
+                appState.selectedTerrains = ['*'];
+            } else {
+                // Vybrán konkrétní terén -> zrušit random mix
+                const randomCard = document.querySelector('.terrain-card.random-mix');
+                if (randomCard) {
+                    randomCard.classList.remove('selected');
+                    randomCard.querySelector('.checkmark').innerText = '☐';
+                }
+
+                // Toggle aktuální karty
+                card.classList.toggle('selected');
+                const check = card.querySelector('.checkmark');
+                if (card.classList.contains('selected')) {
+                    check.innerText = '✅';
+                } else {
+                    check.innerText = '☐';
+                }
+
+                // Přepočítat stav
+                appState.selectedTerrains = Array.from(document.querySelectorAll('.terrain-card.selected:not(.random-mix)'))
+                    .map(c => c.getAttribute('data-terrain'));
+                
+                // Pokud uživatel vše odznačí, automaticky vybrat random
+                if (appState.selectedTerrains.length === 0) {
+                    appState.selectedTerrains = ['*'];
+                    if (randomCard) {
+                        randomCard.classList.add('selected');
+                        randomCard.querySelector('.checkmark').innerText = '✅';
+                    }
+                }
+            }
+        });
+    });
+});
