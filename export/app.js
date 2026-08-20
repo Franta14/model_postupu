@@ -41,13 +41,23 @@ document.addEventListener("DOMContentLoaded", () => {
     loadData();
 });
 
+const TERRAINS = ['cesky-les', 'skandinavie', 'madarsko', 'piskovce', 'alpy', 'mesto'];
+let selectedTerrains = new Set();
+
 function loadData() {
     fetch('postupy/postupy_index.json?v=' + Date.now())
         .then(res => res.json())
         .then(data => {
             postupyData = data;
+            // DUMMY: Assign a terrain to each map for demonstration purposes
+            postupyData.forEach((map, index) => {
+                map.terrain = TERRAINS[index % TERRAINS.length];
+            });
+            
             buildReels();
             setupObserver();
+            renderExploreGrid();
+            setupExploreStories();
             
             setTimeout(() => {
                 document.getElementById('loader').style.opacity = 0;
@@ -67,6 +77,7 @@ function buildReels() {
         const reel = document.createElement('div');
         reel.className = 'reel';
         reel.dataset.index = index;
+        reel.dataset.terrain = postup.terrain; // Přidáno pro filtraci
 
         reel.innerHTML = `
             <div class="map-clip" id="clip-${index}">
@@ -772,33 +783,130 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 2. Logika karet terénů (IG Grid)
-    const igSquares = document.querySelectorAll('.ig-square');
+    // 2. Logika Explore (Stories a Grid)
+    // Inicializace se provádí z loadData přes renderExploreGrid() a setupExploreStories()
+});
+
+function setupExploreStories() {
+    const stories = document.querySelectorAll('.story-item');
     const navBadge = document.getElementById('nav-badge');
-
-    function updateBadge() {
-        const selectedCount = document.querySelectorAll('.ig-square.selected').length;
-        if (selectedCount > 0) {
-            navBadge.innerText = selectedCount;
-            navBadge.style.display = 'flex';
-        } else {
-            navBadge.style.display = 'none';
-        }
-        
-        if (selectedCount === 0) {
-            appState.selectedTerrains = ['*'];
-        } else {
-            appState.selectedTerrains = Array.from(document.querySelectorAll('.ig-square.selected'))
-                .map(sq => sq.getAttribute('data-terrain'));
-        }
-    }
-
-    igSquares.forEach(square => {
-        square.addEventListener('click', () => {
-            square.classList.toggle('selected');
-            updateBadge();
+    
+    stories.forEach(story => {
+        story.addEventListener('click', () => {
+            const terrain = story.getAttribute('data-terrain');
+            const ring = story.querySelector('.story-ring');
+            
+            if (selectedTerrains.has(terrain)) {
+                selectedTerrains.delete(terrain);
+                ring.classList.remove('active-story');
+            } else {
+                selectedTerrains.add(terrain);
+                ring.classList.add('active-story');
+            }
+            
+            updateExploreBadge(navBadge);
+            renderExploreGrid(); // Refresh grid preview
         });
     });
+}
+
+function updateExploreBadge(badgeEl) {
+    if (selectedTerrains.size > 0) {
+        badgeEl.innerText = selectedTerrains.size;
+        badgeEl.style.display = 'flex';
+        appState.selectedTerrains = Array.from(selectedTerrains);
+    } else {
+        badgeEl.style.display = 'none';
+        appState.selectedTerrains = ['*'];
+    }
     
-    updateBadge();
-});
+    // Filtrování samotných Reels v hlavní obrazovce (aby scrollování odpovídalo výběru)
+    const allReels = document.querySelectorAll('.reel');
+    allReels.forEach(reel => {
+        if (selectedTerrains.size === 0) {
+            reel.style.display = 'block'; // Zobrazit vše
+        } else {
+            const t = reel.getAttribute('data-terrain');
+            if (selectedTerrains.has(t)) {
+                reel.style.display = 'block';
+            } else {
+                reel.style.display = 'none';
+            }
+        }
+    });
+}
+
+function renderExploreGrid() {
+    const container = document.getElementById('explore-grid-container');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    let displayData = postupyData;
+    if (selectedTerrains.size > 0) {
+        displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
+    }
+    
+    displayData.forEach((map, index) => {
+        // DUMMY: Randomly pick a placeholder image for the thumbnail
+        const images = [
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Jizersk%C3%A9_hory_%284%29.jpg/800px-Jizersk%C3%A9_hory_%284%29.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Forest_in_Sweden.jpg/800px-Forest_in_Sweden.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/B%C3%BCkk_National_Park.jpg/800px-B%C3%BCkk_National_Park.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Pravcicka_brana.jpg/800px-Pravcicka_brana.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Matterhorn_from_Domh%C3%BCtte_-_2.jpg/800px-Matterhorn_from_Domh%C3%BCtte_-_2.jpg"
+        ];
+        const thumbUrl = images[map.id % images.length];
+        
+        const isDoubleHeight = (index % 4 === 3); // Make every 4th item double height (Reels style)
+        
+        const el = document.createElement('div');
+        el.className = 'explore-grid-item' + (isDoubleHeight ? ' double-height' : '');
+        
+        let iconHtml = '';
+        if (isDoubleHeight) {
+            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+        } else if (map.variants_count > 1) {
+            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; // multi-post
+        }
+        
+        el.innerHTML = `
+            <div class="grid-img" style="background-image: url('${thumbUrl}');"></div>
+            ${iconHtml}
+        `;
+        
+        el.addEventListener('click', () => {
+            // Skok přímo na mapu do feedu
+            openMapInFeed(map.id);
+        });
+        
+        container.appendChild(el);
+    });
+}
+
+function openMapInFeed(mapId) {
+    // Najdeme index v puvodnim poli postupyData
+    const globalIndex = postupyData.findIndex(m => m.id === mapId);
+    if (globalIndex === -1) return;
+    
+    // Prepne do screen-scroll
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-btn[data-target="screen-scroll"]').classList.add('active');
+    
+    document.querySelectorAll('.app-screen').forEach(screen => {
+        if (screen.id === 'screen-scroll') {
+            screen.classList.add('active');
+        } else {
+            screen.classList.remove('active');
+        }
+    });
+    
+    // Naskroluje feed na pozadovany reel
+    const reelsContainer = document.getElementById('reels-container');
+    const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
+    if (targetReel) {
+        reelsContainer.scrollTo({
+            top: targetReel.offsetTop,
+            behavior: 'auto'
+        });
+    }
+}
