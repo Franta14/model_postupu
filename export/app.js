@@ -456,8 +456,8 @@ function renderMapData(index, geojsonOriginal) {
         let dy = endCoords[1] - startCoords[1];
         let dist = Math.sqrt(dx*dx + dy*dy);
         
-        // Cílová délka postupu na obrazovce v pixelech (např. 90% výšky displeje)
-        let targetPixelsY = h * 0.90;
+        // Cílová délka postupu na obrazovce v pixelech (změněno na 70% pro větší rezervu nad a pod)
+        let targetPixelsY = h * 0.70;
         let idealZoom = 0;
         if (dist > 0) {
             idealZoom = Math.log2(targetPixelsY / dist);
