@@ -185,8 +185,7 @@ function toggleVariants(index) {
                     let bulges = [
                         { corner: 'pos-top-left', val: maxLeftTop },
                         { corner: 'pos-top-right', val: maxRightTop },
-                        { corner: 'pos-bottom-left', val: maxLeftBot },
-                        { corner: 'pos-bottom-right', val: maxRightBot }
+                        { corner: 'pos-bottom-left', val: maxLeftBot }
                     ];
                     bulges.sort((a, b) => a.val - b.val);
                     panelClass = bulges[0].corner;
