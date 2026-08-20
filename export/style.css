@@ -421,13 +421,13 @@ html, body {
   overflow: hidden;
 }
 
-/* Map clip — full screen */
+/* Map clip — stops above bottom nav */
 .map-clip {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 52px); /* above bottom nav */
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -583,10 +583,9 @@ html, body {
   color: var(--text-secondary);
 }
 
-/* Force crisp downscaling for Leaflet tiles on mobile */
+/* Smooth interpolation for Leaflet tiles (no crisp-edges — prevents pixelation on long legs) */
 .leaflet-tile {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
 
 /* ── Variants Panel (clean, Instagram settings style) ── */
