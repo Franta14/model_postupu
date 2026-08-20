@@ -5,7 +5,7 @@ let currentLayers = {}; // stores { index: L.geoJSON }
 let currentOverlays = {}; // stores { index: L.featureGroup }
 let currentTileLayers = {}; // stores { index: L.tileLayer }
 
-const iofPurple = "#D81E5B";
+const iofPurple = "#262626";
 
 document.addEventListener("DOMContentLoaded", () => {
     // Monkey-patch pro správné posouvání mapy při CSS rotaci
@@ -75,10 +75,10 @@ function buildReels() {
             <div class="reel-ui">
                 <div class="reel-header">
                     <div class="reel-subtitle">${postup.dist_m.toFixed(0)} m vzdušně</div>
-                    <button class="btn-primary" onclick="toggleVariants(${index})">Volby</button>
+                    <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>Volby</button>
                 </div>
             </div>
-            <div class="scroll-area">↑ Další postup ↓</div>
+            <div class="scroll-area"><svg class="scroll-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 15l-6 6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 9l6-6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Další postup</span></div>
         `;
         
         container.appendChild(reel);
@@ -190,6 +190,7 @@ function toggleVariants(index) {
         panel.className = 'variants-panel ' + panelClass;
         void panel.offsetWidth; // force reflow
         
+        document.getElementById('global-toggle-btn').innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
         document.getElementById('global-toggle-btn').onclick = () => {
             panel.classList.toggle('collapsed');
         };
@@ -535,7 +536,7 @@ function renderMapData(index, geojsonOriginal) {
         // Vykreslení masky (polygon s dírou)
         let mask = L.polygon([outerRing, innerRing], {
             color: 'transparent',
-            fillColor: '#2a2a2a',
+            fillColor: '#ffffff',
             fillOpacity: 1.0,
             interactive: false,
             pane: 'maskPane'
@@ -647,8 +648,8 @@ async function startOfflineSync() {
         
         setTimeout(() => {
             overlay.classList.remove('active');
-            btn.innerHTML = "✅";
-            btn.style.background = "rgba(46, 204, 113, 0.8)";
+            btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+            btn.style.background = "var(--bg-color)";
             btn.onclick = null;
         }, 500);
         

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Scrollienteering</title>
@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
     <!-- Custom PWA Styles -->
-    <link rel="stylesheet" href="style.css?v=20"/>
+    <link rel="stylesheet" href="style.css?v=30"/>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -55,14 +55,14 @@
     <div class="variants-panel pos-top-right" id="global-variants-panel">
         <div class="panel-header">
             <div class="panel-title">Ideální postupy</div>
-            <button class="toggle-btn" id="global-toggle-btn">▼</button>
+            <button class="toggle-btn" id="global-toggle-btn"><svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
         </div>
         <div id="global-variants-content"></div>
     </div>
     
     <!-- Offline Sync Button -->
     <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
-        💾
+        <svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 17v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
     </button>
     
     <!-- Sync Progress Overlay -->
