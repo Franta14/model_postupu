@@ -16,7 +16,7 @@
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
     <!-- Custom PWA Styles -->
-    <link rel="stylesheet" href="style.css?v=30"/>
+    <link rel="stylesheet" href="style.css?v=31"/>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -38,42 +38,192 @@
     </script>
 </head>
 <body>
-    <div id="loader">Načítám postupy...</div>
-    
-    <div id="calibration-ui">
-        KALIBRAČNÍ MÓD ZAPNUT<br>
-        Šipkami posouvej trasu.<br>
-        X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
-    </div>
-    
-    <!-- Foreground scroll-snapping reels -->
-    <div id="reels-container">
-        <!-- JS will inject .reel elements here -->
-    </div>
-    
-    <!-- Global Variants Panel (Bottom Sheet) -->
-    <div class="variants-panel pos-top-right" id="global-variants-panel">
-        <div class="panel-header">
-            <div class="panel-title">Ideální postupy</div>
-            <button class="toggle-btn" id="global-toggle-btn"><svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
+    <main id="app-content">
+        <!-- 1. OBRAZOVKA: OBJEVUJ -->
+        <div id="screen-explore" class="app-screen active">
+            <div class="explore-header">
+                <h2>Objevuj terény</h2>
+                <input type="text" placeholder="Hledat terén..." class="explore-search">
+            </div>
+            <div class="ig-grid">
+                <!-- IG Style Karta 1 -->
+                <div class="ig-square" data-terrain="cesky-les">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Jizersk%C3%A9_hory_%284%29.jpg/800px-Jizersk%C3%A9_hory_%284%29.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇨🇿 Český les</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 2 -->
+                <div class="ig-square" data-terrain="skandinavie">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Forest_in_Sweden.jpg/800px-Forest_in_Sweden.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇸🇪 Skandinávie</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 3 -->
+                <div class="ig-square" data-terrain="madarsko">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/B%C3%BCkk_National_Park.jpg/800px-B%C3%BCkk_National_Park.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇭🇺 Maďarsko</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 4 -->
+                <div class="ig-square" data-terrain="piskovce">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Pravcicka_brana.jpg/800px-Pravcicka_brana.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🧗 Pískovce</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 5 -->
+                <div class="ig-square" data-terrain="alpy">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Matterhorn_from_Domh%C3%BCtte_-_2.jpg/800px-Matterhorn_from_Domh%C3%BCtte_-_2.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🇨🇭 Alpy</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+                
+                <!-- IG Style Karta 6 -->
+                <div class="ig-square" data-terrain="mesto">
+                    <div class="ig-bg" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Prague_Old_Town_Square.jpg/800px-Prague_Old_Town_Square.jpg');"></div>
+                    <div class="ig-overlay"></div>
+                    <div class="ig-info">
+                        <span class="ig-country">🏙️ Městský sprint</span>
+                    </div>
+                    <div class="ig-check"><div class="check-circle"></div></div>
+                </div>
+            </div>
         </div>
-        <div id="global-variants-content"></div>
-    </div>
-    
-    <!-- Offline Sync Button -->
-    <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
-        <svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 17v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-    </button>
-    
-    <!-- Sync Progress Overlay -->
-    <div id="sync-progress" class="sync-progress-overlay">
-        <div class="sync-box">
-            <h4>Stahování dat...</h4>
-            <div class="progress-bar"><div id="sync-bar" class="progress-fill"></div></div>
-            <div id="sync-text">0 / 0</div>
+
+        <!-- 2. OBRAZOVKA: SCROLLUJ (Původní aplikace) -->
+        <div id="screen-scroll" class="app-screen">
+            <div id="loader">Načítám postupy...</div>
+            
+            <div id="calibration-ui">
+                KALIBRAČNÍ MÓD ZAPNUT<br>
+                Šipkami posouvej trasu.<br>
+                X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
+            </div>
+            
+            <!-- Foreground scroll-snapping reels -->
+            <div id="reels-container">
+                <!-- JS will inject .reel elements here -->
+            </div>
+            
+            <!-- Global Variants Panel (Bottom Sheet) -->
+            <div class="variants-panel pos-top-right" id="global-variants-panel">
+                <div class="panel-header">
+                    <div class="panel-title">Ideální postupy</div>
+                    <button class="toggle-btn" id="global-toggle-btn"><svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
+                </div>
+                <div id="global-variants-content"></div>
+            </div>
+            
+            <!-- Offline Sync Button -->
+            <button id="offline-sync-btn" class="sync-btn" onclick="startOfflineSync()" title="Uložit mapu do paměti (Offline)">
+                <svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 17v2a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </button>
+            
+            <!-- Sync Progress Overlay -->
+            <div id="sync-progress" class="sync-progress-overlay">
+                <div class="sync-box">
+                    <h4>Stahování dat...</h4>
+                    <div class="progress-bar"><div id="sync-bar" class="progress-fill"></div></div>
+                    <div id="sync-text">0 / 0</div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- 3. OBRAZOVKA: PROFIL -->
+        <div id="screen-profile" class="app-screen">
+            <div class="screen-header"><h2>Profil</h2></div>
+            <div class="screen-content">
+                <div class="profile-placeholder">
+                    <div class="avatar">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#8e8e8e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="#8e8e8e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <h3>Nepřihlášený uživatel</h3>
+                    <p>Zde se budou ukládat tvé oblíbené postupy.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. OBRAZOVKA: NASTAVENÍ -->
+        <div id="screen-settings" class="app-screen">
+            <div class="screen-header"><h2>Nastavení</h2></div>
+            <div class="screen-content">
+                <div class="settings-group">
+                    <h3>Běžec</h3>
+                    <div class="setting-item">
+                        <label>Tempo na cestě</label>
+                        <input type="range" min="3" max="5" step="0.1" value="3.6">
+                        <span class="value">3:40 min/km</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Aplikace</h3>
+                    <div class="setting-item">
+                        <label>Jazyk</label>
+                        <select><option>Čeština</option><option>English</option></select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Vzhled</label>
+                        <select id="theme-select"><option>Systémový</option><option>Tmavý</option><option>Světlý</option></select>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Mapy</h3>
+                    <div class="setting-item">
+                        <button class="btn-secondary" onclick="alert('Cache vymazána')">Vymazat cache (0 MB)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SPODNÍ NAVIGACE (SVG liniové ikony) -->
+    <nav id="bottom-nav">
+        <button class="nav-btn active" data-target="screen-explore">
+            <svg class="nav-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <polygon points="14.5,9.5 10,14 9.5,14.5 10,10 14,10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <button class="nav-btn" data-target="screen-scroll">
+            <div style="position: relative;">
+                <svg class="nav-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="5,3 19,12 5,21" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+                </svg>
+                <span id="nav-badge" class="nav-badge">0</span>
+            </div>
+        </button>
+        <button class="nav-btn" data-target="screen-profile">
+            <svg class="nav-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+        </button>
+        <button class="nav-btn" data-target="screen-settings">
+            <svg class="nav-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+        </button>
+    </nav>
     
-    <script src="app.js?v=21"></script>
+    <script src="app.js?v=31"></script>
 </body>
 </html>

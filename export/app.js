@@ -5,7 +5,7 @@ let currentLayers = {}; // stores { index: L.geoJSON }
 let currentOverlays = {}; // stores { index: L.featureGroup }
 let currentTileLayers = {}; // stores { index: L.tileLayer }
 
-const iofPurple = "#262626";
+const iofPurple = "#b300ff";
 
 document.addEventListener("DOMContentLoaded", () => {
     // Monkey-patch pro správné posouvání mapy při CSS rotaci
@@ -78,7 +78,6 @@ function buildReels() {
                     <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>Volby</button>
                 </div>
             </div>
-            <div class="scroll-area"><svg class="scroll-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 15l-6 6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M6 9l6-6 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>Další postup</span></div>
         `;
         
         container.appendChild(reel);
@@ -451,7 +450,7 @@ function renderMapData(index, geojsonOriginal) {
     
     if (startCoords && endCoords) {
         let w = window.innerWidth;
-        let h = window.innerHeight - 60; // visible height
+        let h = window.innerHeight; // full screen, no bottom bar in map
         
         let dx = endCoords[0] - startCoords[0];
         let dy = endCoords[1] - startCoords[1];
@@ -658,3 +657,64 @@ async function startOfflineSync() {
         overlay.classList.remove('active');
     }
 }
+
+// === SPA ROUTER A LOGIKA VÝBĚRU ===
+
+let appState = {
+    selectedTerrains: ['*'] // Výchozí: Náhodný mix
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    // 1. Spodní navigace
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const screens = document.querySelectorAll('.app-screen');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
+            
+            // Přepnutí tlačítek
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Přepnutí obrazovek
+            screens.forEach(screen => {
+                if (screen.id === targetId) {
+                    screen.classList.add('active');
+                } else {
+                    screen.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // 2. Logika karet terénů (IG Grid)
+    const igSquares = document.querySelectorAll('.ig-square');
+    const navBadge = document.getElementById('nav-badge');
+
+    function updateBadge() {
+        const selectedCount = document.querySelectorAll('.ig-square.selected').length;
+        if (selectedCount > 0) {
+            navBadge.innerText = selectedCount;
+            navBadge.style.display = 'flex';
+        } else {
+            navBadge.style.display = 'none';
+        }
+        
+        if (selectedCount === 0) {
+            appState.selectedTerrains = ['*'];
+        } else {
+            appState.selectedTerrains = Array.from(document.querySelectorAll('.ig-square.selected'))
+                .map(sq => sq.getAttribute('data-terrain'));
+        }
+    }
+
+    igSquares.forEach(square => {
+        square.addEventListener('click', () => {
+            square.classList.toggle('selected');
+            updateBadge();
+        });
+    });
+    
+    updateBadge();
+});

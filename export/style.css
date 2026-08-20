@@ -9,7 +9,7 @@
   --accent: #0095f6;
   --accent-hover: #1877f2;
   --map-bg: #ffffff;
-  --overlay-bg: rgba(255, 255, 255, 0.95);
+  --iof-purple: #b300ff;
 }
 
 * {
@@ -29,6 +29,368 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ==================================================== */
+/* SPA SCREENS AND BOTTOM NAVIGATION                    */
+/* ==================================================== */
+
+#app-content {
+  width: 100%;
+  height: calc(100vh - 52px); /* minus bottom nav */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Screen container */
+.app-screen {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  background-color: var(--bg-color);
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-screen.active {
+  display: block;
+}
+
+/* Scroll screen spans full height — bottom nav sits on top */
+#screen-scroll {
+  height: 100vh;
+  overflow: hidden;
+}
+
+#screen-scroll #reels-container {
+  height: 100vh;
+}
+
+/* ── Bottom Navigation (Instagram-style, SVG line icons) ── */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 52px;
+  background-color: var(--bg-color);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 9999;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  font-family: inherit;
+  padding: 0;
+}
+
+.nav-btn:active {
+  transform: scale(0.9);
+}
+
+.nav-btn.active {
+  color: var(--text-primary);
+}
+
+.nav-icon-svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  fill: none;
+}
+
+.nav-label {
+  display: none;
+}
+
+/* Notification Badge */
+.nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  background-color: var(--accent);
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 700;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid var(--bg-color);
+  z-index: 10;
+}
+
+/* ==================================================== */
+/* EXPLORE SCREEN (IG Grid)                             */
+/* ==================================================== */
+
+.explore-header {
+  padding: 16px 16px 12px;
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+.explore-header h2 {
+  font-size: 1.3rem;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.explore-search {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.explore-search::placeholder {
+  color: var(--text-secondary);
+}
+
+.explore-search:focus {
+  border-color: var(--text-secondary);
+}
+
+.ig-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 0 80px 0;
+  background: var(--bg-color);
+}
+
+.ig-square {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-secondary);
+}
+
+.ig-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 10s linear;
+  animation: kenBurns 20s infinite alternate ease-in-out;
+}
+
+@keyframes kenBurns {
+  0% { transform: scale(1.0) translate(0, 0); }
+  100% { transform: scale(1.12) translate(-2%, 2%); }
+}
+
+.ig-overlay {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 50%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.ig-info {
+  position: absolute;
+  bottom: 6px; left: 6px;
+  z-index: 2;
+  pointer-events: none;
+  max-width: 90%;
+}
+
+.ig-country {
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+/* IG-style checkmark */
+.ig-check {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.7);
+  background: rgba(0,0,0,0.2);
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.8;
+  transition: all 0.15s;
+}
+
+.ig-square.selected .ig-check {
+  background: var(--accent);
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.ig-square.selected .ig-check::after {
+  content: '';
+  width: 3px; height: 7px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.ig-square.selected .ig-bg {
+  filter: brightness(0.7);
+}
+
+/* ==================================================== */
+/* PROFILE SCREEN                                       */
+/* ==================================================== */
+
+.screen-header {
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--border-color);
+}
+
+.screen-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.screen-content {
+  padding: 20px 16px;
+}
+
+.profile-placeholder {
+  text-align: center;
+  padding-top: 40px;
+}
+
+.profile-placeholder .avatar {
+  background: var(--bg-secondary);
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+  border: 1px solid var(--border-color);
+}
+
+.profile-placeholder h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.profile-placeholder p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ==================================================== */
+/* SETTINGS SCREEN (Instagram settings style)           */
+/* ==================================================== */
+
+.settings-group {
+  margin-bottom: 28px;
+}
+
+.settings-group h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.setting-item label {
+  font-weight: 400;
+  font-size: 0.88rem;
+}
+
+.setting-item .value {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.setting-item input[type="range"] {
+  flex: 1;
+  margin: 0 14px;
+  accent-color: var(--text-primary);
+}
+
+.setting-item select {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 7px 12px;
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.82rem;
+  transition: background 0.15s;
+}
+
+.btn-secondary:active {
+  background: var(--border-color);
+}
+
+/* ==================================================== */
+/* REELS / MAP VIEWER                                   */
+/* ==================================================== */
+
 /* Foreground reels container (Scroll snapping) */
 #reels-container {
   position: absolute;
@@ -46,7 +408,7 @@ html, body {
   display: none;
 }
 
-/* Individual reel slide */
+/* Individual reel slide — full screen, no bottom bar */
 .reel {
   width: 100vw;
   height: 100vh;
@@ -59,13 +421,13 @@ html, body {
   overflow: hidden;
 }
 
-/* Map clip — celá obrazovka nad spodním panelem */
+/* Map clip — full screen */
 .map-clip {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 52px); /* Celá výška minus spodní scroll panel */
+  height: 100%;
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -74,10 +436,8 @@ html, body {
 /* Map inside map-clip */
 .map-container {
   position: absolute;
-  /* Zvětšený kontejner pro bezpečnou rotaci bez černých rohů */
   width: 150vmax;
   height: 150vmax;
-  /* Vycentrování uvnitř map-clip: střed map-containeru (75vmax) = střed clipu (50%) */
   left: 50%;
   top: 50%;
   margin-left: -75vmax;
@@ -85,40 +445,10 @@ html, body {
   background-color: var(--map-bg);
 }
 
-/* ── Bottom bar (Instagram-style tab bar) ── */
-.scroll-area {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100vw;
-  height: 52px;
-  background-color: var(--bg-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: 0.3px;
-  z-index: 3;
-  pointer-events: auto;
-  border-top: 1px solid var(--border-color);
-}
-
-.scroll-area .scroll-icon {
-  width: 20px;
-  height: 20px;
-  stroke: var(--text-secondary);
-  stroke-width: 1.5;
-  fill: none;
-  flex-shrink: 0;
-}
-
 /* UI overlay at bottom of each slide */
 .reel-ui {
   position: absolute;
-  bottom: 52px;
+  bottom: 52px; /* above bottom nav */
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
@@ -277,10 +607,8 @@ html, body {
 }
 
 .variants-panel.pos-top-right {
-  right: 10px;
-  left: auto;
-  top: 10px;
-  bottom: auto;
+  right: 10px; left: auto;
+  top: 10px; bottom: auto;
   transform: translateX(120%);
 }
 .variants-panel.pos-top-right.active {
@@ -288,10 +616,8 @@ html, body {
 }
 
 .variants-panel.pos-top-left {
-  left: 10px;
-  right: auto;
-  top: 10px;
-  bottom: auto;
+  left: 10px; right: auto;
+  top: 10px; bottom: auto;
   transform: translateX(-120%);
 }
 .variants-panel.pos-top-left.active {
@@ -299,10 +625,8 @@ html, body {
 }
 
 .variants-panel.pos-bottom-right {
-  right: 10px;
-  left: auto;
-  bottom: 100px;
-  top: auto;
+  right: 10px; left: auto;
+  bottom: 100px; top: auto;
   transform: translateX(120%);
 }
 .variants-panel.pos-bottom-right.active {
@@ -310,10 +634,8 @@ html, body {
 }
 
 .variants-panel.pos-bottom-left {
-  left: 10px;
-  right: auto;
-  bottom: 100px;
-  top: auto;
+  left: 10px; right: auto;
+  bottom: 100px; top: auto;
   transform: translateX(-120%);
 }
 .variants-panel.pos-bottom-left.active {
@@ -332,8 +654,6 @@ html, body {
 .panel-title {
   font-size: 0.72rem;
   font-weight: 600;
-  text-transform: none;
-  letter-spacing: 0;
   color: var(--text-primary);
 }
 
@@ -341,10 +661,8 @@ html, body {
   background: none;
   border: none;
   color: var(--text-secondary);
-  width: 24px;
-  height: 24px;
+  width: 24px; height: 24px;
   border-radius: 50%;
-  font-size: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -354,8 +672,7 @@ html, body {
 }
 
 .toggle-btn .toggle-icon {
-  width: 18px;
-  height: 18px;
+  width: 18px; height: 18px;
   stroke: var(--text-secondary);
   stroke-width: 1.5;
   fill: none;
@@ -369,7 +686,7 @@ html, body {
   display: none;
 }
 
-/* ── Variant item list (Instagram settings-style rows) ── */
+/* ── Variant item list (IG settings-style rows) ── */
 .variant-item {
   display: flex;
   align-items: flex-start;
@@ -381,8 +698,7 @@ html, body {
 }
 
 .variant-color {
-  width: 8px;
-  height: 8px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   margin-right: 10px;
   flex-shrink: 0;
@@ -436,7 +752,6 @@ html, body {
   pointer-events: none;
 }
 
-
 /* Start triangle icon styling */
 .start-triangle-icon {
   background: transparent;
@@ -452,7 +767,6 @@ html, body {
 .leaflet-tile {
   /* Removed crisp-edges to fix blurry/noisy rendering on long legs */
 }
-
 
 /* Kalibracni Nastroj */
 #calibration-ui {
@@ -473,7 +787,7 @@ html, body {
   font-size: 0.8rem;
 }
 #calibration-ui span {
-  color: var(--accent);
+  color: var(--iof-purple);
   font-weight: 600;
 }
 
