@@ -215,10 +215,15 @@ html, body {
   height: 64px;
   border-radius: 50%;
   padding: 2px;
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  background: var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.story-ring.active-story {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
 }
 
 .story-img {
