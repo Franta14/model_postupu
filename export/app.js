@@ -336,12 +336,15 @@ function renderMapData(index, geojsonOriginal) {
     if (!currentTileLayers[index] && allLngs.length > 0) {
         let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
         let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-        let marginLng = (maxLng - minLng) * 0.30;
-        let marginLat = (maxLat - minLat) * 0.30;
+        let marginLng = Math.max(100, (maxLng - minLng) * 0.50);
+        let marginLat = Math.max(100, (maxLat - minLat) * 0.50);
         let tileBounds = [
             [minLat - marginLat, minLng - marginLng],
             [maxLat + marginLat, maxLng + marginLng]
         ];
+        
+        // Zabrání odjetí mapy do bílého prázdna
+        map.setMaxBounds(tileBounds);
         
         let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
             tileSize: 512,
