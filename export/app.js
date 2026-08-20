@@ -306,13 +306,13 @@ function initMapForReel(index) {
     map.on('dblclick', function(e) {
         let currentZoom = map.getZoom();
         let minZoom = map.getMinZoom();
-        if (currentZoom > minZoom) {
-            // If zoomed in, reset to center
-            let midX = (map.getBounds().getWest() + map.getBounds().getEast()) / 2;
-            let midY = (map.getBounds().getNorth() + map.getBounds().getSouth()) / 2;
-            // Wait, we can just center to the original midX, midY. They are not stored in map though.
-            // But we know that minZoom is the idealZoom, and it forces bounds. So setZoom(minZoom) is enough.
-            map.setZoom(minZoom);
+        if (currentZoom > minZoom + 0.05) {
+            // If zoomed in, reset to center and min zoom
+            if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
+                map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
+            } else {
+                map.setZoom(minZoom);
+            }
         } else {
             // Trigger Like
             let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
@@ -580,6 +580,9 @@ function renderMapData(index, geojsonOriginal) {
         
         setTimeout(() => {
             map.invalidateSize();
+            map.originalMidX = midX;
+            map.originalMidY = midY;
+            map.originalZoom = idealZoom;
             map.setView([midY, midX], idealZoom, {
                 animate: false
             });
