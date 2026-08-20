@@ -72,15 +72,17 @@ html, body {
   height: 100vh;
 }
 
-/* ── Bottom Navigation (Instagram-style, SVG line icons) ── */
+/* ── Bottom Navigation (Instagram-style Dark Glassmorphism) ── */
 #bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 52px;
-  background-color: var(--bg-color);
-  border-top: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -91,7 +93,7 @@ html, body {
 .nav-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -99,7 +101,7 @@ html, body {
   flex: 1;
   height: 100%;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color 0.15s ease, transform 0.15s ease;
   font-family: inherit;
   padding: 0;
 }
@@ -108,18 +110,25 @@ html, body {
   transform: scale(0.9);
 }
 
-.nav-btn.active {
-  color: var(--text-primary);
-}
-
-.nav-icon-svg {
-  width: 26px;
-  height: 26px;
+.nav-btn .nav-icon-svg {
+  width: 24px;
+  height: 24px;
   stroke: currentColor;
+  stroke-width: 1.5;
   fill: none;
+  margin-bottom: 2px;
+  transition: stroke-width 0.15s ease;
 }
 
-.nav-label {
+.nav-btn.active {
+  color: #ffffff;
+}
+.nav-btn.active .nav-icon-svg {
+  stroke-width: 2.2;
+}
+
+/* Hide text in nav for cleaner IG look */
+.nav-btn span {
   display: none;
 }
 
