@@ -350,7 +350,6 @@ function renderMapData(index, geojsonOriginal) {
             maxNativeZoom: 5,
             noWrap: true,
             tms: false,
-            bounds: tileBounds,
             keepBuffer: 4,
             updateWhenIdle: false,
             updateWhenZooming: true,
