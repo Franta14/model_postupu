@@ -292,31 +292,92 @@ html, body {
   padding: 20px 16px;
 }
 
-.profile-placeholder {
-  text-align: center;
-  padding-top: 40px;
+.profile-header-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-.profile-placeholder .avatar {
+.avatar-large {
   background: var(--bg-secondary);
   width: 80px; height: 80px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px auto;
   border: 1px solid var(--border-color);
+  flex-shrink: 0;
+  margin-right: 24px;
 }
 
-.profile-placeholder h3 {
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin-bottom: 6px;
+.avatar-large svg {
+  stroke: var(--text-secondary);
 }
 
-.profile-placeholder p {
-  font-size: 0.8rem;
+.profile-stats {
+  display: flex;
+  flex: 1;
+  justify-content: space-around;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-num {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.75rem;
   color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.profile-bio {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.profile-tabs {
+  display: flex;
+  border-top: 1px solid var(--border-color);
+  margin: 0 -16px;
+}
+
+.profile-tab {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  color: var(--text-secondary);
+  border-top: 1px solid transparent;
+  margin-top: -1px;
+  cursor: pointer;
+}
+
+.profile-tab.active {
+  color: var(--text-primary);
+  border-top: 1px solid var(--text-primary);
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 0 -16px;
+}
+
+.profile-grid .grid-item {
+  aspect-ratio: 1/1;
+  background-color: var(--bg-secondary);
 }
 
 /* ==================================================== */
@@ -583,12 +644,95 @@ html, body {
   color: var(--text-secondary);
 }
 
+/* ── Reel Action Buttons (Right side) ── */
+.reel-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 80px; /* Above the variants panel/nav */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1000;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.action-btn svg {
+  width: 28px;
+  height: 28px;
+  transition: color 0.15s ease, fill 0.15s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.85);
+}
+
+.like-btn.liked svg {
+  color: #ff3040;
+  fill: #ff3040;
+  stroke: #ff3040;
+}
+
+.bookmark-btn.bookmarked svg {
+  color: #fff;
+  fill: #fff;
+}
+
+/* ── Like Animation (Big Heart) ── */
+.like-animation-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1500;
+  pointer-events: none;
+  opacity: 0;
+  color: #ff3040;
+}
+
+.like-animation-container svg {
+  width: 100px;
+  height: 100px;
+}
+
+.like-animation-container.active {
+  animation: bigLike 0.8s ease-in-out forwards;
+}
+
+@keyframes bigLike {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  25% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.2); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  75% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+}
+
 /* Smooth interpolation for Leaflet tiles (no crisp-edges — prevents pixelation on long legs) */
 .leaflet-tile {
   image-rendering: auto;
 }
 
 /* ── Variants Panel (clean, Instagram settings style) ── */
+.grabber {
+  width: 32px;
+  height: 4px;
+  background-color: var(--border-color);
+  border-radius: 2px;
+  margin: 0 auto 12px auto;
+}
+
 .variants-panel {
   background: var(--bg-color);
   border: 1px solid var(--border-color);

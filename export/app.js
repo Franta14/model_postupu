@@ -71,6 +71,14 @@ function buildReels() {
         reel.innerHTML = `
             <div class="map-clip" id="clip-${index}">
                 <div class="map-container" id="map-${index}"></div>
+                <div class="like-animation-container" id="like-anim-${index}">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                </div>
+            </div>
+            <div class="reel-actions">
+                <button class="action-btn like-btn" onclick="toggleLike(${index}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
+                <button class="action-btn bookmark-btn" onclick="toggleBookmark(${index}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
+                <button class="action-btn share-btn" onclick="sharePostup(${index})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
             </div>
             <div class="reel-ui">
                 <div class="reel-header">
@@ -292,6 +300,32 @@ function initMapForReel(index) {
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; // Nad dlaždicemi (200), pod overlay (400)
     
+    // Disable default double click zoom
+    map.doubleClickZoom.disable();
+    
+    // Custom double click logic (Reset Zoom vs Like)
+    map.on('dblclick', function(e) {
+        let currentZoom = map.getZoom();
+        let minZoom = map.getMinZoom();
+        if (currentZoom > minZoom) {
+            // If zoomed in, reset to center
+            let midX = (map.getBounds().getWest() + map.getBounds().getEast()) / 2;
+            let midY = (map.getBounds().getNorth() + map.getBounds().getSouth()) / 2;
+            // Wait, we can just center to the original midX, midY. They are not stored in map though.
+            // But we know that minZoom is the idealZoom, and it forces bounds. So setZoom(minZoom) is enough.
+            map.setZoom(minZoom);
+        } else {
+            // Trigger Like
+            let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
+            if (btn && !btn.classList.contains('liked')) {
+                toggleLike(index, btn);
+            } else {
+                // Show animation even if already liked
+                triggerLikeAnimation(index);
+            }
+        }
+    });
+
     L.control.zoom({ position: 'topleft' }).addTo(map);
     // Tile layer se přidá až v renderMapData — potřebujeme GeoJSON data pro ořez
     
@@ -596,17 +630,13 @@ function updateCalibrationShift() {
 
 // === OFFLINE SYNC ===
 async function startOfflineSync() {
-    if (!('serviceWorker' in navigator)) {
-        alert("Offline režim není podporován (chybí Service Worker). Ujistěte se, že používáte HTTPS.");
-        return;
-    }
+    let btn = document.getElementById('offline-sync-btn');
+    if (btn) btn.disabled = true;
     
-    const overlay = document.getElementById('sync-progress');
-    const bar = document.getElementById('sync-bar');
-    const text = document.getElementById('sync-text');
-    const btn = document.getElementById('offline-sync-btn');
-    
-    overlay.classList.add('active');
+    let progressOverlay = document.getElementById('sync-progress');
+    let bar = document.getElementById('sync-bar');
+    let text = document.getElementById('sync-text');
+    if (progressOverlay) progressOverlay.style.display = 'flex';
     
     try {
         let urlsToFetch = [];
@@ -657,6 +687,48 @@ async function startOfflineSync() {
     } catch (err) {
         alert("Chyba při stahování: " + err.message);
         overlay.classList.remove('active');
+    }
+}
+
+// === LIKES, BOOKMARKS, SHARE ===
+function toggleLike(index, btn) {
+    btn.classList.toggle('liked');
+    if (btn.classList.contains('liked')) {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        triggerLikeAnimation(index);
+    } else {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+    }
+}
+
+function triggerLikeAnimation(index) {
+    let anim = document.getElementById(`like-anim-${index}`);
+    if (anim) {
+        // Znovu spustit animaci odebráním a přidáním třídy
+        anim.classList.remove('active');
+        void anim.offsetWidth; // trigger reflow
+        anim.classList.add('active');
+    }
+}
+
+function toggleBookmark(index, btn) {
+    btn.classList.toggle('bookmarked');
+    if (btn.classList.contains('bookmarked')) {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+    } else {
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+    }
+}
+
+function sharePostup(index) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Zajímavý postup!',
+            text: 'Podívej se na tuhle volbu postupu ve Scrollienteeringu.',
+            url: window.location.href
+        }).catch(err => console.log('Share error:', err));
+    } else {
+        alert("Odkaz zkopírován do schránky (simulace).");
     }
 }
 

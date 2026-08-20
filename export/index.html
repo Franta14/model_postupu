@@ -126,6 +126,7 @@
             <!-- Global Variants Panel (Bottom Sheet) -->
             <div class="variants-panel pos-top-right" id="global-variants-panel">
                 <div class="panel-header">
+                    <div class="grabber"></div>
                     <div class="panel-title">Ideální postupy</div>
                     <button class="toggle-btn" id="global-toggle-btn"><svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
                 </div>
@@ -149,14 +150,33 @@
 
         <!-- 3. OBRAZOVKA: PROFIL -->
         <div id="screen-profile" class="app-screen">
-            <div class="screen-header"><h2>Profil</h2></div>
+            <div class="screen-header"><h2>Franta Orvaťák</h2></div>
             <div class="screen-content">
-                <div class="profile-placeholder">
-                    <div class="avatar">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#8e8e8e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="#8e8e8e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div class="profile-header-info">
+                    <div class="avatar-large">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="7" r="4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
-                    <h3>Nepřihlášený uživatel</h3>
-                    <p>Zde se budou ukládat tvé oblíbené postupy.</p>
+                    <div class="profile-stats">
+                        <div class="stat-item"><span class="stat-num">124</span><span class="stat-label">Analyz.</span></div>
+                        <div class="stat-item"><span class="stat-num">12</span><span class="stat-label">Uloženo</span></div>
+                        <div class="stat-item"><span class="stat-num">4.5</span><span class="stat-label">Hodin</span></div>
+                    </div>
+                </div>
+                <div class="profile-bio">
+                    <p>Zde najdeš všechny své oblíbené volby postupů z tréninků i závodů.</p>
+                </div>
+                <div class="profile-tabs">
+                    <div class="profile-tab active"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+                    <div class="profile-tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
+                </div>
+                <div class="profile-grid">
+                    <!-- Dummy items -->
+                    <div class="grid-item"></div>
+                    <div class="grid-item"></div>
+                    <div class="grid-item"></div>
+                    <div class="grid-item"></div>
+                    <div class="grid-item"></div>
+                    <div class="grid-item"></div>
                 </div>
             </div>
         </div>
@@ -182,6 +202,10 @@
                     <div class="setting-item">
                         <label>Vzhled</label>
                         <select id="theme-select"><option>Systémový</option><option>Tmavý</option><option>Světlý</option></select>
+                    </div>
+                    <div class="setting-item">
+                        <label>Uložit mapy offline</label>
+                        <button class="btn-primary" onclick="startOfflineSync()" style="font-size: 0.8rem; padding: 6px 12px;">Stáhnout</button>
                     </div>
                 </div>
                 <div class="settings-group">
