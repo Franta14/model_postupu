@@ -303,25 +303,33 @@ function initMapForReel(index) {
     map.doubleClickZoom.disable();
     
     // Custom double click logic (Reset Zoom vs Like)
-    map.on('dblclick', function(e) {
-        let currentZoom = map.getZoom();
-        let minZoom = map.getMinZoom();
-        if (currentZoom > minZoom + 0.05) {
-            // If zoomed in, reset to center and min zoom
-            if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
-                map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
+    let lastClickTime = 0;
+    map.on('click', function(e) {
+        let currentTime = Date.now();
+        if (currentTime - lastClickTime < 400) {
+            // It's a double click!
+            let currentZoom = map.getZoom();
+            let minZoom = map.getMinZoom();
+            if (currentZoom > minZoom + 0.05) {
+                // If zoomed in, reset to center and min zoom
+                if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
+                    map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
+                } else {
+                    map.setZoom(minZoom);
+                }
             } else {
-                map.setZoom(minZoom);
+                // Trigger Like
+                let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
+                if (btn && !btn.classList.contains('liked')) {
+                    toggleLike(index, btn);
+                } else {
+                    // Show animation even if already liked
+                    triggerLikeAnimation(index);
+                }
             }
+            lastClickTime = 0; // reset
         } else {
-            // Trigger Like
-            let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
-            if (btn && !btn.classList.contains('liked')) {
-                toggleLike(index, btn);
-            } else {
-                // Show animation even if already liked
-                triggerLikeAnimation(index);
-            }
+            lastClickTime = currentTime;
         }
     });
 
