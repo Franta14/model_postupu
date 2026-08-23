@@ -271,6 +271,31 @@ html, body {
   height: 100%;
   background-size: cover;
   background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.grid-img.animated-map {
+  animation: slowMapMovement 20s ease-in-out infinite alternate;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes slowMapMovement {
+  0% {
+    transform: scale(1.15) translate(0%, 0%);
+  }
+  25% {
+    transform: scale(1.22) translate(-4%, -3%);
+  }
+  50% {
+    transform: scale(1.18) translate(3%, -4%);
+  }
+  75% {
+    transform: scale(1.24) translate(-2%, 4%);
+  }
+  100% {
+    transform: scale(1.15) translate(0%, 0%);
+  }
 }
 
 .grid-icon {

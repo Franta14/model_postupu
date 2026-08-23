@@ -846,18 +846,20 @@ function renderExploreGrid() {
         displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     }
     
+    // Mapové výstřižky přímo z aktuálně nahrané mapy v aplikaci
+    const localMapThumbs = [
+        "tiles/3/1/2.png",
+        "tiles/3/2/2.png",
+        "tiles/3/1/3.png",
+        "tiles/2/0/1.png",
+        "tiles/3/2/3.png",
+        "tiles/1/0/0.png"
+    ];
+    
     displayData.forEach((map, index) => {
-        // DUMMY: Randomly pick a placeholder image for the thumbnail
-        const images = [
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Jizersk%C3%A9_hory_%284%29.jpg/800px-Jizersk%C3%A9_hory_%284%29.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Forest_in_Sweden.jpg/800px-Forest_in_Sweden.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/B%C3%BCkk_National_Park.jpg/800px-B%C3%BCkk_National_Park.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Pravcicka_brana.jpg/800px-Pravcicka_brana.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Matterhorn_from_Domh%C3%BCtte_-_2.jpg/800px-Matterhorn_from_Domh%C3%BCtte_-_2.jpg"
-        ];
-        const thumbUrl = images[map.id % images.length];
-        
-        const isDoubleHeight = (index % 4 === 3); // Make every 4th item double height (Reels style)
+        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
+        const isDoubleHeight = (index % 4 === 3);
+        const isAnimated = (index === 0); // První dlaždice hned pod kolečky má živou pomalou animaci pohybu mapy
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item' + (isDoubleHeight ? ' double-height' : '');
@@ -869,8 +871,10 @@ function renderExploreGrid() {
             iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; // multi-post
         }
         
+        const animClass = isAnimated ? ' animated-map' : '';
+        
         el.innerHTML = `
-            <div class="grid-img" style="background-image: url('${thumbUrl}');"></div>
+            <div class="grid-img${animClass}" style="background-image: url('${thumbUrl}');"></div>
             ${iconHtml}
         `;
         
