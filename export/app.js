@@ -19,7 +19,6 @@ style.innerHTML = `
 document.head.appendChild(style);
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Monkey-patch pro posouvání mapy
     let originalUpdatePosition = L.Draggable.prototype._updatePosition;
     L.Draggable.prototype._updatePosition = function () {
         if (this._element && this._element.classList && this._element.classList.contains('leaflet-map-pane')) {
@@ -505,7 +504,47 @@ function renderMapData(index, geojsonOriginal) {
     }
 }
 
-// OFFLINE SYNC, LIKES, SHARE
+// === KALIBRACE A OFFLINE SYNC ===
+let calibMode = false;
+let calibX = 400;
+let calibY = -300;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'k') {
+        calibMode = !calibMode;
+        let ui = document.getElementById('calibration-ui');
+        if(ui) ui.style.display = calibMode ? 'block' : 'none';
+        if (calibMode) updateCalibrationShift();
+        return;
+    }
+    if (!calibMode) return;
+    if (e.key === 'ArrowLeft') calibX -= 1;
+    else if (e.key === 'ArrowRight') calibX += 1;
+    else if (e.key === 'ArrowUp') calibY -= 1;
+    else if (e.key === 'ArrowDown') calibY += 1;
+    else return;
+    e.preventDefault();
+    let xspan = document.getElementById('calib-x');
+    let yspan = document.getElementById('calib-y');
+    if (xspan) xspan.innerText = calibX;
+    if (yspan) yspan.innerText = calibY;
+    updateCalibrationShift();
+});
+
+// ZDE JE OPRAVENÁ A NAVRÁCENÁ FUNKCE PRO KALIBRACI, ABY NEPADALO SCROLLOVÁNÍ
+function updateCalibrationShift() {
+    if (typeof activeIndex === 'undefined') return;
+    let map = mapInstances[activeIndex];
+    if (!map) return;
+    let pane = map.getPane('markerPane');
+    if (!pane) return;
+    let shiftXConfig = calibX - 400;
+    let shiftYConfig = calibY - (-300);
+    let scale = Math.pow(2, map.getZoom()) / 64;
+    pane.style.marginLeft = (shiftXConfig * scale) + 'px';
+    pane.style.marginTop = (shiftYConfig * scale) + 'px';
+}
+
 async function startOfflineSync() {
     let btn = document.getElementById('offline-sync-btn');
     if (btn) btn.disabled = true;
@@ -597,28 +636,34 @@ function sharePostup(index) {
     }
 }
 
-// === VYKRESLENÍ PROFILU (S PILLS) ===
+// === BEZPEČNÉ VYKRESLENÍ PROFILU (S PILLS) ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
+    // 1. Zcela smaže a skryje původní lišty a záložky tak, aby na to nespadlo Safari
+    const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
+    oldTabs.forEach(tab => tab.style.display = 'none');
+    
+    // 2. Vytvoří nebo najde bezpečný kontejner, aby se nám gridy nemíchaly
     let profileContent = document.getElementById('profile-content-wrapper');
     if (!profileContent) {
         profileContent = document.createElement('div');
         profileContent.id = 'profile-content-wrapper';
         
-        // Najde staré ikony/záložky v profilu (např. div s ikonkou mřížky a záložky) a skryje je
-        const tabsContainer = profileScreen.querySelector('.profile-tabs, div:has(> .profile-tab)');
-        if (tabsContainer) tabsContainer.style.display = 'none';
+        // Zničí případné poloviční pozůstatky starých tabulek
+        const oldGridContainers = profileScreen.querySelectorAll('.explore-grid-container, .profile-grid');
+        oldGridContainers.forEach(g => g.remove());
         
         profileScreen.appendChild(profileContent);
     }
     
-    profileContent.innerHTML = '';
+    profileContent.innerHTML = ''; 
     
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedIds = saved.map(String);
     
+    // Pokd nic nebylo uloženo
     if (savedIds.length === 0) {
         profileContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
@@ -638,7 +683,7 @@ function renderProfileSaved() {
         profileSelectedTerrain = 'Vše';
     }
     
-    // Tvorba Pills kontejneru
+    // Vykreslení horizontálních Pills (tlačítek pro filtry)
     const pillsContainer = document.createElement('div');
     pillsContainer.className = 'profile-pills-container';
     pillsContainer.style.display = 'flex';
@@ -681,7 +726,7 @@ function renderProfileSaved() {
     });
     profileContent.appendChild(pillsContainer);
     
-    // Tvorba Grid kontejneru
+    // Tvorba samotného rozložení dlaždic (Mřížka)
     const gridContainer = document.createElement('div');
     gridContainer.style.display = 'grid';
     gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
