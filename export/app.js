@@ -7,8 +7,19 @@ let currentTileLayers = {};
 
 const iofPurple = "#b300ff";
 
+// Stav pro filtr v profilu
+let profileSelectedTerrain = 'Vše';
+
+// Skrytí scrollbaru pro posuvné štítky (Pills)
+const style = document.createElement('style');
+style.innerHTML = `
+.profile-pills-container::-webkit-scrollbar { display: none; }
+.profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
+`;
+document.head.appendChild(style);
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Monkey-patch pro správné posouvání mapy při CSS rotaci
+    // Monkey-patch pro posouvání mapy
     let originalUpdatePosition = L.Draggable.prototype._updatePosition;
     L.Draggable.prototype._updatePosition = function () {
         if (this._element && this._element.classList && this._element.classList.contains('leaflet-map-pane')) {
@@ -19,17 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     let theta = parseFloat(match[1]) * Math.PI / 180;
                     let cos = Math.cos(-theta);
                     let sin = Math.sin(-theta);
-                    
                     let dx_screen = this._newPos.x - this._startPos.x;
                     let dy_screen = this._newPos.y - this._startPos.y;
-                    
                     let dx_local = dx_screen * cos - dy_screen * sin;
                     let dy_local = dx_screen * sin + dy_screen * cos;
-                    
-                    this._newPos = new L.Point(
-                        this._startPos.x + dx_local,
-                        this._startPos.y + dy_local
-                    );
+                    this._newPos = new L.Point(this._startPos.x + dx_local, this._startPos.y + dy_local);
                 }
             }
         }
@@ -38,14 +43,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
 
-    // Spodní navigace a Router
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
 
     navButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetId = btn.getAttribute('data-target');
-            
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
@@ -61,20 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
     });
-
-    // Delegované klikání na záložky v profilu
-    const profileScreen = document.getElementById('screen-profile');
-    if (profileScreen) {
-        profileScreen.addEventListener('click', (e) => {
-            const tabBtn = e.target.closest('.profile-tab, .tab-item, button, .nav-tab');
-            if (tabBtn) {
-                const allTabs = profileScreen.querySelectorAll('.profile-tab, .tab-item, .nav-tab');
-                allTabs.forEach(t => t.classList.remove('active'));
-                tabBtn.classList.add('active');
-                renderProfileSaved();
-            }
-        });
-    }
 });
 
 const TERRAINS = ['cesky-les', 'skandinavie', 'madarsko', 'piskovce', 'alpy', 'mesto'];
@@ -104,9 +93,7 @@ function loadData() {
                 }
             }, 500);
         })
-        .catch(err => {
-            alert("Chyba při načítání dat: " + err);
-        });
+        .catch(err => alert("Chyba při načítání dat: " + err));
 }
 
 function buildReels() {
@@ -148,33 +135,23 @@ function buildReels() {
                 </div>
             </div>
         `;
-        
         container.appendChild(reel);
     });
 }
 
 let scrollTimeout = null;
 function setupObserver() {
-    let options = {
-        root: document.getElementById('app'),
-        rootMargin: '0px',
-        threshold: 0.5
-    };
+    let options = { root: document.getElementById('app'), rootMargin: '0px', threshold: 0.5 };
     let observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const index = entry.target.dataset.index;
                 if (scrollTimeout) clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    activateReel(index);
-                }, 250);
+                scrollTimeout = setTimeout(() => { activateReel(index); }, 250);
             }
         });
     }, options);
-    
-    document.querySelectorAll('.reel').forEach(reel => {
-        observer.observe(reel);
-    });
+    document.querySelectorAll('.reel').forEach(reel => observer.observe(reel));
 }
 
 let showVariantsForIndex = {};
@@ -219,10 +196,7 @@ function toggleVariants(index) {
                     let uy = dy / dist;
                     let vx = -uy; 
                     let vy = ux;
-                    
-                    let maxLeftTop = 0, maxRightTop = 0;
-                    let maxLeftBot = 0, maxRightBot = 0;
-                    
+                    let maxLeftTop = 0, maxRightTop = 0, maxLeftBot = 0, maxRightBot = 0;
                     geojsonCache[postup.file].features.forEach(f => {
                         if (f.properties && f.properties.type === 'variant' && f.geometry.type === 'LineString') {
                             f.geometry.coordinates.forEach(c => {
@@ -230,7 +204,6 @@ function toggleVariants(index) {
                                 let py = c[1] - startC[1];
                                 let localY = px * ux + py * uy; 
                                 let localX = px * vx + py * vy; 
-                                
                                 if (localY > dist * 0.6) { 
                                     if (localX > maxLeftTop) maxLeftTop = localX;
                                     if (-localX > maxRightTop) maxRightTop = -localX;
@@ -241,7 +214,6 @@ function toggleVariants(index) {
                             });
                         }
                     });
-                    
                     let bulges = [
                         { corner: 'pos-top-left', val: maxLeftTop },
                         { corner: 'pos-top-right', val: maxRightTop },
@@ -259,9 +231,7 @@ function toggleVariants(index) {
         const toggleBtn = document.getElementById('global-toggle-btn');
         if (toggleBtn) {
             toggleBtn.innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
-            toggleBtn.onclick = () => {
-                panel.classList.toggle('collapsed');
-            };
+            toggleBtn.onclick = () => panel.classList.toggle('collapsed');
         }
         
         panel.classList.remove('collapsed'); 
@@ -278,7 +248,6 @@ function toggleVariants(index) {
 
 function activateReel(indexStr) {
     const index = parseInt(indexStr);
-    
     if (activeIndex !== index) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
@@ -288,7 +257,6 @@ function activateReel(indexStr) {
             }
             isPanelOpen = false;
             showVariantsForIndex[activeIndex] = false;
-            
             const prevPostup = postupyData[activeIndex];
             if (prevPostup && geojsonCache[prevPostup.file]) {
                 renderMapData(activeIndex, geojsonCache[prevPostup.file]);
@@ -296,30 +264,21 @@ function activateReel(indexStr) {
         }
         activeIndex = index;
     }
-    
     preloadReel(index);
 }
 
 function preloadReel(i) {
     if (i < 0 || i >= postupyData.length) return;
-    
-    if (!mapInstances[i]) {
-        initMapForReel(i);
-    }
-    
+    if (!mapInstances[i]) initMapForReel(i);
     const postup = postupyData[i];
     if (geojsonCache[postup.file]) {
-        if (!currentLayers[i]) {
-            renderMapData(i, geojsonCache[postup.file]);
-        }
+        if (!currentLayers[i]) renderMapData(i, geojsonCache[postup.file]);
     } else {
         fetch('postupy/' + postup.file + '?v=' + Date.now())
             .then(res => res.json())
             .then(geojson => {
                 geojsonCache[postup.file] = geojson;
-                if (!currentLayers[i]) {
-                    renderMapData(i, geojson);
-                }
+                if (!currentLayers[i]) renderMapData(i, geojson);
             })
             .catch(err => console.error("GeoJSON load error:", err));
     }
@@ -328,34 +287,20 @@ function preloadReel(i) {
 const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
-    Math.round = function(val) {
-        if (val === zoom) return Math.ceil(val);
-        return oldRound(val);
-    };
-    try {
-        originalSetView.call(this, center, zoom, noPrune, noUpdate);
-    } finally {
-        Math.round = oldRound;
-    }
+    Math.round = function(val) { return (val === zoom) ? Math.ceil(val) : oldRound(val); };
+    try { originalSetView.call(this, center, zoom, noPrune, noUpdate); } 
+    finally { Math.round = oldRound; }
 };
 
 function initMapForReel(index) {
     const mapContainer = document.getElementById(`map-${index}`);
     if (!mapContainer) return;
-
     const map = L.map(`map-${index}`, {
-        crs: L.CRS.Simple,
-        minZoom: 0,
-        maxZoom: 8,
-        zoomSnap: 0,
-        zoomControl: false,
-        gestureHandling: false,
-        inertia: false
+        crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
+        zoomControl: false, gestureHandling: false, inertia: false
     });
-    
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
-    
     map.doubleClickZoom.disable();
     
     let lastClickTime = 0;
@@ -372,11 +317,8 @@ function initMapForReel(index) {
                 }
             } else {
                 let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
-                if (btn && !btn.classList.contains('liked')) {
-                    toggleLike(index, btn);
-                } else {
-                    triggerLikeAnimation(index);
-                }
+                if (btn && !btn.classList.contains('liked')) toggleLike(index, btn);
+                else triggerLikeAnimation(index);
             }
             lastClickTime = 0; 
         } else {
@@ -393,343 +335,222 @@ function renderMapData(index, geojsonOriginal) {
     try {
         const map = mapInstances[index];
         if (!map) return;
-    
-    if (currentLayers[index]) {
-        map.removeLayer(currentLayers[index]);
-    }
-    if (currentOverlays[index]) {
-        map.removeLayer(currentOverlays[index]);
-    }
-    
-    let geojson = JSON.parse(JSON.stringify(geojsonOriginal));
-    let overlays = L.featureGroup().addTo(map);
-    currentOverlays[index] = overlays;
-    
-    let startCoords = null;
-    let endCoords = null;
-    
-    let allLngs = [], allLats = [];
-    geojson.features.forEach(f => {
-        if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
-        if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
+        if (currentLayers[index]) map.removeLayer(currentLayers[index]);
+        if (currentOverlays[index]) map.removeLayer(currentOverlays[index]);
         
-        if (f.geometry.type === 'Point') {
-            allLngs.push(f.geometry.coordinates[0]);
-            allLats.push(f.geometry.coordinates[1]);
-        } else if (f.geometry.type === 'LineString') {
-            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
-        }
-    });
-    
-    if (!currentTileLayers[index] && allLngs.length > 0) {
-        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-        let marginLng = Math.max(100, (maxLng - minLng) * 0.50);
-        let marginLat = Math.max(100, (maxLat - minLat) * 0.50);
-        let tileBounds = [
-            [minLat - marginLat, minLng - marginLng],
-            [maxLat + marginLat, maxLng + marginLng]
-        ];
+        let geojson = JSON.parse(JSON.stringify(geojsonOriginal));
+        let overlays = L.featureGroup().addTo(map);
+        currentOverlays[index] = overlays;
         
-        map.setMaxBounds(tileBounds);
-        
-        let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
-            tileSize: 512,
-            minZoom: 0,
-            maxZoom: 8,
-            maxNativeZoom: 5,
-            noWrap: true,
-            tms: false,
-            keepBuffer: 4,
-            updateWhenIdle: false,
-            updateWhenZooming: true,
-            detectRetina: true
-        }).addTo(map);
-        currentTileLayers[index] = tl;
-        
-        if (index === activeIndex) {
-            tl.once('load', () => {
-                preloadReel(index + 1);
-                preloadReel(index - 1);
-            });
-            setTimeout(() => {
-                preloadReel(index + 1);
-                preloadReel(index - 1);
-            }, 500);
-        }
-    }
-    
-    let showVariants = showVariantsForIndex[index] || false;
-
-    let layer = L.geoJSON(geojson, {
-        filter: function(feature) {
-            if (feature.properties && feature.properties.type === 'variant' && !showVariants) return false;
-            if (feature.properties && ['start', 'end', 'spojnice'].includes(feature.properties.type)) return false;
-            return true;
-        },
-        style: function (feature) {
-            if (feature.properties && feature.properties.type === 'variant') {
-                return { color: feature.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+        let startCoords = null, endCoords = null;
+        let allLngs = [], allLats = [];
+        geojson.features.forEach(f => {
+            if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
+            if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
+            if (f.geometry.type === 'Point') {
+                allLngs.push(f.geometry.coordinates[0]);
+                allLats.push(f.geometry.coordinates[1]);
+            } else if (f.geometry.type === 'LineString') {
+                f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
             }
-            if (feature.properties && feature.properties.type === 'spojnice') {
-                return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
-            }
-        },
-    });
-    
-    if (startCoords && endCoords) {
-        let dx = endCoords[0] - startCoords[0];
-        let dy = endCoords[1] - startCoords[1];
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist > 0) {
-            let distM = postupyData[index].dist_m || 0;
-            let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
-            let gap = 0.10;
-            let ux = dx / dist;
-            let uy = dy / dist;
-            let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
-            const mContainer = document.getElementById(`map-${index}`);
-            if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
+        });
+        
+        if (!currentTileLayers[index] && allLngs.length > 0) {
+            let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+            let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+            let marginLng = Math.max(100, (maxLng - minLng) * 0.50);
+            let marginLat = Math.max(100, (maxLat - minLat) * 0.50);
+            let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
             
-            let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
-            let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
-            let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
-            if (dist > R*2 + gap*2) {
-                let polyline = L.polyline([
-                    [lineStart[1], lineStart[0]],
-                    [lineEnd[1], lineEnd[0]]
-                ], {color: iofPurple, weight: lineWeight, pane: 'markerPane', interactive: false});
-                layer.addLayer(polyline);
+            map.setMaxBounds(tileBounds);
+            let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
+                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5,
+                noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false,
+                updateWhenZooming: true, detectRetina: true
+            }).addTo(map);
+            currentTileLayers[index] = tl;
+            
+            if (index === activeIndex) {
+                tl.once('load', () => { preloadReel(index + 1); preloadReel(index - 1); });
+                setTimeout(() => { preloadReel(index + 1); preloadReel(index - 1); }, 500);
             }
-            [startCoords, endCoords].forEach((coords, idx) => {
-                let num = idx === 0 ? "1" : "2";
-                layer.addLayer(L.circle([coords[1], coords[0]], {
-                    radius: R,
-                    color: iofPurple,
-                    weight: lineWeight,
-                    fill: false,
-                    pane: 'markerPane',
-                    interactive: false
-                }));
-                
-                let nx = -uy, ny = ux;
-                let textDist = R + 0.90;
-                let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
-                
-                let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-                svgText.setAttribute('viewBox', "0 0 100 100");
-                svgText.setAttribute('preserveAspectRatio', 'none');
-                svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
-                let halfSizeText = 1.0;
-                let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
-                overlays.addLayer(L.svgOverlay(svgText, boundsText, {interactive: false, pane: 'markerPane'}));
-            });
-        }
-    }
-    
-    layer.addTo(map);
-    currentLayers[index] = layer;
-    
-    if (startCoords && endCoords) {
-        let w = window.innerWidth;
-        let h = window.innerHeight; 
-        
-        let dx = endCoords[0] - startCoords[0];
-        let dy = endCoords[1] - startCoords[1];
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        
-        let targetPixelsY = h * 0.70;
-        let idealZoom = 0;
-        if (dist > 0) {
-            idealZoom = Math.log2(targetPixelsY / dist);
         }
         
-        let HARD_MIN_ZOOM = 0; 
-        let maxZoom = map.getMaxZoom() || 8;
-        idealZoom = Math.max(HARD_MIN_ZOOM, Math.min(maxZoom, idealZoom));
+        let showVariants = showVariantsForIndex[index] || false;
+        let layer = L.geoJSON(geojson, {
+            filter: function(feature) {
+                if (feature.properties && feature.properties.type === 'variant' && !showVariants) return false;
+                if (feature.properties && ['start', 'end', 'spojnice'].includes(feature.properties.type)) return false;
+                return true;
+            },
+            style: function (feature) {
+                if (feature.properties && feature.properties.type === 'variant') {
+                    return { color: feature.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                }
+                if (feature.properties && feature.properties.type === 'spojnice') {
+                    return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                }
+            },
+        });
         
-        let midX = (startCoords[0] + endCoords[0]) / 2;
-        let midY = (startCoords[1] + endCoords[1]) / 2;
-        
-        map.setMinZoom(idealZoom);
-        
-        let ux = dx / dist;
-        let uy = dy / dist;
-        let vx = -uy; 
-        let vy = ux;
-        let maxAbsX = 0;
-        
-        allLngs.forEach((lng, idx) => {
-            let px = lng - midX;
-            let py = allLats[idx] - midY;
-            let localX = px * vx + py * vy;
-            if (Math.abs(localX) > maxAbsX) {
-                maxAbsX = Math.abs(localX);
+        if (startCoords && endCoords) {
+            let dx = endCoords[0] - startCoords[0];
+            let dy = endCoords[1] - startCoords[1];
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > 0) {
+                let distM = postupyData[index].dist_m || 0;
+                let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
+                let gap = 0.10;
+                let ux = dx / dist;
+                let uy = dy / dist;
+                let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
+                const mContainer = document.getElementById(`map-${index}`);
+                if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
+                
+                let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
+                let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
+                let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
+                if (dist > R*2 + gap*2) {
+                    let polyline = L.polyline([[lineStart[1], lineStart[0]], [lineEnd[1], lineEnd[0]]], 
+                        {color: iofPurple, weight: lineWeight, pane: 'markerPane', interactive: false});
+                    layer.addLayer(polyline);
+                }
+                [startCoords, endCoords].forEach((coords, idx) => {
+                    let num = idx === 0 ? "1" : "2";
+                    layer.addLayer(L.circle([coords[1], coords[0]], {
+                        radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false
+                    }));
+                    
+                    let nx = -uy, ny = ux;
+                    let textDist = R + 0.90;
+                    let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
+                    
+                    let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+                    svgText.setAttribute('viewBox', "0 0 100 100");
+                    svgText.setAttribute('preserveAspectRatio', 'none');
+                    svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
+                    let halfSizeText = 1.0;
+                    let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
+                    overlays.addLayer(L.svgOverlay(svgText, boundsText, {interactive: false, pane: 'markerPane'}));
+                });
             }
-        });
+        }
         
-        let pixelScale = Math.pow(2, idealZoom); 
+        layer.addTo(map);
+        currentLayers[index] = layer;
         
-        let screenHalfW = (w / 2) / pixelScale;
-        let screenHalfH = (h / 2) / pixelScale;
-        
-        let routeHalfW = maxAbsX + (60 / pixelScale);
-        let routeHalfH = (dist / 2) + (80 / pixelScale);
-        
-        let holeHalfW = Math.max(screenHalfW, routeHalfW);
-        let holeHalfH = Math.max(screenHalfH, routeHalfH);
-        
-        let p1x = midX + ux * holeHalfH + vx * holeHalfW;
-        let p1y = midY + uy * holeHalfH + vy * holeHalfW;
-        
-        let p2x = midX + ux * holeHalfH - vx * holeHalfW;
-        let p2y = midY + uy * holeHalfH - vy * holeHalfW;
-        
-        let p3x = midX - ux * holeHalfH - vx * holeHalfW;
-        let p3y = midY - uy * holeHalfH - vy * holeHalfW;
-        
-        let p4x = midX - ux * holeHalfH + vx * holeHalfW;
-        let p4y = midY - uy * holeHalfH + vy * holeHalfW;
-        
-        let innerRing = [
-            [p1y, p1x],
-            [p2y, p2x],
-            [p3y, p3x],
-            [p4y, p4x]
-        ];
-        
-        let outerRing = [
-            [-50000, -50000],
-            [-50000, 50000],
-            [50000, 50000],
-            [50000, -50000]
-        ];
-        
-        let mask = L.polygon([outerRing, innerRing], {
-            color: 'transparent',
-            fillColor: '#ffffff',
-            fillOpacity: 1.0,
-            interactive: false,
-            pane: 'maskPane'
-        });
-        overlays.addLayer(mask);
-        
-        setTimeout(() => {
-            map.invalidateSize();
-            map.originalMidX = midX;
-            map.originalMidY = midY;
-            map.originalZoom = idealZoom;
-            map.setView([midY, midX], idealZoom, {
-                animate: false
+        if (startCoords && endCoords) {
+            let w = window.innerWidth;
+            let h = window.innerHeight; 
+            let dx = endCoords[0] - startCoords[0];
+            let dy = endCoords[1] - startCoords[1];
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            
+            let targetPixelsY = h * 0.70;
+            let idealZoom = 0;
+            if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
+            
+            let HARD_MIN_ZOOM = 0; 
+            let maxZoom = map.getMaxZoom() || 8;
+            idealZoom = Math.max(HARD_MIN_ZOOM, Math.min(maxZoom, idealZoom));
+            
+            let midX = (startCoords[0] + endCoords[0]) / 2;
+            let midY = (startCoords[1] + endCoords[1]) / 2;
+            
+            map.setMinZoom(idealZoom);
+            
+            let ux = dx / dist, uy = dy / dist;
+            let vx = -uy, vy = ux;
+            let maxAbsX = 0;
+            
+            allLngs.forEach((lng, idx) => {
+                let px = lng - midX, py = allLats[idx] - midY;
+                let localX = px * vx + py * vy;
+                if (Math.abs(localX) > maxAbsX) maxAbsX = Math.abs(localX);
             });
-        }, 50);
-    }
+            
+            let pixelScale = Math.pow(2, idealZoom); 
+            let screenHalfW = (w / 2) / pixelScale;
+            let screenHalfH = (h / 2) / pixelScale;
+            let routeHalfW = maxAbsX + (60 / pixelScale);
+            let routeHalfH = (dist / 2) + (80 / pixelScale);
+            
+            let holeHalfW = Math.max(screenHalfW, routeHalfW);
+            let holeHalfH = Math.max(screenHalfH, routeHalfH);
+            
+            let innerRing = [
+                [midY + uy * holeHalfH + vy * holeHalfW, midX + ux * holeHalfH + vx * holeHalfW],
+                [midY + uy * holeHalfH - vy * holeHalfW, midX + ux * holeHalfH - vx * holeHalfW],
+                [midY - uy * holeHalfH - vy * holeHalfW, midX - ux * holeHalfH - vx * holeHalfW],
+                [midY - uy * holeHalfH + vy * holeHalfW, midX - ux * holeHalfH + vx * holeHalfW]
+            ];
+            let outerRing = [[-50000, -50000], [-50000, 50000], [50000, 50000], [50000, -50000]];
+            
+            let mask = L.polygon([outerRing, innerRing], {
+                color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane'
+            });
+            overlays.addLayer(mask);
+            
+            setTimeout(() => {
+                map.invalidateSize();
+                map.originalMidX = midX;
+                map.originalMidY = midY;
+                map.originalZoom = idealZoom;
+                map.setView([midY, midX], idealZoom, { animate: false });
+            }, 50);
+        }
     } catch (e) {
         alert("renderMapData Error at index " + index + ": " + e.message + "\nStack: " + e.stack);
     }
 }
 
-let calibMode = false;
-let calibX = 400;
-let calibY = -300;
-document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'k') {
-        calibMode = !calibMode;
-        let ui = document.getElementById('calibration-ui');
-        if(ui) ui.style.display = calibMode ? 'block' : 'none';
-        if (calibMode) updateCalibrationShift();
-        return;
-    }
-    if (!calibMode) return;
-    if (e.key === 'ArrowLeft') calibX -= 1;
-    else if (e.key === 'ArrowRight') calibX += 1;
-    else if (e.key === 'ArrowUp') calibY -= 1;
-    else if (e.key === 'ArrowDown') calibY += 1;
-    else return;
-    e.preventDefault();
-    let xspan = document.getElementById('calib-x');
-    let yspan = document.getElementById('calib-y');
-    if (xspan) xspan.innerText = calibX;
-    if (yspan) yspan.innerText = calibY;
-    updateCalibrationShift();
-});
-
-function updateCalibrationShift() {
-    if (typeof activeIndex === 'undefined') return;
-    let map = mapInstances[activeIndex];
-    if (!map) return;
-    let pane = map.getPane('markerPane');
-    let shiftXConfig = calibX - 400;
-    let shiftYConfig = calibY - (-300);
-    let scale = Math.pow(2, map.getZoom()) / 64;
-    pane.style.marginLeft = (shiftXConfig * scale) + 'px';
-    pane.style.marginTop = (shiftYConfig * scale) + 'px';
-}
-
-// === OFFLINE SYNC ===
+// OFFLINE SYNC, LIKES, SHARE
 async function startOfflineSync() {
     let btn = document.getElementById('offline-sync-btn');
     if (btn) btn.disabled = true;
-    
     let progressOverlay = document.getElementById('sync-progress');
     let bar = document.getElementById('sync-bar');
     let text = document.getElementById('sync-text');
     if (progressOverlay) progressOverlay.style.display = 'flex';
     
     try {
-        let urlsToFetch = [];
-        urlsToFetch.push('postupy/postupy_index.json');
-        
-        postupyData.forEach(p => {
-            urlsToFetch.push('postupy/' + p.file);
-        });
-        
+        let urlsToFetch = ['postupy/postupy_index.json'];
+        postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
         text.innerText = "Získávám index dlaždic...";
         let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
         if (tilesResponse.ok) {
             let tiles = await tilesResponse.json();
             urlsToFetch = urlsToFetch.concat(tiles);
-        } else {
-            console.warn("tiles_index.json nenalezen, dlaždice nebudou staženy.");
         }
         
         let total = urlsToFetch.length;
         let done = 0;
-        
         const chunkSize = 20;
         for (let i = 0; i < total; i += chunkSize) {
             let chunk = urlsToFetch.slice(i, i + chunkSize);
             await Promise.all(chunk.map(async (url) => {
-                try {
-                    let res = await fetch(url, { cache: 'no-store' }); 
-                } catch(e) {
-                    console.error("Failed to fetch", url, e);
-                }
+                try { await fetch(url, { cache: 'no-store' }); } catch(e) {}
                 done++;
             }));
-            
-            let percent = Math.floor((done / total) * 100);
-            if (bar) bar.style.width = percent + '%';
+            if (bar) bar.style.width = Math.floor((done / total) * 100) + '%';
             if (text) text.innerText = `${done} / ${total}`;
         }
         
         setTimeout(() => {
             if (progressOverlay) progressOverlay.style.display = 'none';
             if (btn) {
-                btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+                btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
                 btn.style.background = "var(--bg-color)";
                 btn.onclick = null;
             }
         }, 500);
-        
     } catch (err) {
         alert("Chyba při stahování: " + err.message);
         if (progressOverlay) progressOverlay.style.display = 'none';
     }
 }
 
-// === LIKES, BOOKMARKS, SHARE ===
 function toggleLike(index, btn) {
     btn.classList.toggle('liked');
     if (btn.classList.contains('liked')) {
@@ -751,75 +572,56 @@ function triggerLikeAnimation(index) {
 
 function toggleBookmark(index, btn) {
     btn.classList.toggle('bookmarked');
-    
     const postup = postupyData[index];
     if (!postup) return;
-    
     const mapId = String(postup.id || (index + 1));
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
     
     if (btn.classList.contains('bookmarked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        if (!savedStrings.includes(mapId)) {
-            saved.push(postup.id || (index + 1));
-        }
+        if (!savedStrings.includes(mapId)) saved.push(postup.id || (index + 1));
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
         saved = saved.filter(id => String(id) !== mapId);
     }
-    
     localStorage.setItem('saved_postupy', JSON.stringify(saved));
     renderProfileSaved();
 }
 
 function sharePostup(index) {
     if (navigator.share) {
-        navigator.share({
-            title: 'Zajímavý postup!',
-            text: 'Podívej se na tuhle volbu postupu ve Scrollienteeringu.',
-            url: window.location.href
-        }).catch(err => console.log('Share error:', err));
+        navigator.share({ title: 'Zajímavý postup!', url: window.location.href }).catch(err => console.log(err));
     } else {
         alert("Odkaz zkopírován do schránky (simulace).");
     }
 }
 
-// === VYKRESLENÍ ULOŽENÝCH V PROFILU ===
+// === VYKRESLENÍ PROFILU (S PILLS) ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    let gridContainer = profileScreen.querySelector('.explore-grid-container, .profile-grid, #profile-grid-container');
-    
-    if (!gridContainer) {
-        gridContainer = document.createElement('div');
-        gridContainer.className = 'explore-grid-container profile-grid';
-        gridContainer.id = 'profile-grid-container';
-        gridContainer.style.display = 'grid';
-        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-        gridContainer.style.gap = '2px';
-        gridContainer.style.width = '100%';
-        gridContainer.style.padding = '4px 0 80px 0';
-        gridContainer.style.boxSizing = 'border-box';
-        profileScreen.appendChild(gridContainer);
-    } else {
-        gridContainer.style.display = 'grid';
-        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-        gridContainer.style.gap = '2px';
-        gridContainer.style.width = '100%';
-        gridContainer.style.padding = '4px 0 80px 0';
-        gridContainer.style.boxSizing = 'border-box';
+    let profileContent = document.getElementById('profile-content-wrapper');
+    if (!profileContent) {
+        profileContent = document.createElement('div');
+        profileContent.id = 'profile-content-wrapper';
+        
+        // Najde staré ikony/záložky v profilu (např. div s ikonkou mřížky a záložky) a skryje je
+        const tabsContainer = profileScreen.querySelector('.profile-tabs, div:has(> .profile-tab)');
+        if (tabsContainer) tabsContainer.style.display = 'none';
+        
+        profileScreen.appendChild(profileContent);
     }
     
-    gridContainer.innerHTML = '';
+    profileContent.innerHTML = '';
     
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedIds = saved.map(String);
     
     if (savedIds.length === 0) {
-        gridContainer.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
+        profileContent.innerHTML = `
+            <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
                 <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
                 </svg>
@@ -829,14 +631,71 @@ function renderProfileSaved() {
         return;
     }
     
-    const localMapThumbs = [
-        "tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png",
-        "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"
-    ];
-    
     const savedData = postupyData.filter(map => savedIds.includes(String(map.id)));
+    const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
     
-    savedData.forEach((map) => {
+    if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) {
+        profileSelectedTerrain = 'Vše';
+    }
+    
+    // Tvorba Pills kontejneru
+    const pillsContainer = document.createElement('div');
+    pillsContainer.className = 'profile-pills-container';
+    pillsContainer.style.display = 'flex';
+    pillsContainer.style.overflowX = 'auto';
+    pillsContainer.style.gap = '8px';
+    pillsContainer.style.padding = '15px';
+    pillsContainer.style.borderBottom = '1px solid #333';
+    
+    const createPill = (terrainName, label) => {
+        const pill = document.createElement('button');
+        pill.innerText = label;
+        pill.style.padding = '8px 16px';
+        pill.style.borderRadius = '20px';
+        pill.style.border = 'none';
+        pill.style.whiteSpace = 'nowrap';
+        pill.style.fontSize = '0.85rem';
+        pill.style.fontWeight = '600';
+        pill.style.cursor = 'pointer';
+        pill.style.transition = 'all 0.2s';
+        
+        if (profileSelectedTerrain === terrainName) {
+            pill.style.background = '#fff';
+            pill.style.color = '#000';
+        } else {
+            pill.style.background = '#333';
+            pill.style.color = '#ccc';
+        }
+
+        pill.onclick = () => {
+            profileSelectedTerrain = terrainName;
+            renderProfileSaved();
+        };
+        return pill;
+    };
+
+    pillsContainer.appendChild(createPill('Vše', 'Vše'));
+    uniqueTerrains.forEach(t => {
+        const niceName = t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ');
+        pillsContainer.appendChild(createPill(t, niceName));
+    });
+    profileContent.appendChild(pillsContainer);
+    
+    // Tvorba Grid kontejneru
+    const gridContainer = document.createElement('div');
+    gridContainer.style.display = 'grid';
+    gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    gridContainer.style.gap = '2px';
+    gridContainer.style.width = '100%';
+    gridContainer.style.padding = '2px 0 80px 0';
+    
+    const displayData = profileSelectedTerrain === 'Vše' 
+        ? savedData 
+        : savedData.filter(map => map.terrain === profileSelectedTerrain);
+    
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"];
+    
+    displayData.forEach((map) => {
         const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
@@ -848,7 +707,7 @@ function renderProfileSaved() {
         
         let iconHtml = '';
         if (map.variants_count > 1) {
-            iconHtml = '<svg class="grid-icon" style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+            iconHtml = '<svg style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
         }
         
         let distBadge = map.dist_m 
@@ -856,33 +715,27 @@ function renderProfileSaved() {
             : '';
         
         el.innerHTML = `
-            <div class="grid-img" style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
+            <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
             ${iconHtml}
             ${distBadge}
         `;
         
-        el.addEventListener('click', () => {
-            openMapInFeed(map.id);
-        });
-        
+        el.addEventListener('click', () => openMapInFeed(map.id));
         gridContainer.appendChild(el);
     });
+    profileContent.appendChild(gridContainer);
 }
 
 // === EXPLORE LOGIKA ===
-let appState = {
-    selectedTerrains: ['*'] 
-};
+let appState = { selectedTerrains: ['*'] };
 
 function setupExploreStories() {
     const stories = document.querySelectorAll('.story-item');
     const navBadge = document.getElementById('nav-badge');
-    
     stories.forEach(story => {
         story.addEventListener('click', () => {
             const terrain = story.getAttribute('data-terrain');
             const ring = story.querySelector('.story-ring');
-            
             if (selectedTerrains.has(terrain)) {
                 selectedTerrains.delete(terrain);
                 if (ring) ring.classList.remove('active-story');
@@ -890,7 +743,6 @@ function setupExploreStories() {
                 selectedTerrains.add(terrain);
                 if (ring) ring.classList.add('active-story');
             }
-            
             updateExploreBadge(navBadge);
             renderExploreGrid(); 
         });
@@ -899,27 +751,19 @@ function setupExploreStories() {
 
 function updateExploreBadge(badgeEl) {
     if (selectedTerrains.size > 0) {
-        if (badgeEl) {
-            badgeEl.innerText = selectedTerrains.size;
-            badgeEl.style.display = 'flex';
-        }
+        if (badgeEl) { badgeEl.innerText = selectedTerrains.size; badgeEl.style.display = 'flex'; }
         appState.selectedTerrains = Array.from(selectedTerrains);
     } else {
         if (badgeEl) badgeEl.style.display = 'none';
         appState.selectedTerrains = ['*'];
     }
     
-    const allReels = document.querySelectorAll('.reel');
-    allReels.forEach(reel => {
+    document.querySelectorAll('.reel').forEach(reel => {
         if (selectedTerrains.size === 0) {
             reel.style.display = 'block'; 
         } else {
             const t = reel.getAttribute('data-terrain');
-            if (selectedTerrains.has(t)) {
-                reel.style.display = 'block';
-            } else {
-                reel.style.display = 'none';
-            }
+            reel.style.display = selectedTerrains.has(t) ? 'block' : 'none';
         }
     });
 }
@@ -930,18 +774,9 @@ function renderExploreGrid() {
     container.innerHTML = '';
     
     let displayData = postupyData;
-    if (selectedTerrains.size > 0) {
-        displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
-    }
+    if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
-    const localMapThumbs = [
-        "tiles/3/1/2.png",
-        "tiles/3/2/2.png",
-        "tiles/3/1/3.png",
-        "tiles/2/0/1.png",
-        "tiles/3/2/3.png",
-        "tiles/1/0/0.png"
-    ];
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"];
     
     displayData.forEach((map, index) => {
         const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
@@ -952,23 +787,12 @@ function renderExploreGrid() {
         el.className = 'explore-grid-item' + (isDoubleHeight ? ' double-height' : '');
         
         let iconHtml = '';
-        if (isDoubleHeight) {
-            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" stroke="#fff" stroke-width="2" fill="none"/></svg>';
-        } else if (map.variants_count > 1) {
-            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; 
-        }
+        if (isDoubleHeight) iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+        else if (map.variants_count > 1) iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; 
         
         const animClass = isAnimated ? ' animated-map' : '';
-        
-        el.innerHTML = `
-            <div class="grid-img${animClass}" style="background-image: url('${thumbUrl}');"></div>
-            ${iconHtml}
-        `;
-        
-        el.addEventListener('click', () => {
-            openMapInFeed(map.id);
-        });
-        
+        el.innerHTML = `<div class="grid-img${animClass}" style="background-image: url('${thumbUrl}');"></div>${iconHtml}`;
+        el.addEventListener('click', () => openMapInFeed(map.id));
         container.appendChild(el);
     });
 }
@@ -982,19 +806,11 @@ function openMapInFeed(mapId) {
     if (scrollNavBtn) scrollNavBtn.classList.add('active');
     
     document.querySelectorAll('.app-screen').forEach(screen => {
-        if (screen.id === 'screen-scroll') {
-            screen.classList.add('active');
-        } else {
-            screen.classList.remove('active');
-        }
+        if (screen.id === 'screen-scroll') screen.classList.add('active');
+        else screen.classList.remove('active');
     });
     
     const reelsContainer = document.getElementById('reels-container');
     const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
-    if (targetReel && reelsContainer) {
-        reelsContainer.scrollTo({
-            top: targetReel.offsetTop,
-            behavior: 'auto'
-        });
-    }
+    if (targetReel && reelsContainer) reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'auto' });
 }
