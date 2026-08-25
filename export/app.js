@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
 
-    // 1. Spodní navigace a Router
+    // Spodní navigace a Router
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
 
@@ -46,15 +46,12 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener('click', (e) => {
             const targetId = btn.getAttribute('data-target');
             
-            // Přepnutí tlačítek
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Přepnutí obrazovek
             screens.forEach(screen => {
                 if (screen.id === targetId) {
                     screen.classList.add('active');
-                    // Když otevřeme profil, vykreslíme uložené položky
                     if (targetId === 'screen-profile') {
                         renderProfileSaved();
                     }
@@ -65,15 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // 2. Podpora pro klikání na záložky uvnitř Profilu (např. Uložené)
-    const profileTabs = document.querySelectorAll('#screen-profile .profile-tab, #screen-profile .tab-item');
-    if (profileTabs.length > 0) {
-        profileTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                profileTabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderProfileSaved(); // Znovunačtení gridu při překliknutí
-            });
+    // Delegované klikání na záložky v profilu
+    const profileScreen = document.getElementById('screen-profile');
+    if (profileScreen) {
+        profileScreen.addEventListener('click', (e) => {
+            const tabBtn = e.target.closest('.profile-tab, .tab-item, button, .nav-tab');
+            if (tabBtn) {
+                const allTabs = profileScreen.querySelectorAll('.profile-tab, .tab-item, .nav-tab');
+                allTabs.forEach(t => t.classList.remove('active'));
+                tabBtn.classList.add('active');
+                renderProfileSaved();
+            }
         });
     }
 });
@@ -86,19 +85,23 @@ function loadData() {
         .then(res => res.json())
         .then(data => {
             postupyData = data;
-            // DUMMY: Assign a terrain to each map for demonstration purposes
             postupyData.forEach((map, index) => {
                 map.terrain = TERRAINS[index % TERRAINS.length];
+                if (!map.id) map.id = index + 1;
             });
             
             buildReels();
             setupObserver();
             renderExploreGrid();
             setupExploreStories();
+            renderProfileSaved();
             
             setTimeout(() => {
-                document.getElementById('loader').style.opacity = 0;
-                setTimeout(() => document.getElementById('loader').remove(), 500);
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.style.opacity = 0;
+                    setTimeout(() => loader.remove(), 500);
+                }
             }, 500);
         })
         .catch(err => {
@@ -108,10 +111,11 @@ function loadData() {
 
 function buildReels() {
     const container = document.getElementById('reels-container');
+    if (!container) return;
     container.innerHTML = '';
     
-    // Načteme uložené stavy z paměti
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    let savedIds = saved.map(String);
     
     postupyData.forEach((postup, index) => {
         const reel = document.createElement('div');
@@ -119,7 +123,7 @@ function buildReels() {
         reel.dataset.index = index;
         reel.dataset.terrain = postup.terrain; 
 
-        const isSaved = saved.includes(postup.id);
+        const isSaved = savedIds.includes(String(postup.id));
         const bookmarkClass = isSaved ? 'action-btn bookmark-btn bookmarked' : 'action-btn bookmark-btn';
         const bookmarkSvg = isSaved 
             ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
@@ -139,7 +143,7 @@ function buildReels() {
             </div>
             <div class="reel-ui">
                 <div class="reel-header">
-                    <div class="reel-subtitle">${postup.dist_m.toFixed(0)} m vzdušně</div>
+                    <div class="reel-subtitle">${postup.dist_m ? postup.dist_m.toFixed(0) : ''} m vzdušně</div>
                     <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>Volby</button>
                 </div>
             </div>
@@ -180,6 +184,7 @@ let activeIndex = -1;
 function toggleVariants(index) {
     const panel = document.getElementById('global-variants-panel');
     const content = document.getElementById('global-variants-content');
+    if (!panel || !content) return;
     
     if (isPanelOpen) {
         panel.classList.remove('active');
@@ -251,10 +256,13 @@ function toggleVariants(index) {
         panel.className = 'variants-panel ' + panelClass;
         void panel.offsetWidth; 
         
-        document.getElementById('global-toggle-btn').innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
-        document.getElementById('global-toggle-btn').onclick = () => {
-            panel.classList.toggle('collapsed');
-        };
+        const toggleBtn = document.getElementById('global-toggle-btn');
+        if (toggleBtn) {
+            toggleBtn.innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+            toggleBtn.onclick = () => {
+                panel.classList.toggle('collapsed');
+            };
+        }
         
         panel.classList.remove('collapsed'); 
         panel.classList.add('active');
@@ -274,8 +282,10 @@ function activateReel(indexStr) {
     if (activeIndex !== index) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
-            panel.classList.remove('active');
-            panel.classList.remove('collapsed');
+            if (panel) {
+                panel.classList.remove('active');
+                panel.classList.remove('collapsed');
+            }
             isPanelOpen = false;
             showVariantsForIndex[activeIndex] = false;
             
@@ -330,6 +340,9 @@ L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
 };
 
 function initMapForReel(index) {
+    const mapContainer = document.getElementById(`map-${index}`);
+    if (!mapContainer) return;
+
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple,
         minZoom: 0,
@@ -475,7 +488,9 @@ function renderMapData(index, geojsonOriginal) {
             let ux = dx / dist;
             let uy = dy / dist;
             let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
-            document.getElementById(`map-${index}`).style.transform = `rotate(${targetBearing}deg)`;
+            const mContainer = document.getElementById(`map-${index}`);
+            if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
+            
             let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
             let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
             let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
@@ -695,20 +710,22 @@ async function startOfflineSync() {
             }));
             
             let percent = Math.floor((done / total) * 100);
-            bar.style.width = percent + '%';
-            text.innerText = `${done} / ${total}`;
+            if (bar) bar.style.width = percent + '%';
+            if (text) text.innerText = `${done} / ${total}`;
         }
         
         setTimeout(() => {
-            if(progressOverlay) progressOverlay.style.display = 'none';
-            btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
-            btn.style.background = "var(--bg-color)";
-            btn.onclick = null;
+            if (progressOverlay) progressOverlay.style.display = 'none';
+            if (btn) {
+                btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
+                btn.style.background = "var(--bg-color)";
+                btn.onclick = null;
+            }
         }, 500);
         
     } catch (err) {
         alert("Chyba při stahování: " + err.message);
-        if(progressOverlay) progressOverlay.style.display = 'none';
+        if (progressOverlay) progressOverlay.style.display = 'none';
     }
 }
 
@@ -732,30 +749,27 @@ function triggerLikeAnimation(index) {
     }
 }
 
-// UPRAVENÁ FUNKCE - Ukládání a odebírání ze Storage
 function toggleBookmark(index, btn) {
     btn.classList.toggle('bookmarked');
     
-    // Získáme unikátní ID konkrétního postupu z načtených dat
-    const mapId = postupyData[index].id;
+    const postup = postupyData[index];
+    if (!postup) return;
+    
+    const mapId = String(postup.id || (index + 1));
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    let savedStrings = saved.map(String);
     
     if (btn.classList.contains('bookmarked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        // Pokud ještě není uloženo, přidej
-        if (!saved.includes(mapId)) {
-            saved.push(mapId);
+        if (!savedStrings.includes(mapId)) {
+            saved.push(postup.id || (index + 1));
         }
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        // Odeber uložení
-        saved = saved.filter(id => id !== mapId);
+        saved = saved.filter(id => String(id) !== mapId);
     }
     
-    // Zapsat zpět do prohlížeče
     localStorage.setItem('saved_postupy', JSON.stringify(saved));
-    
-    // Pokud je profil otevřený, rovnou ho aktualizujeme
     renderProfileSaved();
 }
 
@@ -771,27 +785,47 @@ function sharePostup(index) {
     }
 }
 
-// === ZCELA NOVÁ FUNKCE: Vykreslení uložených položek v Profilu ===
+// === VYKRESLENÍ ULOŽENÝCH V PROFILU ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    // Zkusíme najít mřížku pro uložené položky v profilu
-    let gridContainer = profileScreen.querySelector('.explore-grid-container') || profileScreen.querySelector('.profile-grid');
+    let gridContainer = profileScreen.querySelector('.explore-grid-container, .profile-grid, #profile-grid-container');
     
-    // Fallback: Pokud žádná taková mřížka v profilu není, rovnou ji vytvoříme
     if (!gridContainer) {
         gridContainer = document.createElement('div');
         gridContainer.className = 'explore-grid-container profile-grid';
+        gridContainer.id = 'profile-grid-container';
+        gridContainer.style.display = 'grid';
+        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+        gridContainer.style.gap = '2px';
+        gridContainer.style.width = '100%';
+        gridContainer.style.padding = '4px 0 80px 0';
+        gridContainer.style.boxSizing = 'border-box';
         profileScreen.appendChild(gridContainer);
+    } else {
+        gridContainer.style.display = 'grid';
+        gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+        gridContainer.style.gap = '2px';
+        gridContainer.style.width = '100%';
+        gridContainer.style.padding = '4px 0 80px 0';
+        gridContainer.style.boxSizing = 'border-box';
     }
     
     gridContainer.innerHTML = '';
     
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    let savedIds = saved.map(String);
     
-    if (saved.length === 0) {
-        gridContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 3rem; color: #888; font-size: 0.9rem;">Zatím nemáš uloženy žádné postupy.</div>';
+    if (savedIds.length === 0) {
+        gridContainer.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
+                <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                </svg>
+                <div style="font-weight: 600; color: #aaa; margin-bottom: 4px;">Žádné uložené postupy</div>
+                <div style="font-size: 0.8rem;">Klikni ve feedu na ikonku záložky pro uložení.</div>
+            </div>`;
         return;
     }
     
@@ -800,21 +834,31 @@ function renderProfileSaved() {
         "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"
     ];
     
-    const savedData = postupyData.filter(map => saved.includes(map.id));
+    const savedData = postupyData.filter(map => savedIds.includes(String(map.id)));
     
     savedData.forEach((map) => {
         const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
+        el.style.position = 'relative';
+        el.style.aspectRatio = '1 / 1';
+        el.style.background = '#1a1a1a';
+        el.style.overflow = 'hidden';
+        el.style.cursor = 'pointer';
         
         let iconHtml = '';
         if (map.variants_count > 1) {
-            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+            iconHtml = '<svg class="grid-icon" style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
         }
         
+        let distBadge = map.dist_m 
+            ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` 
+            : '';
+        
         el.innerHTML = `
-            <div class="grid-img" style="background-image: url('${thumbUrl}');"></div>
+            <div class="grid-img" style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
             ${iconHtml}
+            ${distBadge}
         `;
         
         el.addEventListener('click', () => {
@@ -841,10 +885,10 @@ function setupExploreStories() {
             
             if (selectedTerrains.has(terrain)) {
                 selectedTerrains.delete(terrain);
-                ring.classList.remove('active-story');
+                if (ring) ring.classList.remove('active-story');
             } else {
                 selectedTerrains.add(terrain);
-                ring.classList.add('active-story');
+                if (ring) ring.classList.add('active-story');
             }
             
             updateExploreBadge(navBadge);
@@ -855,11 +899,13 @@ function setupExploreStories() {
 
 function updateExploreBadge(badgeEl) {
     if (selectedTerrains.size > 0) {
-        badgeEl.innerText = selectedTerrains.size;
-        badgeEl.style.display = 'flex';
+        if (badgeEl) {
+            badgeEl.innerText = selectedTerrains.size;
+            badgeEl.style.display = 'flex';
+        }
         appState.selectedTerrains = Array.from(selectedTerrains);
     } else {
-        badgeEl.style.display = 'none';
+        if (badgeEl) badgeEl.style.display = 'none';
         appState.selectedTerrains = ['*'];
     }
     
@@ -928,11 +974,12 @@ function renderExploreGrid() {
 }
 
 function openMapInFeed(mapId) {
-    const globalIndex = postupyData.findIndex(m => m.id === mapId);
+    const globalIndex = postupyData.findIndex(m => String(m.id) === String(mapId));
     if (globalIndex === -1) return;
     
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector('.nav-btn[data-target="screen-scroll"]').classList.add('active');
+    const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
+    if (scrollNavBtn) scrollNavBtn.classList.add('active');
     
     document.querySelectorAll('.app-screen').forEach(screen => {
         if (screen.id === 'screen-scroll') {
@@ -944,7 +991,7 @@ function openMapInFeed(mapId) {
     
     const reelsContainer = document.getElementById('reels-container');
     const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
-    if (targetReel) {
+    if (targetReel && reelsContainer) {
         reelsContainer.scrollTo({
             top: targetReel.offsetTop,
             behavior: 'auto'
