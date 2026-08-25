@@ -1,9 +1,9 @@
 let postupyData = [];
 let geojsonCache = {};
-let mapInstances = {}; // stores { index: L.map }
-let currentLayers = {}; // stores { index: L.geoJSON }
-let currentOverlays = {}; // stores { index: L.featureGroup }
-let currentTileLayers = {}; // stores { index: L.tileLayer }
+let mapInstances = {}; 
+let currentLayers = {}; 
+let currentOverlays = {}; 
+let currentTileLayers = {}; 
 
 const iofPurple = "#b300ff";
 
@@ -36,9 +36,46 @@ document.addEventListener("DOMContentLoaded", () => {
         originalUpdatePosition.call(this);
     };
 
-    // panBy patch was removed because it caused internal coordinate desync during setView
-
     loadData();
+
+    // 1. Spodní navigace a Router
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const screens = document.querySelectorAll('.app-screen');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
+            
+            // Přepnutí tlačítek
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Přepnutí obrazovek
+            screens.forEach(screen => {
+                if (screen.id === targetId) {
+                    screen.classList.add('active');
+                    // Když otevřeme profil, vykreslíme uložené položky
+                    if (targetId === 'screen-profile') {
+                        renderProfileSaved();
+                    }
+                } else {
+                    screen.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // 2. Podpora pro klikání na záložky uvnitř Profilu (např. Uložené)
+    const profileTabs = document.querySelectorAll('#screen-profile .profile-tab, #screen-profile .tab-item');
+    if (profileTabs.length > 0) {
+        profileTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                profileTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderProfileSaved(); // Znovunačtení gridu při překliknutí
+            });
+        });
+    }
 });
 
 const TERRAINS = ['cesky-les', 'skandinavie', 'madarsko', 'piskovce', 'alpy', 'mesto'];
@@ -73,11 +110,20 @@ function buildReels() {
     const container = document.getElementById('reels-container');
     container.innerHTML = '';
     
+    // Načteme uložené stavy z paměti
+    let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    
     postupyData.forEach((postup, index) => {
         const reel = document.createElement('div');
         reel.className = 'reel';
         reel.dataset.index = index;
-        reel.dataset.terrain = postup.terrain; // Přidáno pro filtraci
+        reel.dataset.terrain = postup.terrain; 
+
+        const isSaved = saved.includes(postup.id);
+        const bookmarkClass = isSaved ? 'action-btn bookmark-btn bookmarked' : 'action-btn bookmark-btn';
+        const bookmarkSvg = isSaved 
+            ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
 
         reel.innerHTML = `
             <div class="map-clip" id="clip-${index}">
@@ -88,7 +134,7 @@ function buildReels() {
             </div>
             <div class="reel-actions">
                 <button class="action-btn like-btn" onclick="toggleLike(${index}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
-                <button class="action-btn bookmark-btn" onclick="toggleBookmark(${index}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
+                <button class="${bookmarkClass}" onclick="toggleBookmark(${index}, this)">${bookmarkSvg}</button>
                 <button class="action-btn share-btn" onclick="sharePostup(${index})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
             </div>
             <div class="reel-ui">
@@ -152,7 +198,7 @@ function toggleVariants(index) {
             </div>
         `).join('');
         
-        let panelClass = 'pos-top-right'; // default
+        let panelClass = 'pos-top-right';
         if (geojsonCache[postup.file]) {
             let startC = null, endC = null;
             geojsonCache[postup.file].features.forEach(f => {
@@ -166,7 +212,7 @@ function toggleVariants(index) {
                 if (dist > 0) {
                     let ux = dx / dist;
                     let uy = dy / dist;
-                    let vx = -uy; // kolmice (ukazuje vlevo na obrazovce po rotaci)
+                    let vx = -uy; 
                     let vy = ux;
                     
                     let maxLeftTop = 0, maxRightTop = 0;
@@ -177,13 +223,13 @@ function toggleVariants(index) {
                             f.geometry.coordinates.forEach(c => {
                                 let px = c[0] - startC[0];
                                 let py = c[1] - startC[1];
-                                let localY = px * ux + py * uy; // 0 u startu, dist u cíle
-                                let localX = px * vx + py * vy; // kladné je vlevo, záporné vpravo na obrazovce
+                                let localY = px * ux + py * uy; 
+                                let localX = px * vx + py * vy; 
                                 
-                                if (localY > dist * 0.6) { // Měříme jen v horních 40 % obrazovky (tam kde fyzicky tabulka je)
+                                if (localY > dist * 0.6) { 
                                     if (localX > maxLeftTop) maxLeftTop = localX;
                                     if (-localX > maxRightTop) maxRightTop = -localX;
-                                } else if (localY < dist * 0.4) { // Měříme jen v dolních 40 % obrazovky
+                                } else if (localY < dist * 0.4) { 
                                     if (localX > maxLeftBot) maxLeftBot = localX;
                                     if (-localX > maxRightBot) maxRightBot = -localX;
                                 }
@@ -191,8 +237,6 @@ function toggleVariants(index) {
                         }
                     });
                     
-                    // Hodnoty reprezentují, jak moc do daného rohu varianty zasahují.
-                    // Vybereme roh s nejmenším zásahem.
                     let bulges = [
                         { corner: 'pos-top-left', val: maxLeftTop },
                         { corner: 'pos-top-right', val: maxRightTop },
@@ -205,20 +249,19 @@ function toggleVariants(index) {
         }
         
         panel.className = 'variants-panel ' + panelClass;
-        void panel.offsetWidth; // force reflow
+        void panel.offsetWidth; 
         
         document.getElementById('global-toggle-btn').innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
         document.getElementById('global-toggle-btn').onclick = () => {
             panel.classList.toggle('collapsed');
         };
         
-        panel.classList.remove('collapsed'); // always start expanded
+        panel.classList.remove('collapsed'); 
         panel.classList.add('active');
         isPanelOpen = true;
         showVariantsForIndex[index] = true;
     }
     
-    // redraw active map
     const postup = postupyData[index];
     if (geojsonCache[postup.file]) {
         renderMapData(index, geojsonCache[postup.file]);
@@ -228,7 +271,6 @@ function toggleVariants(index) {
 function activateReel(indexStr) {
     const index = parseInt(indexStr);
     
-    // Zruš panel při přechodu na jiný reel
     if (activeIndex !== index) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
@@ -237,7 +279,6 @@ function activateReel(indexStr) {
             isPanelOpen = false;
             showVariantsForIndex[activeIndex] = false;
             
-            // hide variants on previous map
             const prevPostup = postupyData[activeIndex];
             if (prevPostup && geojsonCache[prevPostup.file]) {
                 renderMapData(activeIndex, geojsonCache[prevPostup.file]);
@@ -247,10 +288,6 @@ function activateReel(indexStr) {
     }
     
     preloadReel(index);
-    
-    // O chytré předvykreslení (smart preloading) se teď stará událost 'load'
-    // přímo na L.tileLayer v renderMapData, takže se další mapa začne stahovat
-    // až ve chvíli, kdy má uživatel ostrou mapu před sebou.
 }
 
 function preloadReel(i) {
@@ -278,13 +315,9 @@ function preloadReel(i) {
     }
 }
 
-// Hack to force Leaflet to always pick the higher integer zoom level for tiles
-// This ensures downscaling (sharper) instead of upscaling (blurry) during fractional zoom.
 const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
-    // Cílený hack: změníme Math.round na Math.ceil POUZE pro hodnotu zoomu,
-    // čímž zabráníme nechtěnému posunu (rozhození) pixelové mřížky mapy (pixelOrigin).
     Math.round = function(val) {
         if (val === zoom) return Math.ceil(val);
         return oldRound(val);
@@ -308,45 +341,37 @@ function initMapForReel(index) {
     });
     
     map.createPane('maskPane');
-    map.getPane('maskPane').style.zIndex = 250; // Nad dlaždicemi (200), pod overlay (400)
+    map.getPane('maskPane').style.zIndex = 250; 
     
-    // Disable default double click zoom
     map.doubleClickZoom.disable();
     
-    // Custom double click logic (Reset Zoom vs Like)
     let lastClickTime = 0;
     map.on('click', function(e) {
         let currentTime = Date.now();
         if (currentTime - lastClickTime < 400) {
-            // It's a double click!
             let currentZoom = map.getZoom();
             let minZoom = map.getMinZoom();
             if (currentZoom > minZoom + 0.05) {
-                // If zoomed in, reset to center and min zoom
                 if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
                     map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
                 } else {
                     map.setZoom(minZoom);
                 }
             } else {
-                // Trigger Like
                 let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
                 if (btn && !btn.classList.contains('liked')) {
                     toggleLike(index, btn);
                 } else {
-                    // Show animation even if already liked
                     triggerLikeAnimation(index);
                 }
             }
-            lastClickTime = 0; // reset
+            lastClickTime = 0; 
         } else {
             lastClickTime = currentTime;
         }
     });
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
-    // Tile layer se přidá až v renderMapData — potřebujeme GeoJSON data pro ořez
-    
     map.on('zoomend', updateCalibrationShift);
     mapInstances[index] = map;
 }
@@ -370,7 +395,6 @@ function renderMapData(index, geojsonOriginal) {
     let startCoords = null;
     let endCoords = null;
     
-    // Sesbírat VŠECHNY souřadnice pro výpočet bounding boxu
     let allLngs = [], allLats = [];
     geojson.features.forEach(f => {
         if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
@@ -384,7 +408,6 @@ function renderMapData(index, geojsonOriginal) {
         }
     });
     
-    // Tile layer s ořezem na bounding box postupu + 30% margin
     if (!currentTileLayers[index] && allLngs.length > 0) {
         let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
         let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
@@ -395,7 +418,6 @@ function renderMapData(index, geojsonOriginal) {
             [maxLat + marginLat, maxLng + marginLng]
         ];
         
-        // Zabrání odjetí mapy do bílého prázdna
         map.setMaxBounds(tileBounds);
         
         let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
@@ -412,22 +434,17 @@ function renderMapData(index, geojsonOriginal) {
         }).addTo(map);
         currentTileLayers[index] = tl;
         
-        // Smart Preloading: pokud je tohle aktivní postup,
-        // počkejme na stažení všech dlaždic, a teprve PAK začněme stahovat
-        // na pozadí dlaždice pro následující postup. Zabrání to síťové zácpě.
         if (index === activeIndex) {
             tl.once('load', () => {
                 preloadReel(index + 1);
                 preloadReel(index - 1);
             });
-            // Bezpečnostní pojistka: pokud by se událost neodpálila (např. vše je v cache)
             setTimeout(() => {
                 preloadReel(index + 1);
                 preloadReel(index - 1);
             }, 500);
         }
     }
-    
     
     let showVariants = showVariantsForIndex[index] || false;
 
@@ -452,7 +469,6 @@ function renderMapData(index, geojsonOriginal) {
         let dy = endCoords[1] - startCoords[1];
         let dist = Math.sqrt(dx*dx + dy*dy);
         if (dist > 0) {
-            // R: Dvojnásobek oproti předchozímu stavu, protože jsme zjemnili mapovou mřížku (scale z 32 na 16)
             let distM = postupyData[index].dist_m || 0;
             let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
             let gap = 0.10;
@@ -472,7 +488,6 @@ function renderMapData(index, geojsonOriginal) {
             }
             [startCoords, endCoords].forEach((coords, idx) => {
                 let num = idx === 0 ? "1" : "2";
-                // 1. L.circle — matematicky dokonalá kružnice, přidaná do stejné vrstvy jako spojnice
                 layer.addLayer(L.circle([coords[1], coords[0]], {
                     radius: R,
                     color: iofPurple,
@@ -482,7 +497,6 @@ function renderMapData(index, geojsonOriginal) {
                     interactive: false
                 }));
                 
-                // 2. Text Overlay (Offset)
                 let nx = -uy, ny = ux;
                 let textDist = R + 0.90;
                 let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
@@ -504,13 +518,12 @@ function renderMapData(index, geojsonOriginal) {
     
     if (startCoords && endCoords) {
         let w = window.innerWidth;
-        let h = window.innerHeight; // full screen, no bottom bar in map
+        let h = window.innerHeight; 
         
         let dx = endCoords[0] - startCoords[0];
         let dy = endCoords[1] - startCoords[1];
         let dist = Math.sqrt(dx*dx + dy*dy);
         
-        // Cílová délka postupu na obrazovce v pixelech (změněno na 70% pro větší rezervu nad a pod)
         let targetPixelsY = h * 0.70;
         let idealZoom = 0;
         if (dist > 0) {
@@ -526,14 +539,12 @@ function renderMapData(index, geojsonOriginal) {
         
         map.setMinZoom(idealZoom);
         
-        // === VÝPOČET CHYTRÉ MASKY ===
         let ux = dx / dist;
         let uy = dy / dist;
-        let vx = -uy; // kolmice
+        let vx = -uy; 
         let vy = ux;
         let maxAbsX = 0;
         
-        // Zjistit, jak daleko od osy jsou varianty
         allLngs.forEach((lng, idx) => {
             let px = lng - midX;
             let py = allLats[idx] - midY;
@@ -543,21 +554,17 @@ function renderMapData(index, geojsonOriginal) {
             }
         });
         
-        let pixelScale = Math.pow(2, idealZoom); // Převod z mapových jednotek na pixely displeje na úvodním zoomu
+        let pixelScale = Math.pow(2, idealZoom); 
         
-        // Polovina šířky/výšky displeje v mapových jednotkách
         let screenHalfW = (w / 2) / pixelScale;
         let screenHalfH = (h / 2) / pixelScale;
         
-        // Rozměry postupu včetně rezervy (60px šířka, 80px výška na displeji)
         let routeHalfW = maxAbsX + (60 / pixelScale);
         let routeHalfH = (dist / 2) + (80 / pixelScale);
         
-        // Díra musí pokrýt displej, ale i celou trasu s rezervou
         let holeHalfW = Math.max(screenHalfW, routeHalfW);
         let holeHalfH = Math.max(screenHalfH, routeHalfH);
         
-        // 4 rohy vnitřní díry (v mapových souřadnicích)
         let p1x = midX + ux * holeHalfH + vx * holeHalfW;
         let p1y = midY + uy * holeHalfH + vy * holeHalfW;
         
@@ -570,7 +577,6 @@ function renderMapData(index, geojsonOriginal) {
         let p4x = midX - ux * holeHalfH + vx * holeHalfW;
         let p4y = midY - uy * holeHalfH + vy * holeHalfW;
         
-        // Ring pro Leaflet Polygon (formát [Lat, Lng] tedy [Y, X])
         let innerRing = [
             [p1y, p1x],
             [p2y, p2x],
@@ -578,7 +584,6 @@ function renderMapData(index, geojsonOriginal) {
             [p4y, p4x]
         ];
         
-        // Obrovský čtverec tvořící vnější hranu masky (pokryje celou mapu)
         let outerRing = [
             [-50000, -50000],
             [-50000, 50000],
@@ -586,7 +591,6 @@ function renderMapData(index, geojsonOriginal) {
             [50000, -50000]
         ];
         
-        // Vykreslení masky (polygon s dírou)
         let mask = L.polygon([outerRing, innerRing], {
             color: 'transparent',
             fillColor: '#ffffff',
@@ -595,7 +599,6 @@ function renderMapData(index, geojsonOriginal) {
             pane: 'maskPane'
         });
         overlays.addLayer(mask);
-        // === KONEC VÝPOČTU MASKY ===
         
         setTimeout(() => {
             map.invalidateSize();
@@ -679,13 +682,11 @@ async function startOfflineSync() {
         let total = urlsToFetch.length;
         let done = 0;
         
-        // Fetch in chunks of 20 to avoid exhausting connection pool
         const chunkSize = 20;
         for (let i = 0; i < total; i += chunkSize) {
             let chunk = urlsToFetch.slice(i, i + chunkSize);
             await Promise.all(chunk.map(async (url) => {
                 try {
-                    // SW will intercept this and put it in cache automatically
                     let res = await fetch(url, { cache: 'no-store' }); 
                 } catch(e) {
                     console.error("Failed to fetch", url, e);
@@ -699,7 +700,7 @@ async function startOfflineSync() {
         }
         
         setTimeout(() => {
-            overlay.classList.remove('active');
+            if(progressOverlay) progressOverlay.style.display = 'none';
             btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
             btn.style.background = "var(--bg-color)";
             btn.onclick = null;
@@ -707,7 +708,7 @@ async function startOfflineSync() {
         
     } catch (err) {
         alert("Chyba při stahování: " + err.message);
-        overlay.classList.remove('active');
+        if(progressOverlay) progressOverlay.style.display = 'none';
     }
 }
 
@@ -725,20 +726,37 @@ function toggleLike(index, btn) {
 function triggerLikeAnimation(index) {
     let anim = document.getElementById(`like-anim-${index}`);
     if (anim) {
-        // Znovu spustit animaci odebráním a přidáním třídy
         anim.classList.remove('active');
-        void anim.offsetWidth; // trigger reflow
+        void anim.offsetWidth; 
         anim.classList.add('active');
     }
 }
 
+// UPRAVENÁ FUNKCE - Ukládání a odebírání ze Storage
 function toggleBookmark(index, btn) {
     btn.classList.toggle('bookmarked');
+    
+    // Získáme unikátní ID konkrétního postupu z načtených dat
+    const mapId = postupyData[index].id;
+    let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    
     if (btn.classList.contains('bookmarked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+        // Pokud ještě není uloženo, přidej
+        if (!saved.includes(mapId)) {
+            saved.push(mapId);
+        }
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+        // Odeber uložení
+        saved = saved.filter(id => id !== mapId);
     }
+    
+    // Zapsat zpět do prohlížeče
+    localStorage.setItem('saved_postupy', JSON.stringify(saved));
+    
+    // Pokud je profil otevřený, rovnou ho aktualizujeme
+    renderProfileSaved();
 }
 
 function sharePostup(index) {
@@ -753,39 +771,64 @@ function sharePostup(index) {
     }
 }
 
-// === SPA ROUTER A LOGIKA VÝBĚRU ===
-
-let appState = {
-    selectedTerrains: ['*'] // Výchozí: Náhodný mix
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. Spodní navigace
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const screens = document.querySelectorAll('.app-screen');
-
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const targetId = btn.getAttribute('data-target');
-            
-            // Přepnutí tlačítek
-            navButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            // Přepnutí obrazovek
-            screens.forEach(screen => {
-                if (screen.id === targetId) {
-                    screen.classList.add('active');
-                } else {
-                    screen.classList.remove('active');
-                }
-            });
+// === ZCELA NOVÁ FUNKCE: Vykreslení uložených položek v Profilu ===
+function renderProfileSaved() {
+    const profileScreen = document.getElementById('screen-profile');
+    if (!profileScreen) return;
+    
+    // Zkusíme najít mřížku pro uložené položky v profilu
+    let gridContainer = profileScreen.querySelector('.explore-grid-container') || profileScreen.querySelector('.profile-grid');
+    
+    // Fallback: Pokud žádná taková mřížka v profilu není, rovnou ji vytvoříme
+    if (!gridContainer) {
+        gridContainer = document.createElement('div');
+        gridContainer.className = 'explore-grid-container profile-grid';
+        profileScreen.appendChild(gridContainer);
+    }
+    
+    gridContainer.innerHTML = '';
+    
+    let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    
+    if (saved.length === 0) {
+        gridContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding: 3rem; color: #888; font-size: 0.9rem;">Zatím nemáš uloženy žádné postupy.</div>';
+        return;
+    }
+    
+    const localMapThumbs = [
+        "tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png",
+        "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"
+    ];
+    
+    const savedData = postupyData.filter(map => saved.includes(map.id));
+    
+    savedData.forEach((map) => {
+        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
+        const el = document.createElement('div');
+        el.className = 'explore-grid-item';
+        
+        let iconHtml = '';
+        if (map.variants_count > 1) {
+            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
+        }
+        
+        el.innerHTML = `
+            <div class="grid-img" style="background-image: url('${thumbUrl}');"></div>
+            ${iconHtml}
+        `;
+        
+        el.addEventListener('click', () => {
+            openMapInFeed(map.id);
         });
+        
+        gridContainer.appendChild(el);
     });
+}
 
-    // 2. Logika Explore (Stories a Grid)
-    // Inicializace se provádí z loadData přes renderExploreGrid() a setupExploreStories()
-});
+// === EXPLORE LOGIKA ===
+let appState = {
+    selectedTerrains: ['*'] 
+};
 
 function setupExploreStories() {
     const stories = document.querySelectorAll('.story-item');
@@ -805,7 +848,7 @@ function setupExploreStories() {
             }
             
             updateExploreBadge(navBadge);
-            renderExploreGrid(); // Refresh grid preview
+            renderExploreGrid(); 
         });
     });
 }
@@ -820,11 +863,10 @@ function updateExploreBadge(badgeEl) {
         appState.selectedTerrains = ['*'];
     }
     
-    // Filtrování samotných Reels v hlavní obrazovce (aby scrollování odpovídalo výběru)
     const allReels = document.querySelectorAll('.reel');
     allReels.forEach(reel => {
         if (selectedTerrains.size === 0) {
-            reel.style.display = 'block'; // Zobrazit vše
+            reel.style.display = 'block'; 
         } else {
             const t = reel.getAttribute('data-terrain');
             if (selectedTerrains.has(t)) {
@@ -846,7 +888,6 @@ function renderExploreGrid() {
         displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     }
     
-    // Mapové výstřižky přímo z aktuálně nahrané mapy v aplikaci
     const localMapThumbs = [
         "tiles/3/1/2.png",
         "tiles/3/2/2.png",
@@ -859,7 +900,7 @@ function renderExploreGrid() {
     displayData.forEach((map, index) => {
         const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
         const isDoubleHeight = (index % 4 === 3);
-        const isAnimated = (index === 0); // První dlaždice hned pod kolečky má živou pomalou animaci pohybu mapy
+        const isAnimated = (index === 0); 
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item' + (isDoubleHeight ? ' double-height' : '');
@@ -868,7 +909,7 @@ function renderExploreGrid() {
         if (isDoubleHeight) {
             iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" stroke="#fff" stroke-width="2" fill="none"/></svg>';
         } else if (map.variants_count > 1) {
-            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; // multi-post
+            iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; 
         }
         
         const animClass = isAnimated ? ' animated-map' : '';
@@ -879,7 +920,6 @@ function renderExploreGrid() {
         `;
         
         el.addEventListener('click', () => {
-            // Skok přímo na mapu do feedu
             openMapInFeed(map.id);
         });
         
@@ -888,11 +928,9 @@ function renderExploreGrid() {
 }
 
 function openMapInFeed(mapId) {
-    // Najdeme index v puvodnim poli postupyData
     const globalIndex = postupyData.findIndex(m => m.id === mapId);
     if (globalIndex === -1) return;
     
-    // Prepne do screen-scroll
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.nav-btn[data-target="screen-scroll"]').classList.add('active');
     
@@ -904,7 +942,6 @@ function openMapInFeed(mapId) {
         }
     });
     
-    // Naskroluje feed na pozadovany reel
     const reelsContainer = document.getElementById('reels-container');
     const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
     if (targetReel) {
