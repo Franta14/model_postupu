@@ -6,15 +6,26 @@ let currentOverlays = {};
 let currentTileLayers = {}; 
 
 const iofPurple = "#b300ff";
-
-// Stav pro filtr v profilu
 let profileSelectedTerrain = 'Vše';
 
-// Skrytí scrollbaru pro posuvné štítky (Pills)
+// CSS pro posuvné štítky a režim "Uloženého Feedu" (Overlay)
 const style = document.createElement('style');
 style.innerHTML = `
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* IG-like Saved Mode Styles */
+body.saved-mode-active .bottom-nav, 
+body.saved-mode-active .nav-bar { display: none !important; }
+#saved-mode-header {
+    position: fixed; top: 0; left: 0; width: 100%; height: 90px;
+    z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
+    color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer;
+}
+body.saved-mode-active #saved-mode-header { display: flex; }
+body.saved-mode-active #screen-scroll { height: 100vh; padding-bottom: 0; }
+body.saved-mode-active .reel { height: 100vh; }
 `;
 document.head.appendChild(style);
 
@@ -42,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
 
+    // Spodní navigace
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
 
@@ -54,18 +66,34 @@ document.addEventListener("DOMContentLoaded", () => {
             screens.forEach(screen => {
                 if (screen.id === targetId) {
                     screen.classList.add('active');
-                    if (targetId === 'screen-profile') {
-                        renderProfileSaved();
-                    }
+                    if (targetId === 'screen-profile') renderProfileSaved();
                 } else {
                     screen.classList.remove('active');
                 }
             });
         });
     });
+
+    // Hlavička a Swipe-to-close pro režim uložených map
+    let smh = document.createElement('div');
+    smh.id = 'saved-mode-header';
+    smh.innerHTML = '<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Uložené';
+    smh.onclick = closeSavedFeed;
+    document.body.appendChild(smh);
+
+    let startX = 0;
+    document.body.addEventListener('touchstart', e => {
+        if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX;
+    }, {passive: true});
+    
+    document.body.addEventListener('touchend', e => {
+        if (document.body.classList.contains('saved-mode-active')) {
+            // Pokud přejedeš prstem o více než 100px zleva doprava
+            if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed();
+        }
+    }, {passive: true});
 });
 
-const TERRAINS = ['cesky-les', 'skandinavie', 'madarsko', 'piskovce', 'alpy', 'mesto'];
 let selectedTerrains = new Set();
 
 function loadData() {
@@ -74,7 +102,8 @@ function loadData() {
         .then(data => {
             postupyData = data;
             postupyData.forEach((map, index) => {
-                map.terrain = TERRAINS[index % TERRAINS.length];
+                // NATVRDO nastaveno na Český les
+                map.terrain = 'cesky-les';
                 if (!map.id) map.id = index + 1;
             });
             
@@ -86,10 +115,7 @@ function loadData() {
             
             setTimeout(() => {
                 const loader = document.getElementById('loader');
-                if (loader) {
-                    loader.style.opacity = 0;
-                    setTimeout(() => loader.remove(), 500);
-                }
+                if (loader) { loader.style.opacity = 0; setTimeout(() => loader.remove(), 500); }
             }, 500);
         })
         .catch(err => alert("Chyba při načítání dat: " + err));
@@ -187,20 +213,15 @@ function toggleVariants(index) {
                 if (f.properties && f.properties.type === 'end') endC = f.geometry.coordinates;
             });
             if (startC && endC) {
-                let dx = endC[0] - startC[0];
-                let dy = endC[1] - startC[1];
+                let dx = endC[0] - startC[0]; let dy = endC[1] - startC[1];
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 if (dist > 0) {
-                    let ux = dx / dist;
-                    let uy = dy / dist;
-                    let vx = -uy; 
-                    let vy = ux;
+                    let ux = dx/dist, uy = dy/dist, vx = -uy, vy = ux;
                     let maxLeftTop = 0, maxRightTop = 0, maxLeftBot = 0, maxRightBot = 0;
                     geojsonCache[postup.file].features.forEach(f => {
                         if (f.properties && f.properties.type === 'variant' && f.geometry.type === 'LineString') {
                             f.geometry.coordinates.forEach(c => {
-                                let px = c[0] - startC[0];
-                                let py = c[1] - startC[1];
+                                let px = c[0] - startC[0], py = c[1] - startC[1];
                                 let localY = px * ux + py * uy; 
                                 let localX = px * vx + py * vy; 
                                 if (localY > dist * 0.6) { 
@@ -213,11 +234,7 @@ function toggleVariants(index) {
                             });
                         }
                     });
-                    let bulges = [
-                        { corner: 'pos-top-left', val: maxLeftTop },
-                        { corner: 'pos-top-right', val: maxRightTop },
-                        { corner: 'pos-bottom-left', val: maxLeftBot }
-                    ];
+                    let bulges = [ { corner: 'pos-top-left', val: maxLeftTop }, { corner: 'pos-top-right', val: maxRightTop }, { corner: 'pos-bottom-left', val: maxLeftBot } ];
                     bulges.sort((a, b) => a.val - b.val);
                     panelClass = bulges[0].corner;
                 }
@@ -238,11 +255,8 @@ function toggleVariants(index) {
         isPanelOpen = true;
         showVariantsForIndex[index] = true;
     }
-    
     const postup = postupyData[index];
-    if (geojsonCache[postup.file]) {
-        renderMapData(index, geojsonCache[postup.file]);
-    }
+    if (geojsonCache[postup.file]) renderMapData(index, geojsonCache[postup.file]);
 }
 
 function activateReel(indexStr) {
@@ -250,16 +264,11 @@ function activateReel(indexStr) {
     if (activeIndex !== index) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
-            if (panel) {
-                panel.classList.remove('active');
-                panel.classList.remove('collapsed');
-            }
+            if (panel) { panel.classList.remove('active'); panel.classList.remove('collapsed'); }
             isPanelOpen = false;
             showVariantsForIndex[activeIndex] = false;
             const prevPostup = postupyData[activeIndex];
-            if (prevPostup && geojsonCache[prevPostup.file]) {
-                renderMapData(activeIndex, geojsonCache[prevPostup.file]);
-            }
+            if (prevPostup && geojsonCache[prevPostup.file]) renderMapData(activeIndex, geojsonCache[prevPostup.file]);
         }
         activeIndex = index;
     }
@@ -309,11 +318,8 @@ function initMapForReel(index) {
             let currentZoom = map.getZoom();
             let minZoom = map.getMinZoom();
             if (currentZoom > minZoom + 0.05) {
-                if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
-                    map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
-                } else {
-                    map.setZoom(minZoom);
-                }
+                if (map.originalMidX !== undefined && map.originalMidY !== undefined) map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
+                else map.setZoom(minZoom);
             } else {
                 let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
                 if (btn && !btn.classList.contains('liked')) toggleLike(index, btn);
@@ -347,8 +353,7 @@ function renderMapData(index, geojsonOriginal) {
             if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
             if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
             if (f.geometry.type === 'Point') {
-                allLngs.push(f.geometry.coordinates[0]);
-                allLats.push(f.geometry.coordinates[1]);
+                allLngs.push(f.geometry.coordinates[0]); allLats.push(f.geometry.coordinates[1]);
             } else if (f.geometry.type === 'LineString') {
                 f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
             }
@@ -364,8 +369,7 @@ function renderMapData(index, geojsonOriginal) {
             map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
                 tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5,
-                noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false,
-                updateWhenZooming: true, detectRetina: true
+                noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
             }).addTo(map);
             currentTileLayers[index] = tl;
             
@@ -377,31 +381,25 @@ function renderMapData(index, geojsonOriginal) {
         
         let showVariants = showVariantsForIndex[index] || false;
         let layer = L.geoJSON(geojson, {
-            filter: function(feature) {
-                if (feature.properties && feature.properties.type === 'variant' && !showVariants) return false;
-                if (feature.properties && ['start', 'end', 'spojnice'].includes(feature.properties.type)) return false;
+            filter: function(f) {
+                if (f.properties && f.properties.type === 'variant' && !showVariants) return false;
+                if (f.properties && ['start', 'end', 'spojnice'].includes(f.properties.type)) return false;
                 return true;
             },
-            style: function (feature) {
-                if (feature.properties && feature.properties.type === 'variant') {
-                    return { color: feature.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
-                }
-                if (feature.properties && feature.properties.type === 'spojnice') {
-                    return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
-                }
+            style: function (f) {
+                if (f.properties && f.properties.type === 'variant') return { color: f.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                if (f.properties && f.properties.type === 'spojnice') return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             },
         });
         
         if (startCoords && endCoords) {
-            let dx = endCoords[0] - startCoords[0];
-            let dy = endCoords[1] - startCoords[1];
+            let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist > 0) {
                 let distM = postupyData[index].dist_m || 0;
                 let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
                 let gap = 0.10;
-                let ux = dx / dist;
-                let uy = dy / dist;
+                let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
                 const mContainer = document.getElementById(`map-${index}`);
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
@@ -416,9 +414,7 @@ function renderMapData(index, geojsonOriginal) {
                 }
                 [startCoords, endCoords].forEach((coords, idx) => {
                     let num = idx === 0 ? "1" : "2";
-                    layer.addLayer(L.circle([coords[1], coords[0]], {
-                        radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false
-                    }));
+                    layer.addLayer(L.circle([coords[1], coords[0]], { radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false }));
                     
                     let nx = -uy, ny = ux;
                     let textDist = R + 0.90;
@@ -440,27 +436,21 @@ function renderMapData(index, geojsonOriginal) {
         currentLayers[index] = layer;
         
         if (startCoords && endCoords) {
-            let w = window.innerWidth;
-            let h = window.innerHeight; 
-            let dx = endCoords[0] - startCoords[0];
-            let dy = endCoords[1] - startCoords[1];
+            let w = window.innerWidth, h = window.innerHeight; 
+            let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
             let targetPixelsY = h * 0.70;
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
             
-            let HARD_MIN_ZOOM = 0; 
             let maxZoom = map.getMaxZoom() || 8;
-            idealZoom = Math.max(HARD_MIN_ZOOM, Math.min(maxZoom, idealZoom));
+            idealZoom = Math.max(0, Math.min(maxZoom, idealZoom));
             
-            let midX = (startCoords[0] + endCoords[0]) / 2;
-            let midY = (startCoords[1] + endCoords[1]) / 2;
-            
+            let midX = (startCoords[0] + endCoords[0]) / 2, midY = (startCoords[1] + endCoords[1]) / 2;
             map.setMinZoom(idealZoom);
             
-            let ux = dx / dist, uy = dy / dist;
-            let vx = -uy, vy = ux;
+            let ux = dx / dist, uy = dy / dist, vx = -uy, vy = ux;
             let maxAbsX = 0;
             
             allLngs.forEach((lng, idx) => {
@@ -470,13 +460,10 @@ function renderMapData(index, geojsonOriginal) {
             });
             
             let pixelScale = Math.pow(2, idealZoom); 
-            let screenHalfW = (w / 2) / pixelScale;
-            let screenHalfH = (h / 2) / pixelScale;
-            let routeHalfW = maxAbsX + (60 / pixelScale);
-            let routeHalfH = (dist / 2) + (80 / pixelScale);
+            let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
+            let routeHalfW = maxAbsX + (60 / pixelScale), routeHalfH = (dist / 2) + (80 / pixelScale);
             
-            let holeHalfW = Math.max(screenHalfW, routeHalfW);
-            let holeHalfH = Math.max(screenHalfH, routeHalfH);
+            let holeHalfW = Math.max(screenHalfW, routeHalfW), holeHalfH = Math.max(screenHalfH, routeHalfH);
             
             let innerRing = [
                 [midY + uy * holeHalfH + vy * holeHalfW, midX + ux * holeHalfH + vx * holeHalfW],
@@ -486,16 +473,12 @@ function renderMapData(index, geojsonOriginal) {
             ];
             let outerRing = [[-50000, -50000], [-50000, 50000], [50000, 50000], [50000, -50000]];
             
-            let mask = L.polygon([outerRing, innerRing], {
-                color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane'
-            });
+            let mask = L.polygon([outerRing, innerRing], { color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane' });
             overlays.addLayer(mask);
             
             setTimeout(() => {
                 map.invalidateSize();
-                map.originalMidX = midX;
-                map.originalMidY = midY;
-                map.originalZoom = idealZoom;
+                map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
                 map.setView([midY, midX], idealZoom, { animate: false });
             }, 50);
         }
@@ -504,7 +487,7 @@ function renderMapData(index, geojsonOriginal) {
     }
 }
 
-// === KALIBRACE A OFFLINE SYNC ===
+// === KALIBRACE ===
 let calibMode = false;
 let calibX = 400;
 let calibY = -300;
@@ -531,7 +514,6 @@ document.addEventListener('keydown', (e) => {
     updateCalibrationShift();
 });
 
-// ZDE JE OPRAVENÁ A NAVRÁCENÁ FUNKCE PRO KALIBRACI, ABY NEPADALO SCROLLOVÁNÍ
 function updateCalibrationShift() {
     if (typeof activeIndex === 'undefined') return;
     let map = mapInstances[activeIndex];
@@ -545,67 +527,14 @@ function updateCalibrationShift() {
     pane.style.marginTop = (shiftYConfig * scale) + 'px';
 }
 
-async function startOfflineSync() {
-    let btn = document.getElementById('offline-sync-btn');
-    if (btn) btn.disabled = true;
-    let progressOverlay = document.getElementById('sync-progress');
-    let bar = document.getElementById('sync-bar');
-    let text = document.getElementById('sync-text');
-    if (progressOverlay) progressOverlay.style.display = 'flex';
-    
-    try {
-        let urlsToFetch = ['postupy/postupy_index.json'];
-        postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
-        text.innerText = "Získávám index dlaždic...";
-        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
-        if (tilesResponse.ok) {
-            let tiles = await tilesResponse.json();
-            urlsToFetch = urlsToFetch.concat(tiles);
-        }
-        
-        let total = urlsToFetch.length;
-        let done = 0;
-        const chunkSize = 20;
-        for (let i = 0; i < total; i += chunkSize) {
-            let chunk = urlsToFetch.slice(i, i + chunkSize);
-            await Promise.all(chunk.map(async (url) => {
-                try { await fetch(url, { cache: 'no-store' }); } catch(e) {}
-                done++;
-            }));
-            if (bar) bar.style.width = Math.floor((done / total) * 100) + '%';
-            if (text) text.innerText = `${done} / ${total}`;
-        }
-        
-        setTimeout(() => {
-            if (progressOverlay) progressOverlay.style.display = 'none';
-            if (btn) {
-                btn.innerHTML = '<svg class="sync-icon" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>';
-                btn.style.background = "var(--bg-color)";
-                btn.onclick = null;
-            }
-        }, 500);
-    } catch (err) {
-        alert("Chyba při stahování: " + err.message);
-        if (progressOverlay) progressOverlay.style.display = 'none';
-    }
-}
-
 function toggleLike(index, btn) {
     btn.classList.toggle('liked');
     if (btn.classList.contains('liked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        triggerLikeAnimation(index);
+        let anim = document.getElementById(`like-anim-${index}`);
+        if (anim) { anim.classList.remove('active'); void anim.offsetWidth; anim.classList.add('active'); }
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
-    }
-}
-
-function triggerLikeAnimation(index) {
-    let anim = document.getElementById(`like-anim-${index}`);
-    if (anim) {
-        anim.classList.remove('active');
-        void anim.offsetWidth; 
-        anim.classList.add('active');
     }
 }
 
@@ -625,45 +554,42 @@ function toggleBookmark(index, btn) {
         saved = saved.filter(id => String(id) !== mapId);
     }
     localStorage.setItem('saved_postupy', JSON.stringify(saved));
+    
+    // Pokud jsme uvnitř overlay modu, smažeme tento konkrétní reel rovnou z DOMu, aby uvolnil místo ostatním
+    if (document.body.classList.contains('saved-mode-active') && !btn.classList.contains('bookmarked')) {
+        const reel = document.querySelector(`.reel[data-index="${index}"]`);
+        if (reel) reel.style.display = 'none';
+    }
+    
     renderProfileSaved();
 }
 
 function sharePostup(index) {
-    if (navigator.share) {
-        navigator.share({ title: 'Zajímavý postup!', url: window.location.href }).catch(err => console.log(err));
-    } else {
-        alert("Odkaz zkopírován do schránky (simulace).");
-    }
+    if (navigator.share) navigator.share({ title: 'Zajímavý postup!', url: window.location.href }).catch(err => console.log(err));
+    else alert("Odkaz zkopírován do schránky.");
 }
 
-// === BEZPEČNÉ VYKRESLENÍ PROFILU (S PILLS) ===
+// === VYKRESLENÍ PROFILU ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    // 1. Zcela smaže a skryje původní lišty a záložky tak, aby na to nespadlo Safari
     const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
     oldTabs.forEach(tab => tab.style.display = 'none');
     
-    // 2. Vytvoří nebo najde bezpečný kontejner, aby se nám gridy nemíchaly
     let profileContent = document.getElementById('profile-content-wrapper');
     if (!profileContent) {
         profileContent = document.createElement('div');
         profileContent.id = 'profile-content-wrapper';
-        
-        // Zničí případné poloviční pozůstatky starých tabulek
         const oldGridContainers = profileScreen.querySelectorAll('.explore-grid-container, .profile-grid');
         oldGridContainers.forEach(g => g.remove());
-        
         profileScreen.appendChild(profileContent);
     }
     
     profileContent.innerHTML = ''; 
-    
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedIds = saved.map(String);
     
-    // Pokd nic nebylo uloženo
     if (savedIds.length === 0) {
         profileContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
@@ -678,12 +604,8 @@ function renderProfileSaved() {
     
     const savedData = postupyData.filter(map => savedIds.includes(String(map.id)));
     const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
+    if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) profileSelectedTerrain = 'Vše';
     
-    if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) {
-        profileSelectedTerrain = 'Vše';
-    }
-    
-    // Vykreslení horizontálních Pills (tlačítek pro filtry)
     const pillsContainer = document.createElement('div');
     pillsContainer.className = 'profile-pills-container';
     pillsContainer.style.display = 'flex';
@@ -703,19 +625,9 @@ function renderProfileSaved() {
         pill.style.fontWeight = '600';
         pill.style.cursor = 'pointer';
         pill.style.transition = 'all 0.2s';
-        
-        if (profileSelectedTerrain === terrainName) {
-            pill.style.background = '#fff';
-            pill.style.color = '#000';
-        } else {
-            pill.style.background = '#333';
-            pill.style.color = '#ccc';
-        }
-
-        pill.onclick = () => {
-            profileSelectedTerrain = terrainName;
-            renderProfileSaved();
-        };
+        if (profileSelectedTerrain === terrainName) { pill.style.background = '#fff'; pill.style.color = '#000'; } 
+        else { pill.style.background = '#333'; pill.style.color = '#ccc'; }
+        pill.onclick = () => { profileSelectedTerrain = terrainName; renderProfileSaved(); };
         return pill;
     };
 
@@ -726,7 +638,6 @@ function renderProfileSaved() {
     });
     profileContent.appendChild(pillsContainer);
     
-    // Tvorba samotného rozložení dlaždic (Mřížka)
     const gridContainer = document.createElement('div');
     gridContainer.style.display = 'grid';
     gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
@@ -734,14 +645,13 @@ function renderProfileSaved() {
     gridContainer.style.width = '100%';
     gridContainer.style.padding = '2px 0 80px 0';
     
-    const displayData = profileSelectedTerrain === 'Vše' 
-        ? savedData 
-        : savedData.filter(map => map.terrain === profileSelectedTerrain);
-    
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"];
+    const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
     
     displayData.forEach((map) => {
-        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
+        // Natáhneme z Pythonu rovnou obrázek pro ultra-ostrou miniaturu, která už obsahuje vykreslenou mapu a postupy
+        let fileName = map.file.replace('.json', '.png').replace('.geojson', '.png');
+        const thumbUrl = 'postupy/' + fileName;
+        
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
@@ -750,25 +660,66 @@ function renderProfileSaved() {
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
         
-        let iconHtml = '';
-        if (map.variants_count > 1) {
-            iconHtml = '<svg style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>';
-        }
-        
-        let distBadge = map.dist_m 
-            ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` 
-            : '';
+        let iconHtml = map.variants_count > 1 ? '<svg style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>' : '';
+        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
         
         el.innerHTML = `
             <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
             ${iconHtml}
             ${distBadge}
         `;
-        
-        el.addEventListener('click', () => openMapInFeed(map.id));
+        el.addEventListener('click', () => openSavedMapInFeed(map.id));
         gridContainer.appendChild(el);
     });
     profileContent.appendChild(gridContainer);
+}
+
+// === OVERLAY REŽIM PRO ULOŽENÉ MAPY ===
+function openSavedMapInFeed(mapId) {
+    const globalIndex = postupyData.findIndex(m => String(m.id) === String(mapId));
+    if (globalIndex === -1) return;
+
+    // Aktivace filtru "pouze uložené" přes CSS (displejnone na neuložené reely)
+    document.body.classList.add('saved-mode-active');
+    
+    let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+    let savedStrings = saved.map(String);
+    
+    document.querySelectorAll('.reel').forEach(reel => {
+        let mId = postupyData[reel.dataset.index].id;
+        if (savedStrings.includes(String(mId))) {
+            reel.style.display = 'block';
+        } else {
+            reel.style.display = 'none';
+        }
+    });
+
+    // Přepnutí do feed okna (skrytého pod overlayem)
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-scroll').classList.add('active');
+
+    // Nascrollování k mapě
+    const reelsContainer = document.getElementById('reels-container');
+    const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
+    if (targetReel && reelsContainer) {
+        setTimeout(() => {
+            reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
+            // Pojistka, aby Leaflet nebyl slepý, když vyskočil z display none
+            let activeMap = mapInstances[globalIndex];
+            if (activeMap) activeMap.invalidateSize();
+        }, 10);
+    }
+}
+
+function closeSavedFeed() {
+    document.body.classList.remove('saved-mode-active');
+    
+    // Obnovení filtru z "Objevuj"
+    updateExploreBadge(document.getElementById('nav-badge'));
+
+    // Vrácení do profilu
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-profile').classList.add('active');
 }
 
 // === EXPLORE LOGIKA ===
@@ -821,41 +772,39 @@ function renderExploreGrid() {
     let displayData = postupyData;
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/2/0/1.png", "tiles/3/2/3.png", "tiles/1/0/0.png"];
-    
-    displayData.forEach((map, index) => {
-        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
-        const isDoubleHeight = (index % 4 === 3);
-        const isAnimated = (index === 0); 
+    displayData.forEach((map) => {
+        // Použije stejný Python PNG pro dokonalou ostrost mřížky v Objevuj, ale dáme do něj 400% zoom
+        let fileName = map.file.replace('.json', '.png').replace('.geojson', '.png');
+        const thumbUrl = 'postupy/' + fileName;
         
         const el = document.createElement('div');
-        el.className = 'explore-grid-item' + (isDoubleHeight ? ' double-height' : '');
+        el.className = 'explore-grid-item'; // ZRUŠENO double-height
+        el.style.aspectRatio = '1 / 1';
+        el.style.overflow = 'hidden';
+        el.style.cursor = 'pointer';
         
-        let iconHtml = '';
-        if (isDoubleHeight) iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21" stroke="#fff" stroke-width="2" fill="none"/></svg>';
-        else if (map.variants_count > 1) iconHtml = '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>'; 
+        let iconHtml = map.variants_count > 1 ? '<svg class="grid-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>' : ''; 
         
-        const animClass = isAnimated ? ' animated-map' : '';
-        el.innerHTML = `<div class="grid-img${animClass}" style="background-image: url('${thumbUrl}');"></div>${iconHtml}`;
-        el.addEventListener('click', () => openMapInFeed(map.id));
+        // Zde je aplikováno brutální 400% přiblížení čtverečků z Objevuj
+        el.innerHTML = `<div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: 400%; background-position: center; width: 100%; height: 100%;"></div>${iconHtml}`;
+        el.addEventListener('click', () => {
+            // Skok do normálního feedu (ne do overlay)
+            const globalIndex = postupyData.findIndex(m => String(m.id) === String(map.id));
+            if (globalIndex === -1) return;
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
+            if (scrollNavBtn) scrollNavBtn.classList.add('active');
+            
+            document.querySelectorAll('.app-screen').forEach(screen => {
+                if (screen.id === 'screen-scroll') screen.classList.add('active');
+                else screen.classList.remove('active');
+            });
+            
+            const reelsContainer = document.getElementById('reels-container');
+            const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
+            if (targetReel && reelsContainer) reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'auto' });
+        });
         container.appendChild(el);
     });
-}
-
-function openMapInFeed(mapId) {
-    const globalIndex = postupyData.findIndex(m => String(m.id) === String(mapId));
-    if (globalIndex === -1) return;
-    
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
-    if (scrollNavBtn) scrollNavBtn.classList.add('active');
-    
-    document.querySelectorAll('.app-screen').forEach(screen => {
-        if (screen.id === 'screen-scroll') screen.classList.add('active');
-        else screen.classList.remove('active');
-    });
-    
-    const reelsContainer = document.getElementById('reels-container');
-    const targetReel = document.querySelector(`.reel[data-index="${globalIndex}"]`);
-    if (targetReel && reelsContainer) reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'auto' });
 }
