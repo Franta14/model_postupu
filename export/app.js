@@ -30,26 +30,29 @@ body.saved-mode-active .reel { height: 100vh; }
 document.head.appendChild(style);
 
 document.addEventListener("DOMContentLoaded", () => {
-    let originalUpdatePosition = L.Draggable.prototype._updatePosition;
-    L.Draggable.prototype._updatePosition = function () {
-        if (this._element && this._element.classList && this._element.classList.contains('leaflet-map-pane')) {
-            let mapDiv = this._element.closest('.map-container');
-            if (mapDiv && mapDiv.style.transform) {
-                let match = mapDiv.style.transform.match(/rotate\(([\-\d\.]+)deg\)/);
-                if (match) {
-                    let theta = parseFloat(match[1]) * Math.PI / 180;
-                    let cos = Math.cos(-theta);
-                    let sin = Math.sin(-theta);
-                    let dx_screen = this._newPos.x - this._startPos.x;
-                    let dy_screen = this._newPos.y - this._startPos.y;
-                    let dx_local = dx_screen * cos - dy_screen * sin;
-                    let dy_local = dx_screen * sin + dy_screen * cos;
-                    this._newPos = new L.Point(this._startPos.x + dx_local, this._startPos.y + dy_local);
+    // Bezpečný Monkey-patch pro Leaflet
+    try {
+        let originalUpdatePosition = L.Draggable.prototype._updatePosition;
+        L.Draggable.prototype._updatePosition = function () {
+            if (this._element && this._element.classList && this._element.classList.contains('leaflet-map-pane')) {
+                let mapDiv = this._element.closest('.map-container');
+                if (mapDiv && mapDiv.style.transform) {
+                    let match = mapDiv.style.transform.match(/rotate\(([\-\d\.]+)deg\)/);
+                    if (match) {
+                        let theta = parseFloat(match[1]) * Math.PI / 180;
+                        let cos = Math.cos(-theta);
+                        let sin = Math.sin(-theta);
+                        let dx_screen = this._newPos.x - this._startPos.x;
+                        let dy_screen = this._newPos.y - this._startPos.y;
+                        let dx_local = dx_screen * cos - dy_screen * sin;
+                        let dy_local = dx_screen * sin + dy_screen * cos;
+                        this._newPos = new L.Point(this._startPos.x + dx_local, this._startPos.y + dy_local);
+                    }
                 }
             }
-        }
-        originalUpdatePosition.call(this);
-    };
+            originalUpdatePosition.call(this);
+        };
+    } catch (e) { console.warn("Draggable patch failed", e); }
 
     loadData();
 
@@ -116,7 +119,7 @@ function loadData() {
                 if (loader) { loader.style.opacity = 0; setTimeout(() => loader.remove(), 500); }
             }, 500);
         })
-        .catch(err => alert("Chyba při načítání dat: " + err));
+        .catch(err => console.error("Chyba při načítání dat: ", err));
 }
 
 function buildReels() {
@@ -167,7 +170,8 @@ function setupObserver() {
     let options = { root: document.getElementById('app'), rootMargin: '0px', threshold: 0.5 };
     let observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
+            // BEZPEČNOSTNÍ POJISTKA: Neaktivovat mapy, které jsou schované (display: none)
+            if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = entry.target.dataset.index;
                 if (scrollTimeout) clearTimeout(scrollTimeout);
                 scrollTimeout = setTimeout(() => { activateReel(index); }, 250);
@@ -286,10 +290,11 @@ function preloadReel(i) {
                 geojsonCache[postup.file] = geojson;
                 if (!currentLayers[i]) renderMapData(i, geojson);
             })
-            .catch(err => console.error("GeoJSON load error:", err));
+            .catch(err => console.warn("GeoJSON load error:", err));
     }
 }
 
+// Bezpečný over-ride pro zoom
 const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
@@ -336,6 +341,10 @@ function initMapForReel(index) {
 
 function renderMapData(index, geojsonOriginal) {
     try {
+        const mContainer = document.getElementById(`map-${index}`);
+        // BEZPEČNOSTNÍ POJISTKA: Nerenorovat mapu, pokud je display:none (zabrání to crashnutí iOS Safari na 0:0 error)
+        if (!mContainer || mContainer.offsetWidth === 0) return;
+
         const map = mapInstances[index];
         if (!map) return;
         if (currentLayers[index]) map.removeLayer(currentLayers[index]);
@@ -399,7 +408,6 @@ function renderMapData(index, geojsonOriginal) {
                 let gap = 0.10;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
-                const mContainer = document.getElementById(`map-${index}`);
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
                 
                 let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
@@ -481,7 +489,7 @@ function renderMapData(index, geojsonOriginal) {
             }, 50);
         }
     } catch (e) {
-        alert("renderMapData Error at index " + index + ": " + e.message + "\nStack: " + e.stack);
+        console.warn("Silent ignore map render error", e);
     }
 }
 
@@ -566,78 +574,26 @@ function sharePostup(index) {
     else alert("Odkaz zkopírován do schránky.");
 }
 
-// === GENIÁLNÍ MINIMAPY ===
-// Pole pro úklid paměti po starých mapách
-window.miniMaps = window.miniMaps || [];
-
-function createMiniMap(containerId, mapData) {
-    const el = document.getElementById(containerId);
-    if (!el) return null;
+// === STATICKÉ DLAŽDICE BEZ ROZMAZÁNÍ ===
+function createStaticThumbnailHtml(map) {
+    // Využijeme lokální dlaždice ve středním detailu a s normálním coverem, aby nebyly rozmazané CSS
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
+    const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
     
-    // Tvorba čisté mapy bez jakéhokoliv ovládání
-    const miniMap = L.map(containerId, {
-        crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomControl: false, attributionControl: false,
-        dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false
-    });
-
-    L.tileLayer('tiles/{z}/{x}/{y}.png', {
-        tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5, noWrap: true, keepBuffer: 2
-    }).addTo(miniMap);
-
-    if (geojsonCache[mapData.file]) {
-        drawMiniMap(miniMap, geojsonCache[mapData.file]);
-    } else {
-        fetch('postupy/' + mapData.file + '?v=' + Date.now())
-            .then(r => r.json())
-            .then(data => {
-                geojsonCache[mapData.file] = data;
-                drawMiniMap(miniMap, data);
-            }).catch(e => console.log(e));
-    }
-    return miniMap;
+    let iconHtml = map.variants_count > 1 ? '<svg class="grid-icon" style="position:absolute; top:6px; right:6px; width:16px; height:16px;" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#fff" stroke-width="2" fill="none"/></svg>' : '';
+    let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
+    
+    return `
+        <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
+        ${iconHtml}
+        ${distBadge}
+    `;
 }
 
-function drawMiniMap(miniMap, geojson) {
-    let allLngs = [], allLats = [];
-    let startC = null, endC = null;
-    
-    geojson.features.forEach(f => {
-        if (f.properties && f.properties.type === 'start') startC = f.geometry.coordinates;
-        if (f.properties && f.properties.type === 'end') endC = f.geometry.coordinates;
-        if (f.geometry.type === 'Point') {
-            allLngs.push(f.geometry.coordinates[0]); allLats.push(f.geometry.coordinates[1]);
-        } else if (f.geometry.type === 'LineString') {
-            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
-        }
-    });
-
-    // Nakreslení variant v jejich barvách
-    L.geoJSON(geojson, {
-        filter: f => (f.properties && f.properties.type === 'variant'),
-        style: f => ({ color: f.properties.color, weight: 3, opacity: 0.9 })
-    }).addTo(miniMap);
-
-    // Vykreslení zjednodušených kontrol (bez textu)
-    if (startC) L.circle([startC[1], startC[0]], {radius: 1.5, color: iofPurple, weight: 2, fill: false}).addTo(miniMap);
-    if (endC) L.circle([endC[1], endC[0]], {radius: 1.5, color: iofPurple, weight: 2, fill: false}).addTo(miniMap);
-
-    if (allLngs.length > 0) {
-        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-        // Vycentrujeme přímo na trasu s okrajem 15 pixelů
-        miniMap.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [15, 15], animate: false });
-    }
-}
-
-// === VYKRESLENÍ PROFILU ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    // Vyčistíme staré Leaflet minimapy z paměti
-    if (window.profileMaps) { window.profileMaps.forEach(m => m.remove()); }
-    window.profileMaps = [];
-
     const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
     oldTabs.forEach(tab => tab.style.display = 'none');
     
@@ -716,23 +672,13 @@ function renderProfileSaved() {
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
         el.style.aspectRatio = '1 / 1';
+        el.style.background = '#1a1a1a';
+        el.style.overflow = 'hidden';
+        el.style.cursor = 'pointer';
         
-        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600; z-index: 1001;">${map.dist_m.toFixed(0)}m</div>` : '';
-        const minimapId = 'minimap-prof-' + map.id;
-        
-        // Krycí DIV zachytí kliknutí, aby nepropadlo do Leafletu
-        el.innerHTML = `
-            <div id="${minimapId}" style="width: 100%; height: 100%; background: #e5e5e5; z-index: 1;"></div>
-            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; cursor:pointer;"></div>
-            ${distBadge}
-        `;
+        el.innerHTML = createStaticThumbnailHtml(map);
         el.addEventListener('click', () => openSavedMapInFeed(map.id));
         gridContainer.appendChild(el);
-        
-        setTimeout(() => {
-            const m = createMiniMap(minimapId, map);
-            if(m) window.profileMaps.push(m);
-        }, 50);
     });
     profileContent.appendChild(gridContainer);
 }
@@ -823,9 +769,6 @@ function updateExploreBadge(badgeEl) {
 function renderExploreGrid() {
     const container = document.getElementById('explore-grid-container');
     if (!container) return;
-    
-    if (window.exploreMaps) { window.exploreMaps.forEach(m => m.remove()); }
-    window.exploreMaps = [];
     container.innerHTML = '';
     
     let displayData = postupyData;
@@ -835,14 +778,11 @@ function renderExploreGrid() {
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
         el.style.aspectRatio = '1 / 1';
-        el.style.position = 'relative';
+        el.style.overflow = 'hidden';
+        el.style.cursor = 'pointer';
         
-        const minimapId = 'minimap-expl-' + map.id;
+        el.innerHTML = createStaticThumbnailHtml(map);
         
-        el.innerHTML = `
-            <div id="${minimapId}" style="width:100%; height:100%; background:#e5e5e5; z-index:1;"></div>
-            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; cursor:pointer;"></div>
-        `;
         el.addEventListener('click', () => {
             const globalIndex = postupyData.findIndex(m => String(m.id) === String(map.id));
             if (globalIndex === -1) return;
@@ -861,11 +801,5 @@ function renderExploreGrid() {
             if (targetReel && reelsContainer) reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'auto' });
         });
         container.appendChild(el);
-        
-        setTimeout(() => {
-            const m = createMiniMap(minimapId, map);
-            if(m) window.exploreMaps.push(m);
-        }, 50);
     });
 }
-
