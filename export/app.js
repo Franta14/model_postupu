@@ -65,7 +65,10 @@ function formatPace(sec) {
 }
 
 function getAdjustedTime(baseSeconds) {
-    return baseSeconds * (userSettings.pace / 220);
+    // KOREKCE CHYBY BACKENDU: Python počítal tempo vůči staré ceně cesty (0.965),
+    // ale reálná cena v matici je 0.750. Časy proto byly o 28 % rychlejší.
+    const pythonErrorCorrection = 0.965 / 0.750;
+    return baseSeconds * pythonErrorCorrection * (userSettings.pace / 220);
 }
 
 function updateUITexts() {
@@ -76,7 +79,7 @@ function updateUITexts() {
 }
 
 // ==========================================
-// 3. INJEKCE CSS STYLŮ (včetně Theme variables)
+// 3. INJEKCE CSS STYLŮ
 // ==========================================
 const style = document.createElement('style');
 style.innerHTML = `
@@ -121,6 +124,8 @@ div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav {
 }
 .nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; }
 .nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
+.nav-btn svg { stroke: var(--nav-icon-color); }
+.nav-btn.active svg { stroke: var(--nav-icon-color); }
 
 /* FIX PRO STORIES A SEARCH BAR */
 .story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
@@ -139,7 +144,6 @@ input::placeholder { color: #888 !important; }
 }
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
 
-/* Settings Styles */
 .settings-section { margin-bottom: 30px; }
 .settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
 .settings-row { 
@@ -152,7 +156,6 @@ input::placeholder { color: #888 !important; }
 }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
-/* IG-like Saved Mode Styles */
 body.saved-mode-active .bottom-nav, 
 body.saved-mode-active .nav-bar { display: none !important; }
 #saved-mode-header {
@@ -275,7 +278,7 @@ function loadData() {
             renderExploreGrid();
             setupExploreStories();
             renderProfileSaved();
-            updateUITexts();
+            updateUITexts(); 
             
             setTimeout(() => {
                 const loader = document.getElementById('loader');
@@ -306,7 +309,7 @@ function updateSettings(key, value) {
         mapInstances = {}; currentLayers = {}; currentOverlays = {}; currentTileLayers = {};
         
         buildReels();
-        setupObserver(); 
+        setupObserver(); // Fix zamrznutí scrollu
         renderProfileSaved();
         renderExploreGrid();
     }
@@ -1182,12 +1185,10 @@ function renderExploreGrid() {
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
     const groups = groupRoutesByMap(displayData);
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     groups.forEach((group) => {
-        let hash = 0;
-        for(let i=0; i<group.map_id.length; i++) hash += group.map_id.charCodeAt(i);
-        const thumbUrl = localMapThumbs[hash % localMapThumbs.length];
+        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
+        const thumbUrl = 'postupy/' + fileName;
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
