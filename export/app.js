@@ -1,18 +1,131 @@
+// ==========================================
+// 1. GLOBÁLNÍ DATA A NASTAVENÍ (STATE)
+// ==========================================
 let postupyData = [];
 let geojsonCache = {};
 let mapInstances = {}; 
 let currentLayers = {}; 
 let currentOverlays = {}; 
 let currentTileLayers = {}; 
-
 const iofPurple = "#b300ff";
 let profileSelectedTerrain = 'Vše';
 
-// CSS pro posuvné štítky a režim "Uloženého Feedu" (Overlay)
+// Výchozí nastavení uživatele
+let userSettings = JSON.parse(localStorage.getItem('user_settings')) || {
+    pace: 220, // 3:40 min/km v sekundách
+    language: 'cs',
+    theme: 'system'
+};
+
+// ==========================================
+// 2. JAZYKOVÝ SLOVNÍK (i18n)
+// ==========================================
+const i18n = {
+    cs: {
+        settings: "Nastavení", runner: "BĚŽEC", paceOnRoad: "Tempo na cestě",
+        application: "APLIKACE", language: "Jazyk", theme: "Vzhled",
+        theme_system: "Systémový", theme_light: "Světlý", theme_dark: "Tmavý",
+        offlineMaps: "Uložit mapy offline", download: "Stáhnout",
+        maps: "MAPY", clearCache: "Vymazat cache",
+        saved: "Uložené", all: "Vše", analyzed: "Analyz.", km: "Km", hours: "Hodin",
+        noSaved: "Žádné uložené postupy", noSavedDesc: "Klikni ve feedu na ikonku záložky pro uložení.",
+        options: "Volby", aerial: "m vzdušně",
+        bioDesc: "Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.",
+        confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána."
+    },
+    en: {
+        settings: "Settings", runner: "RUNNER", paceOnRoad: "Pace on road",
+        application: "APPLICATION", language: "Language", theme: "Appearance",
+        theme_system: "System", theme_light: "Light", theme_dark: "Dark",
+        offlineMaps: "Save maps offline", download: "Download",
+        maps: "MAPS", clearCache: "Clear cache",
+        saved: "Saved", all: "All", analyzed: "Analyz.", km: "Km", hours: "Hours",
+        noSaved: "No saved routes", noSavedDesc: "Click the bookmark icon in the feed to save.",
+        options: "Options", aerial: "m aerial",
+        bioDesc: "Here you can find all your favorite route choices from training and races.",
+        confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared."
+    }
+};
+
+function t(key) { return i18n[userSettings.language][key] || key; }
+
+function getRoutesCountText(count) {
+    if (userSettings.language === 'en') return count === 1 ? '1 route' : count + ' routes';
+    if (count === 1) return '1 postup';
+    if (count >= 2 && count <= 4) return count + ' postupy';
+    return count + ' postupů';
+}
+
+function formatPace(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, '0');
+    return `${m}:${s} min/km`;
+}
+
+function getAdjustedTime(baseSeconds) {
+    // 220s = 3:40 min/km (výchozí tempo Python enginu)
+    return baseSeconds * (userSettings.pace / 220);
+}
+
+// ==========================================
+// 3. INJEKCE CSS STYLŮ (včetně Theme variables)
+// ==========================================
 const style = document.createElement('style');
 style.innerHTML = `
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --secondary-bg: #f2f2f6;
+    --border-color: #e5e5ea;
+    --pill-bg: #e5e5ea;
+    --pill-text: #000;
+    --pill-active-bg: #000;
+    --pill-active-text: #fff;
+    --accent: #b300ff;
+}
+:root[data-theme="dark"] {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --secondary-bg: #1c1c1e;
+    --border-color: #2c2c2e;
+    --pill-bg: #2c2c2e;
+    --pill-text: #fff;
+    --pill-active-bg: #fff;
+    --pill-active-text: #000;
+}
+@media (prefers-color-scheme: dark) {
+    :root[data-theme="system"] {
+        --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e;
+        --border-color: #2c2c2e; --pill-bg: #2c2c2e; --pill-text: #fff;
+        --pill-active-bg: #fff; --pill-active-text: #000;
+    }
+}
+
+body, .app-screen, .bottom-nav { background-color: var(--bg-color); color: var(--text-color); }
+.bottom-nav { border-top: 1px solid var(--border-color); }
+.nav-btn { color: var(--text-color); opacity: 0.5; }
+.nav-btn.active { opacity: 1; color: var(--text-color); }
+
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
+.ig-pill {
+    padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);
+    background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+.ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
+
+/* Settings Styles */
+.settings-section { margin-bottom: 30px; }
+.settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
+.settings-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+    padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color);
+}
+.settings-row select, .settings-btn { 
+    background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); 
+    padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none;
+}
+input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
 /* IG-like Saved Mode Styles */
 body.saved-mode-active .bottom-nav, 
@@ -26,32 +139,28 @@ body.saved-mode-active .nav-bar { display: none !important; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 body.saved-mode-active #screen-scroll { height: 100vh; padding-bottom: 0; }
 body.saved-mode-active .reel { height: 100vh; }
-
-/* IG Pills Design */
-.ig-pill {
-    padding: 8px 16px; border-radius: 20px; border: 1px solid #ccc;
-    background: transparent; color: #111; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
-}
-.ig-pill.active { background: #111; color: #fff; border-color: #111; }
-
-@media (prefers-color-scheme: dark) {
-    .ig-pill { color: #fff; border-color: #555; }
-    .ig-pill.active { background: #fff; color: #000; border-color: #fff; }
-}
 `;
 document.head.appendChild(style);
 
-// MĚŘENÍ ČASU V APLIKACI
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', userSettings.theme);
+}
+applyTheme();
+
+// ==========================================
+// 4. MĚŘENÍ ČASU V APLIKACI
+// ==========================================
 setInterval(() => {
     let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
-    accMs += 5000; // Přidá 5 vteřin každých 5 vteřin
+    accMs += 5000;
     localStorage.setItem('app_time_ms', accMs.toString());
-    
-    // Pokud jsme na profilu, aktualizujeme číslo živě
     const hrsEl = document.getElementById('stat-hours');
     if (hrsEl) hrsEl.innerText = (accMs / 3600000).toFixed(1);
 }, 5000);
 
+// ==========================================
+// 5. INICIALIZACE APLIKACE
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
     try {
         let originalUpdatePosition = L.Draggable.prototype._updatePosition;
@@ -74,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             originalUpdatePosition.call(this);
         };
-    } catch (e) { console.warn("Draggable patch failed", e); }
+    } catch (e) {}
 
     loadData();
 
@@ -96,6 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (screen.id === targetId) {
                     screen.classList.add('active');
                     if (targetId === 'screen-profile') renderProfileSaved();
+                    if (targetId === 'screen-settings') renderSettings();
                 } else {
                     screen.classList.remove('active');
                 }
@@ -105,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let smh = document.createElement('div');
     smh.id = 'saved-mode-header';
-    smh.innerHTML = '<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">Uložené</span>';
+    smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${t('saved')}</span>`;
     smh.onclick = closeSavedFeed;
     document.body.appendChild(smh);
 
@@ -149,6 +259,140 @@ function loadData() {
         .catch(err => console.error("Chyba při načítání dat: ", err));
 }
 
+// ==========================================
+// 6. NASTAVENÍ (SETTINGS SCREEN)
+// ==========================================
+function updateSettings(key, value) {
+    userSettings[key] = value;
+    localStorage.setItem('user_settings', JSON.stringify(userSettings));
+    
+    if (key === 'theme') applyTheme();
+    if (key === 'language' || key === 'pace') {
+        // Full UI reload for language or pace change
+        let smhTitle = document.getElementById('saved-mode-title');
+        if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) {
+            smhTitle.innerText = t('saved'); // Aktualizace hlavičky overlay
+        }
+        
+        renderSettings();
+        
+        // Smazat staré mapy aby se překreslily s novými časy
+        Object.values(mapInstances).forEach(m => m.remove());
+        mapInstances = {}; currentLayers = {}; currentOverlays = {}; currentTileLayers = {};
+        
+        buildReels();
+        renderProfileSaved();
+        renderExploreGrid();
+    }
+}
+
+function renderSettings() {
+    let screen = document.getElementById('screen-settings');
+    if (!screen) {
+        screen = document.createElement('div');
+        screen.id = 'screen-settings';
+        screen.className = 'app-screen';
+        document.body.appendChild(screen);
+    }
+    
+    screen.innerHTML = `
+        <div style="padding: 20px 0; padding-bottom: 100px;">
+            <h1 style="font-size: 1.5rem; margin: 10px 20px 30px 20px; font-weight: 700;">${t('settings')}</h1>
+            
+            <div class="settings-section">
+                <div class="settings-title">${t('runner')}</div>
+                <div class="settings-row">
+                    <span style="white-space:nowrap;">${t('paceOnRoad')}</span>
+                    <input type="range" id="pace-slider" min="180" max="480" step="5" value="${userSettings.pace}">
+                    <span id="pace-value" style="white-space:nowrap; font-weight: 600;">${formatPace(userSettings.pace)}</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">${t('application')}</div>
+                <div class="settings-row">
+                    <span>${t('language')}</span>
+                    <select id="lang-select" onchange="updateSettings('language', this.value)">
+                        <option value="cs" ${userSettings.language === 'cs' ? 'selected' : ''}>Čeština</option>
+                        <option value="en" ${userSettings.language === 'en' ? 'selected' : ''}>English</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <span>${t('theme')}</span>
+                    <select id="theme-select" onchange="updateSettings('theme', this.value)">
+                        <option value="system" ${userSettings.theme === 'system' ? 'selected' : ''}>${t('theme_system')}</option>
+                        <option value="light" ${userSettings.theme === 'light' ? 'selected' : ''}>${t('theme_light')}</option>
+                        <option value="dark" ${userSettings.theme === 'dark' ? 'selected' : ''}>${t('theme_dark')}</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <span>${t('offlineMaps')}</span>
+                    <button class="settings-btn" id="offline-sync-btn" onclick="startOfflineSync()">${t('download')}</button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">${t('maps')}</div>
+                <div class="settings-row" style="border:none;">
+                    <button class="settings-btn" style="width: 100%; text-align: left;" onclick="clearAppCache()">${t('clearCache')} (<span id="cache-size">0.0 MB</span>)</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Real-time aktualizace čísla během tahání slideru
+    const paceSlider = document.getElementById('pace-slider');
+    const paceValue = document.getElementById('pace-value');
+    paceSlider.addEventListener('input', (e) => {
+        paceValue.innerText = formatPace(e.target.value);
+    });
+    // Samotný náročný přepočet se provede až po puštění prstu
+    paceSlider.addEventListener('change', (e) => {
+        updateSettings('pace', parseInt(e.target.value));
+    });
+
+    updateCacheSize();
+}
+
+async function updateCacheSize() {
+    const span = document.getElementById('cache-size');
+    if (!span) return;
+    let total = 0;
+    if ('caches' in window) {
+        try {
+            const cacheNames = await caches.keys();
+            for (let name of cacheNames) {
+                const cache = await caches.open(name);
+                const keys = await cache.keys();
+                for (let req of keys) {
+                    const res = await cache.match(req);
+                    if (res) {
+                        const blob = await res.blob();
+                        total += blob.size;
+                    }
+                }
+            }
+        } catch(e) { console.warn(e); }
+    }
+    span.innerText = (total / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+async function clearAppCache() {
+    if (confirm(t('confirmClear'))) {
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            for (let name of cacheNames) {
+                await caches.delete(name);
+            }
+        }
+        updateCacheSize();
+        alert(t('cacheCleared'));
+    }
+}
+
+// ==========================================
+// 7. VYKRESLENÍ FEEDU
+// ==========================================
 function buildReels() {
     const container = document.getElementById('reels-container');
     if (!container) return;
@@ -183,8 +427,8 @@ function buildReels() {
             </div>
             <div class="reel-ui">
                 <div class="reel-header">
-                    <div class="reel-subtitle">${postup.dist_m ? postup.dist_m.toFixed(0) : ''} m vzdušně</div>
-                    <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>Volby</button>
+                    <div class="reel-subtitle">${postup.dist_m ? postup.dist_m.toFixed(0) : ''} ${t('aerial')}</div>
+                    <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>${t('options')}</button>
                 </div>
             </div>
         `;
@@ -223,15 +467,21 @@ function toggleVariants(index) {
         showVariantsForIndex[index] = false;
     } else {
         const postup = postupyData[index];
-        content.innerHTML = postup.variants.map(v => `
+        content.innerHTML = postup.variants.map(v => {
+            let adjCasS = getAdjustedTime(v.cas_s);
+            let adjTempoS = (adjCasS / v.vzdal_m) * 1000;
+            let timeStr = `${Math.floor(adjCasS/60)}:${Math.floor(adjCasS%60).toString().padStart(2,'0')}`;
+            let paceStr = `${Math.floor(adjTempoS/60)}:${Math.floor(adjTempoS%60).toString().padStart(2,'0')} min/km`;
+
+            return `
             <div class="variant-item">
                 <div class="variant-color" style="background-color: ${v.color}; color: ${v.color}"></div>
                 <div class="variant-stats">
-                    <div class="variant-main">V${v.id} • ${Math.floor(v.cas_s/60)}:${(v.cas_s%60).toString().padStart(2,'0')}</div>
-                    <div class="variant-sub">${v.vzdal_m.toFixed(0)}m • ${v.prevyseni_m.toFixed(0)}m↑<br>${v.tempo_str}</div>
+                    <div class="variant-main">V${v.id} • ${timeStr}</div>
+                    <div class="variant-sub">${v.vzdal_m.toFixed(0)}m • ${v.prevyseni_m.toFixed(0)}m↑<br>${paceStr}</div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
         
         let panelClass = 'pos-top-right';
         if (geojsonCache[postup.file]) {
@@ -290,7 +540,6 @@ function toggleVariants(index) {
 function activateReel(indexStr) {
     const index = parseInt(indexStr);
     
-    // Uložení do statistik viděných (procházených)
     const postup = postupyData[index];
     if (postup) {
         let viewed = JSON.parse(localStorage.getItem('viewed_postupy') || '[]');
@@ -523,9 +772,7 @@ function renderMapData(index, geojsonOriginal) {
                 map.setView([midY, midX], idealZoom, { animate: false });
             }, 50);
         }
-    } catch (e) {
-        console.warn("Silent ignore map render error", e);
-    }
+    } catch (e) { console.warn("Silent ignore map render error", e); }
 }
 
 let calibMode = false;
@@ -565,6 +812,51 @@ function updateCalibrationShift() {
     let scale = Math.pow(2, map.getZoom()) / 64;
     pane.style.marginLeft = (shiftXConfig * scale) + 'px';
     pane.style.marginTop = (shiftYConfig * scale) + 'px';
+}
+
+async function startOfflineSync() {
+    let btn = document.getElementById('offline-sync-btn');
+    if (btn) btn.disabled = true;
+    let progressOverlay = document.getElementById('sync-progress');
+    let bar = document.getElementById('sync-bar');
+    let text = document.getElementById('sync-text');
+    if (progressOverlay) progressOverlay.style.display = 'flex';
+    
+    try {
+        let urlsToFetch = ['postupy/postupy_index.json'];
+        postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
+        text.innerText = "Získávám index dlaždic...";
+        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
+        if (tilesResponse.ok) {
+            let tiles = await tilesResponse.json();
+            urlsToFetch = urlsToFetch.concat(tiles);
+        }
+        
+        let total = urlsToFetch.length;
+        let done = 0;
+        const chunkSize = 20;
+        for (let i = 0; i < total; i += chunkSize) {
+            let chunk = urlsToFetch.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (url) => {
+                try { await fetch(url, { cache: 'no-store' }); } catch(e) {}
+                done++;
+            }));
+            if (bar) bar.style.width = Math.floor((done / total) * 100) + '%';
+            if (text) text.innerText = `${done} / ${total}`;
+        }
+        
+        setTimeout(() => {
+            if (progressOverlay) progressOverlay.style.display = 'none';
+            if (btn) {
+                btn.innerHTML = t('download');
+                btn.disabled = false;
+            }
+            updateCacheSize();
+        }, 500);
+    } catch (err) {
+        alert("Chyba při stahování: " + err.message);
+        if (progressOverlay) progressOverlay.style.display = 'none';
+    }
 }
 
 function toggleLike(index, btn) {
@@ -613,11 +905,7 @@ function groupRoutesByMap(routesArray) {
     routesArray.forEach(route => {
         if (!mapGroups.has(route.map_id)) {
             mapGroups.set(route.map_id, {
-                map_id: route.map_id,
-                map_name: route.map_name,
-                terrain: route.terrain,
-                routes: [],
-                thumbRoute: route
+                map_id: route.map_id, map_name: route.map_name, terrain: route.terrain, routes: [], thumbRoute: route
             });
         }
         mapGroups.get(route.map_id).routes.push(route);
@@ -625,20 +913,17 @@ function groupRoutesByMap(routesArray) {
     return Array.from(mapGroups.values());
 }
 
-// === ZCELA PŘEPSANÝ PROFIL ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    // Extrémně důležité: Zcela smažeme HTML vnitřek Profilu! (Vyřeší to problém se starou hlavičkou)
     profileScreen.innerHTML = '';
     
     let profileContent = document.createElement('div');
     profileContent.id = 'profile-content-wrapper';
-    profileContent.style.paddingBottom = '80px'; // Rezerva pro spodní navigaci
+    profileContent.style.paddingBottom = '80px'; 
     profileScreen.appendChild(profileContent);
     
-    // VÝPOČET REÁLNÝCH STATISTIK Z LOKÁLNÍ PAMĚTI A JSON DAT
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let viewed = JSON.parse(localStorage.getItem('viewed_postupy') || '[]');
     let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
@@ -647,7 +932,6 @@ function renderProfileSaved() {
     let videnoCislo = viewed.length;
     let hodinCislo = (accMs / 3600000).toFixed(1);
 
-    // DOKONALÝ INSTAGRAM HEADER
     profileContent.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px 20px; color: inherit;">
             <div style="font-size: 1.4rem; font-weight: 700; display:flex; align-items:center; gap: 5px;">
@@ -657,44 +941,40 @@ function renderProfileSaved() {
         </div>
 
         <div style="display:flex; padding: 15px 20px; align-items:center;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; overflow:hidden; flex-shrink: 0; border: 1px solid #ccc; display:flex; align-items:center; justify-content:center;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; overflow:hidden; flex-shrink: 0; border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center;">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </div>
             <div style="display:flex; flex-grow: 1; justify-content: space-evenly; text-align:center;">
                 <div>
                     <div style="font-weight:700; font-size:1.1rem; color: inherit;">${videnoCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">Zhlédnuto</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">${t('analyzed')}</div>
                 </div>
                 <div>
                     <div style="font-weight:700; font-size:1.1rem; color: inherit;">${ulozenaCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">Uloženo</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">${t('saved')}</div>
                 </div>
                 <div>
                     <div id="stat-hours" style="font-weight:700; font-size:1.1rem; color: inherit;">${hodinCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">Hodin</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">${t('hours')}</div>
                 </div>
             </div>
         </div>
         
         <div style="padding: 0 20px 15px 20px; font-size: 0.95rem; color: inherit;">
             <div style="font-weight: 700; margin-bottom:3px;">František Čtrnáct</div>
-            <div style="opacity: 0.8;">Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.</div>
+            <div style="opacity: 0.8;">${t('bioDesc')}</div>
         </div>
-        
         <div id="profile-dynamic-content"></div>
     `;
     
     let dynamicContent = document.getElementById('profile-dynamic-content');
-
     let savedIds = saved.map(String);
     if (savedIds.length === 0) {
         dynamicContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
-                <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-                </svg>
-                <div style="font-weight: 600; opacity: 0.7; margin-bottom: 4px;">Žádné uložené postupy</div>
-                <div style="font-size: 0.8rem;">Klikni ve feedu na ikonku záložky pro uložení.</div>
+                <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                <div style="font-weight: 600; opacity: 0.7; margin-bottom: 4px;">${t('noSaved')}</div>
+                <div style="font-size: 0.8rem;">${t('noSavedDesc')}</div>
             </div>`;
         return;
     }
@@ -718,7 +998,7 @@ function renderProfileSaved() {
         return pill;
     };
 
-    pillsContainer.appendChild(createPill('Vše', 'Vše'));
+    pillsContainer.appendChild(createPill('Vše', t('all')));
     uniqueTerrains.forEach(t => {
         const niceName = t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ');
         pillsContainer.appendChild(createPill(t, niceName));
@@ -742,11 +1022,11 @@ function renderProfileSaved() {
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
         el.style.aspectRatio = '1 / 1';
-        el.style.background = '#1a1a1a';
+        el.style.background = 'var(--secondary-bg)';
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
         
-        const countText = group.routes.length === 1 ? '1 postup' : (group.routes.length >= 2 && group.routes.length <= 4) ? `${group.routes.length} postupy` : `${group.routes.length} postupů`;
+        const countText = getRoutesCountText(group.routes.length);
         
         el.innerHTML = `
             <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
@@ -761,13 +1041,12 @@ function renderProfileSaved() {
     dynamicContent.appendChild(gridContainer);
 }
 
-// === UNIVERZÁLNÍ FEED OPENER ===
 function openFeed(map_id, isSavedMode) {
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
     
     let firstVisibleIndex = -1;
-    let groupName = postupyData.find(m => m.map_id === map_id)?.map_name || 'Uložené';
+    let groupName = postupyData.find(m => m.map_id === map_id)?.map_name || t('saved');
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
@@ -820,12 +1099,10 @@ function openFeed(map_id, isSavedMode) {
 function closeSavedFeed() {
     document.body.classList.remove('saved-mode-active');
     updateExploreBadge(document.getElementById('nav-badge'));
-
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-profile').classList.add('active');
 }
 
-// === EXPLORE LOGIKA ===
 let appState = { selectedTerrains: ['*'] };
 
 function setupExploreStories() {
@@ -861,8 +1138,8 @@ function updateExploreBadge(badgeEl) {
         if (selectedTerrains.size === 0) {
             reel.style.display = 'block'; 
         } else {
-            const t = reel.getAttribute('data-terrain');
-            reel.style.display = selectedTerrains.has(t) ? 'block' : 'none';
+            const tr = reel.getAttribute('data-terrain');
+            reel.style.display = selectedTerrains.has(tr) ? 'block' : 'none';
         }
     });
 }
@@ -876,10 +1153,12 @@ function renderExploreGrid() {
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
     const groups = groupRoutesByMap(displayData);
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     groups.forEach((group) => {
-        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        let hash = 0;
+        for(let i=0; i<group.map_id.length; i++) hash += group.map_id.charCodeAt(i);
+        const thumbUrl = localMapThumbs[hash % localMapThumbs.length];
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
@@ -888,7 +1167,7 @@ function renderExploreGrid() {
         el.style.cursor = 'pointer';
         el.style.position = 'relative';
         
-        const countText = group.routes.length === 1 ? '1 postup' : (group.routes.length >= 2 && group.routes.length <= 4) ? `${group.routes.length} postupy` : `${group.routes.length} postupů`;
+        const countText = getRoutesCountText(group.routes.length);
         
         el.innerHTML = `
             <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: cover; background-position: center; width: 100%; height: 100%;"></div>
