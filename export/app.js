@@ -8,7 +8,7 @@ let currentTileLayers = {};
 const iofPurple = "#b300ff";
 let profileSelectedTerrain = 'Vše';
 
-// Vkládáme CSS pro posuvné štítky, IG Overlay a nové Pills
+// CSS pro posuvné štítky a režim "Uloženého Feedu" (Overlay)
 const style = document.createElement('style');
 style.innerHTML = `
 .profile-pills-container::-webkit-scrollbar { display: none; }
@@ -27,7 +27,7 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 body.saved-mode-active #screen-scroll { height: 100vh; padding-bottom: 0; }
 body.saved-mode-active .reel { height: 100vh; }
 
-/* IG Pills Design (Automaticky reaguje na Dark/Light mode telefonu) */
+/* IG Pills Design */
 .ig-pill {
     padding: 8px 16px; border-radius: 20px; border: 1px solid #ccc;
     background: transparent; color: #111; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
@@ -40,6 +40,17 @@ body.saved-mode-active .reel { height: 100vh; }
 }
 `;
 document.head.appendChild(style);
+
+// MĚŘENÍ ČASU V APLIKACI
+setInterval(() => {
+    let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
+    accMs += 5000; // Přidá 5 vteřin každých 5 vteřin
+    localStorage.setItem('app_time_ms', accMs.toString());
+    
+    // Pokud jsme na profilu, aktualizujeme číslo živě
+    const hrsEl = document.getElementById('stat-hours');
+    if (hrsEl) hrsEl.innerText = (accMs / 3600000).toFixed(1);
+}, 5000);
 
 document.addEventListener("DOMContentLoaded", () => {
     try {
@@ -67,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
 
-    // Spodní navigace
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
 
@@ -93,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Hlavička a Swipe-to-close pro režim uložených map
     let smh = document.createElement('div');
     smh.id = 'saved-mode-header';
     smh.innerHTML = '<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">Uložené</span>';
@@ -280,6 +289,17 @@ function toggleVariants(index) {
 
 function activateReel(indexStr) {
     const index = parseInt(indexStr);
+    
+    // Uložení do statistik viděných (procházených)
+    const postup = postupyData[index];
+    if (postup) {
+        let viewed = JSON.parse(localStorage.getItem('viewed_postupy') || '[]');
+        if (!viewed.includes(postup.id)) {
+            viewed.push(postup.id);
+            localStorage.setItem('viewed_postupy', JSON.stringify(viewed));
+        }
+    }
+
     if (activeIndex !== index) {
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
@@ -508,7 +528,6 @@ function renderMapData(index, geojsonOriginal) {
     }
 }
 
-// === KALIBRACE ===
 let calibMode = false;
 let calibX = 400;
 let calibY = -300;
@@ -589,7 +608,6 @@ function sharePostup(index) {
     else alert("Odkaz zkopírován do schránky.");
 }
 
-// === FUNKCE: SESKUPOVÁNÍ POSTUPŮ DO MAP ===
 function groupRoutesByMap(routesArray) {
     const mapGroups = new Map();
     routesArray.forEach(route => {
@@ -607,74 +625,57 @@ function groupRoutesByMap(routesArray) {
     return Array.from(mapGroups.values());
 }
 
-// === ZCELA PŘEPSANÝ PROFIL (JAKO INSTAGRAM) ===
+// === ZCELA PŘEPSANÝ PROFIL ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
-    // Zničení všech původních lišt z index.html (schování)
-    const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
-    oldTabs.forEach(tab => tab.style.display = 'none');
+    // Extrémně důležité: Zcela smažeme HTML vnitřek Profilu! (Vyřeší to problém se starou hlavičkou)
+    profileScreen.innerHTML = '';
     
-    let profileContent = document.getElementById('profile-content-wrapper');
-    if (!profileContent) {
-        profileContent = document.createElement('div');
-        profileContent.id = 'profile-content-wrapper';
-        
-        // Smazání původního kódu, pokud tam byl
-        const oldGridContainers = profileScreen.querySelectorAll('.explore-grid-container, .profile-grid');
-        oldGridContainers.forEach(g => g.remove());
-        
-        profileScreen.appendChild(profileContent);
-    }
+    let profileContent = document.createElement('div');
+    profileContent.id = 'profile-content-wrapper';
+    profileContent.style.paddingBottom = '80px'; // Rezerva pro spodní navigaci
+    profileScreen.appendChild(profileContent);
     
-    // VÝPOČET REÁLNÝCH STATISTIK
+    // VÝPOČET REÁLNÝCH STATISTIK Z LOKÁLNÍ PAMĚTI A JSON DAT
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
-    let savedIds = saved.map(String);
+    let viewed = JSON.parse(localStorage.getItem('viewed_postupy') || '[]');
+    let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
     
-    let ulozenaCislo = savedIds.length;
-    let analyzCislo = postupyData.length;
-    
-    let totalDist = postupyData.reduce((sum, p) => sum + (p.dist_m || 0), 0);
-    let kmCislo = (totalDist / 1000).toFixed(1);
+    let ulozenaCislo = saved.length;
+    let videnoCislo = viewed.length;
+    let hodinCislo = (accMs / 3600000).toFixed(1);
 
     // DOKONALÝ INSTAGRAM HEADER
     profileContent.innerHTML = `
-        <!-- Top Bar -->
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px 20px; color: inherit;">
             <div style="font-size: 1.4rem; font-weight: 700; display:flex; align-items:center; gap: 5px;">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
                 franta14_
             </div>
-            <div>
-                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </div>
         </div>
 
-        <!-- Profile Info -->
         <div style="display:flex; padding: 15px 20px; align-items:center;">
-            <!-- Avatar Placeholder -->
             <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; overflow:hidden; flex-shrink: 0; border: 1px solid #ccc; display:flex; align-items:center; justify-content:center;">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </div>
-            <!-- Stats -->
             <div style="display:flex; flex-grow: 1; justify-content: space-evenly; text-align:center;">
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${analyzCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">Analyz.</div>
+                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${videnoCislo}</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">Zhlédnuto</div>
                 </div>
                 <div>
                     <div style="font-weight:700; font-size:1.1rem; color: inherit;">${ulozenaCislo}</div>
                     <div style="font-size:0.8rem; opacity: 0.7;">Uloženo</div>
                 </div>
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${kmCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">Km</div>
+                    <div id="stat-hours" style="font-weight:700; font-size:1.1rem; color: inherit;">${hodinCislo}</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">Hodin</div>
                 </div>
             </div>
         </div>
         
-        <!-- Bio -->
         <div style="padding: 0 20px 15px 20px; font-size: 0.95rem; color: inherit;">
             <div style="font-weight: 700; margin-bottom:3px;">František Čtrnáct</div>
             <div style="opacity: 0.8;">Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.</div>
@@ -685,7 +686,7 @@ function renderProfileSaved() {
     
     let dynamicContent = document.getElementById('profile-dynamic-content');
 
-    // Mřížka při prázdném uložení
+    let savedIds = saved.map(String);
     if (savedIds.length === 0) {
         dynamicContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
@@ -702,7 +703,6 @@ function renderProfileSaved() {
     const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
     if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) profileSelectedTerrain = 'Vše';
     
-    // Tlačítka (Pills)
     const pillsContainer = document.createElement('div');
     pillsContainer.className = 'profile-pills-container';
     pillsContainer.style.display = 'flex';
@@ -725,19 +725,18 @@ function renderProfileSaved() {
     });
     dynamicContent.appendChild(pillsContainer);
     
-    // Mřížka map
     const gridContainer = document.createElement('div');
     gridContainer.style.display = 'grid';
     gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
     gridContainer.style.gap = '2px';
     gridContainer.style.width = '100%';
-    gridContainer.style.padding = '2px 0 80px 0';
     
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
     const groups = groupRoutesByMap(displayData);
     
     groups.forEach((group) => {
-        const thumbUrl = "tiles/3/1/2.png"; // Fixní čistá lokální dlaždice bez rozmazání
+        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
+        const thumbUrl = 'postupy/' + fileName;
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
@@ -877,12 +876,10 @@ function renderExploreGrid() {
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
     const groups = groupRoutesByMap(displayData);
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     groups.forEach((group) => {
-        let hash = 0;
-        for(let i=0; i<group.map_id.length; i++) hash += group.map_id.charCodeAt(i);
-        const thumbUrl = localMapThumbs[hash % localMapThumbs.length];
+        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
+        const thumbUrl = 'postupy/' + fileName;
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
