@@ -8,10 +8,12 @@ import shutil
 
 def convert_to_geojson():
     print("🚀 Starting GeoJSON export for Mobile App...")
-    input_dir = os.path.join("cache", "Homolka_Vojirov_20240917", "schvalene_postupy")
+    cache_dir = os.path.join("cache", "Homolka_Vojirov_20240917")
+    input_dir = os.path.join(cache_dir, "schvalene_postupy")
+    archiv_dir = os.path.join(cache_dir, "archiv_postupu")
     
     # Get metadata for grid_size conversion
-    cache_cenova = os.path.join("cache", "Homolka_Vojirov_20240917", "cenova_mapa_meta.npy")
+    cache_cenova = os.path.join(cache_dir, "cenova_mapa_meta.npy")
     if not os.path.exists(cache_cenova):
         print("❌ Metadata cenova_mapa_meta.npy neexistuje!")
         return
@@ -21,7 +23,7 @@ def convert_to_geojson():
     min_y = metadata[1]
     grid_size = metadata[4]
     
-    kalibrace = np.load(os.path.join("cache", "Homolka_Vojirov_20240917", "kalibrace.npy"))
+    kalibrace = np.load(os.path.join(cache_dir, "kalibrace.npy"))
     cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = kalibrace
     A = np.array([[cal_a, cal_b], [cal_d, cal_e]])
     
@@ -132,11 +134,15 @@ def convert_to_geojson():
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2)
             
-        # PŘIDÁNO: Kopírování vygenerovaného náhledu PNG
-        png_src = jfile.replace(".json", ".png")
+        # OPRAVENÉ HLEDÁNÍ PNG OBRÁZKŮ V ARCHIVU
+        png_basename = "schvaleno_" + basename.replace(".json", ".png")
+        png_src = os.path.join(archiv_dir, png_basename)
+        
         if os.path.exists(png_src):
             png_dst = os.path.join(out_dir, basename.replace(".json", ".png"))
             shutil.copy2(png_src, png_dst)
+        else:
+            print(f"⚠️ Nenalezen náhled: {png_src}")
             
         index_data.append({
             "id": idx + 1,
