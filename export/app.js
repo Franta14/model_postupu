@@ -31,7 +31,8 @@ const i18n = {
         noSaved: "Žádné uložené postupy", noSavedDesc: "Klikni ve feedu na ikonku záložky pro uložení.",
         options: "Volby", aerial: "m vzdušně",
         bioDesc: "Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.",
-        confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána."
+        confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána.",
+        searchRoutes: "Hledat postupy..."
     },
     en: {
         settings: "Settings", runner: "RUNNER", paceOnRoad: "Pace on road",
@@ -43,7 +44,8 @@ const i18n = {
         noSaved: "No saved routes", noSavedDesc: "Click the bookmark icon in the feed to save.",
         options: "Options", aerial: "m aerial",
         bioDesc: "Here you can find all your favorite route choices from training and races.",
-        confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared."
+        confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared.",
+        searchRoutes: "Search routes..."
     }
 };
 
@@ -63,8 +65,14 @@ function formatPace(sec) {
 }
 
 function getAdjustedTime(baseSeconds) {
-    // 220s = 3:40 min/km (výchozí tempo Python enginu)
     return baseSeconds * (userSettings.pace / 220);
+}
+
+function updateUITexts() {
+    const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"], input[placeholder*="Hledat"]');
+    searchInputs.forEach(input => {
+        input.placeholder = t('searchRoutes');
+    });
 }
 
 // ==========================================
@@ -82,6 +90,7 @@ style.innerHTML = `
     --pill-active-bg: #000;
     --pill-active-text: #fff;
     --accent: #b300ff;
+    --nav-icon-color: #000000;
 }
 :root[data-theme="dark"] {
     --bg-color: #000000;
@@ -92,19 +101,36 @@ style.innerHTML = `
     --pill-text: #fff;
     --pill-active-bg: #fff;
     --pill-active-text: #000;
+    --nav-icon-color: #ffffff;
 }
 @media (prefers-color-scheme: dark) {
     :root[data-theme="system"] {
         --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e;
         --border-color: #2c2c2e; --pill-bg: #2c2c2e; --pill-text: #fff;
-        --pill-active-bg: #fff; --pill-active-text: #000;
+        --pill-active-bg: #fff; --pill-active-text: #000; --nav-icon-color: #ffffff;
     }
 }
 
-body, .app-screen, .bottom-nav { background-color: var(--bg-color); color: var(--text-color); }
-.bottom-nav { border-top: 1px solid var(--border-color); }
-.nav-btn { color: var(--text-color); opacity: 0.5; }
-.nav-btn.active { opacity: 1; color: var(--text-color); }
+body, .app-screen { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
+
+/* FIX PRO SPODNÍ LIŠTU A IKONKY */
+.bottom-nav { 
+    background-color: var(--bg-color) !important; 
+    border-top: 1px solid var(--border-color) !important; 
+}
+.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.5; }
+.nav-btn.active { opacity: 1; color: var(--nav-icon-color) !important; }
+.nav-btn svg { stroke: var(--nav-icon-color); }
+.nav-btn.active svg { stroke: var(--nav-icon-color); }
+
+/* FIX PRO STORIES A SEARCH BAR */
+.story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
+input[type="text"], input[type="search"] { 
+    background-color: var(--secondary-bg) !important; 
+    color: var(--text-color) !important; 
+    border: 1px solid var(--border-color) !important; 
+}
+input::placeholder { color: #888 !important; }
 
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
@@ -250,6 +276,7 @@ function loadData() {
             renderExploreGrid();
             setupExploreStories();
             renderProfileSaved();
+            updateUITexts(); // Převede search bar do správného jazyka
             
             setTimeout(() => {
                 const loader = document.getElementById('loader');
@@ -268,19 +295,19 @@ function updateSettings(key, value) {
     
     if (key === 'theme') applyTheme();
     if (key === 'language' || key === 'pace') {
-        // Full UI reload for language or pace change
         let smhTitle = document.getElementById('saved-mode-title');
         if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) {
-            smhTitle.innerText = t('saved'); // Aktualizace hlavičky overlay
+            smhTitle.innerText = t('saved'); 
         }
         
         renderSettings();
+        updateUITexts();
         
-        // Smazat staré mapy aby se překreslily s novými časy
         Object.values(mapInstances).forEach(m => m.remove());
         mapInstances = {}; currentLayers = {}; currentOverlays = {}; currentTileLayers = {};
         
         buildReels();
+        setupObserver(); // NUTNÉ: Znovu napojit observer na nové DOM prvky, aby fungoval posun
         renderProfileSaved();
         renderExploreGrid();
     }
@@ -340,13 +367,11 @@ function renderSettings() {
         </div>
     `;
 
-    // Real-time aktualizace čísla během tahání slideru
     const paceSlider = document.getElementById('pace-slider');
     const paceValue = document.getElementById('pace-value');
     paceSlider.addEventListener('input', (e) => {
         paceValue.innerText = formatPace(e.target.value);
     });
-    // Samotný náročný přepočet se provede až po puštění prstu
     paceSlider.addEventListener('change', (e) => {
         updateSettings('pace', parseInt(e.target.value));
     });
@@ -436,10 +461,14 @@ function buildReels() {
     });
 }
 
+// Držíme referenci, abychom mohli starý observer odpojit při změně tempa
+let reelObserver = null;
 let scrollTimeout = null;
 function setupObserver() {
+    if (reelObserver) reelObserver.disconnect();
+    
     let options = { root: document.getElementById('app'), rootMargin: '0px', threshold: 0.5 };
-    let observer = new IntersectionObserver((entries) => {
+    reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = entry.target.dataset.index;
@@ -448,7 +477,8 @@ function setupObserver() {
             }
         });
     }, options);
-    document.querySelectorAll('.reel').forEach(reel => observer.observe(reel));
+    
+    document.querySelectorAll('.reel').forEach(reel => reelObserver.observe(reel));
 }
 
 let showVariantsForIndex = {};
@@ -687,8 +717,7 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist > 0) {
-                let distM = postupyData[index].dist_m || 0;
-                let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
+                let R = 1.10 + Math.max(0, Math.min(1, ((postupyData[index].dist_m || 0) - 1600) / 800)) * 0.40; 
                 let gap = 0.10;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
@@ -1138,8 +1167,8 @@ function updateExploreBadge(badgeEl) {
         if (selectedTerrains.size === 0) {
             reel.style.display = 'block'; 
         } else {
-            const tr = reel.getAttribute('data-terrain');
-            reel.style.display = selectedTerrains.has(tr) ? 'block' : 'none';
+            const t = reel.getAttribute('data-terrain');
+            reel.style.display = selectedTerrains.has(t) ? 'block' : 'none';
         }
     });
 }
