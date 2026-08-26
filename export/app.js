@@ -8,11 +8,13 @@ let currentTileLayers = {};
 const iofPurple = "#b300ff";
 let profileSelectedTerrain = 'Vše';
 
+// CSS pro posuvné štítky a režim "Uloženého Feedu" (Overlay)
 const style = document.createElement('style');
 style.innerHTML = `
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* IG-like Saved Mode Styles */
 body.saved-mode-active .bottom-nav, 
 body.saved-mode-active .nav-bar { display: none !important; }
 #saved-mode-header {
@@ -51,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
 
+    // Spodní navigace
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
 
@@ -71,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // Hlavička a Swipe-to-close pro režim uložených map
     let smh = document.createElement('div');
     smh.id = 'saved-mode-header';
     smh.innerHTML = '<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> Uložené';
@@ -639,10 +643,10 @@ function renderProfileSaved() {
     gridContainer.style.padding = '2px 0 80px 0';
     
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     displayData.forEach((map) => {
-        let fileName = map.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
@@ -655,7 +659,7 @@ function renderProfileSaved() {
         let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
         
         el.innerHTML = `
-            <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
+            <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: 250%; background-position: center;"></div>
             ${distBadge}
         `;
         el.addEventListener('click', () => openSavedMapInFeed(map.id));
@@ -754,18 +758,24 @@ function renderExploreGrid() {
     
     let displayData = postupyData;
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     displayData.forEach((map) => {
-        let fileName = map.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
         el.style.aspectRatio = '1 / 1';
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
+        el.style.position = 'relative';
         
-        el.innerHTML = `<div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: 250%; background-position: center; width: 100%; height: 100%;"></div>`;
+        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
+        
+        el.innerHTML = `
+            <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: 250%; background-position: center; width: 100%; height: 100%;"></div>
+            ${distBadge}
+        `;
         el.addEventListener('click', () => {
             const globalIndex = postupyData.findIndex(m => String(m.id) === String(map.id));
             if (globalIndex === -1) return;
