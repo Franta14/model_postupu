@@ -114,14 +114,13 @@ style.innerHTML = `
 body, .app-screen { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
 
 /* FIX PRO SPODNÍ LIŠTU A IKONKY */
-.bottom-nav { 
+div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { 
+    background: var(--bg-color) !important; 
     background-color: var(--bg-color) !important; 
     border-top: 1px solid var(--border-color) !important; 
 }
-.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.5; }
-.nav-btn.active { opacity: 1; color: var(--nav-icon-color) !important; }
-.nav-btn svg { stroke: var(--nav-icon-color); }
-.nav-btn.active svg { stroke: var(--nav-icon-color); }
+.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; }
+.nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
 
 /* FIX PRO STORIES A SEARCH BAR */
 .story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
@@ -276,7 +275,7 @@ function loadData() {
             renderExploreGrid();
             setupExploreStories();
             renderProfileSaved();
-            updateUITexts(); // Převede search bar do správného jazyka
+            updateUITexts();
             
             setTimeout(() => {
                 const loader = document.getElementById('loader');
@@ -307,7 +306,7 @@ function updateSettings(key, value) {
         mapInstances = {}; currentLayers = {}; currentOverlays = {}; currentTileLayers = {};
         
         buildReels();
-        setupObserver(); // NUTNÉ: Znovu napojit observer na nové DOM prvky, aby fungoval posun
+        setupObserver(); 
         renderProfileSaved();
         renderExploreGrid();
     }
@@ -461,7 +460,6 @@ function buildReels() {
     });
 }
 
-// Držíme referenci, abychom mohli starý observer odpojit při změně tempa
 let reelObserver = null;
 let scrollTimeout = null;
 function setupObserver() {
@@ -717,7 +715,8 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist > 0) {
-                let R = 1.10 + Math.max(0, Math.min(1, ((postupyData[index].dist_m || 0) - 1600) / 800)) * 0.40; 
+                let distM = postupyData[index].dist_m || 0;
+                let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40; 
                 let gap = 0.10;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
@@ -1128,6 +1127,7 @@ function openFeed(map_id, isSavedMode) {
 function closeSavedFeed() {
     document.body.classList.remove('saved-mode-active');
     updateExploreBadge(document.getElementById('nav-badge'));
+
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-profile').classList.add('active');
 }
