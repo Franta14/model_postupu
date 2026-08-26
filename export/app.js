@@ -8,7 +8,7 @@ let currentTileLayers = {};
 const iofPurple = "#b300ff";
 let profileSelectedTerrain = 'Vše';
 
-// CSS pro posuvné štítky a režim "Uloženého Feedu" (Overlay)
+// Vkládáme CSS pro posuvné štítky, IG Overlay a nové Pills
 const style = document.createElement('style');
 style.innerHTML = `
 .profile-pills-container::-webkit-scrollbar { display: none; }
@@ -26,6 +26,18 @@ body.saved-mode-active .nav-bar { display: none !important; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 body.saved-mode-active #screen-scroll { height: 100vh; padding-bottom: 0; }
 body.saved-mode-active .reel { height: 100vh; }
+
+/* IG Pills Design (Automaticky reaguje na Dark/Light mode telefonu) */
+.ig-pill {
+    padding: 8px 16px; border-radius: 20px; border: 1px solid #ccc;
+    background: transparent; color: #111; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+}
+.ig-pill.active { background: #111; color: #fff; border-color: #111; }
+
+@media (prefers-color-scheme: dark) {
+    .ig-pill { color: #fff; border-color: #555; }
+    .ig-pill.active { background: #fff; color: #000; border-color: #fff; }
+}
 `;
 document.head.appendChild(style);
 
@@ -63,7 +75,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener('click', (e) => {
             const targetId = btn.getAttribute('data-target');
             
-            // Pokud klikneme na feed "z venku" (např. z tlačítka navigace dole), obnovíme klasický scrollovací filtr.
             if (targetId === 'screen-scroll' && !document.body.classList.contains('saved-mode-active')) {
                 updateExploreBadge(document.getElementById('nav-badge'));
             }
@@ -110,8 +121,8 @@ function loadData() {
             postupyData = data;
             postupyData.forEach((map, index) => {
                 map.terrain = 'cesky-les';
-                map.map_id = 'homolka';    // ID mapy (sdílené všemi postupy prozatím)
-                map.map_name = 'Homolka';  // Zobrazovaný název mapy
+                map.map_id = 'homolka';    
+                map.map_name = 'Homolka';  
                 if (!map.id) map.id = index + 1;
             });
             
@@ -596,11 +607,12 @@ function groupRoutesByMap(routesArray) {
     return Array.from(mapGroups.values());
 }
 
-// === VYKRESLENÍ PROFILU (Seskupeno podle map) ===
+// === ZCELA PŘEPSANÝ PROFIL (JAKO INSTAGRAM) ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
+    // Zničení všech původních lišt z index.html (schování)
     const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
     oldTabs.forEach(tab => tab.style.display = 'none');
     
@@ -608,22 +620,79 @@ function renderProfileSaved() {
     if (!profileContent) {
         profileContent = document.createElement('div');
         profileContent.id = 'profile-content-wrapper';
+        
+        // Smazání původního kódu, pokud tam byl
         const oldGridContainers = profileScreen.querySelectorAll('.explore-grid-container, .profile-grid');
         oldGridContainers.forEach(g => g.remove());
+        
         profileScreen.appendChild(profileContent);
     }
     
-    profileContent.innerHTML = ''; 
+    // VÝPOČET REÁLNÝCH STATISTIK
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedIds = saved.map(String);
     
+    let ulozenaCislo = savedIds.length;
+    let analyzCislo = postupyData.length;
+    
+    let totalDist = postupyData.reduce((sum, p) => sum + (p.dist_m || 0), 0);
+    let kmCislo = (totalDist / 1000).toFixed(1);
+
+    // DOKONALÝ INSTAGRAM HEADER
+    profileContent.innerHTML = `
+        <!-- Top Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px 20px; color: inherit;">
+            <div style="font-size: 1.4rem; font-weight: 700; display:flex; align-items:center; gap: 5px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+                franta14_
+            </div>
+            <div>
+                <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </div>
+        </div>
+
+        <!-- Profile Info -->
+        <div style="display:flex; padding: 15px 20px; align-items:center;">
+            <!-- Avatar Placeholder -->
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; overflow:hidden; flex-shrink: 0; border: 1px solid #ccc; display:flex; align-items:center; justify-content:center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <!-- Stats -->
+            <div style="display:flex; flex-grow: 1; justify-content: space-evenly; text-align:center;">
+                <div>
+                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${analyzCislo}</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">Analyz.</div>
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${ulozenaCislo}</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">Uloženo</div>
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${kmCislo}</div>
+                    <div style="font-size:0.8rem; opacity: 0.7;">Km</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bio -->
+        <div style="padding: 0 20px 15px 20px; font-size: 0.95rem; color: inherit;">
+            <div style="font-weight: 700; margin-bottom:3px;">František Čtrnáct</div>
+            <div style="opacity: 0.8;">Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.</div>
+        </div>
+        
+        <div id="profile-dynamic-content"></div>
+    `;
+    
+    let dynamicContent = document.getElementById('profile-dynamic-content');
+
+    // Mřížka při prázdném uložení
     if (savedIds.length === 0) {
-        profileContent.innerHTML = `
+        dynamicContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
                 <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
                 </svg>
-                <div style="font-weight: 600; color: #aaa; margin-bottom: 4px;">Žádné uložené postupy</div>
+                <div style="font-weight: 600; opacity: 0.7; margin-bottom: 4px;">Žádné uložené postupy</div>
                 <div style="font-size: 0.8rem;">Klikni ve feedu na ikonku záložky pro uložení.</div>
             </div>`;
         return;
@@ -633,27 +702,18 @@ function renderProfileSaved() {
     const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
     if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) profileSelectedTerrain = 'Vše';
     
+    // Tlačítka (Pills)
     const pillsContainer = document.createElement('div');
     pillsContainer.className = 'profile-pills-container';
     pillsContainer.style.display = 'flex';
     pillsContainer.style.overflowX = 'auto';
     pillsContainer.style.gap = '8px';
-    pillsContainer.style.padding = '15px';
-    pillsContainer.style.borderBottom = '1px solid #333';
+    pillsContainer.style.padding = '5px 15px 15px 15px';
     
     const createPill = (terrainName, label) => {
         const pill = document.createElement('button');
+        pill.className = 'ig-pill' + (profileSelectedTerrain === terrainName ? ' active' : '');
         pill.innerText = label;
-        pill.style.padding = '8px 16px';
-        pill.style.borderRadius = '20px';
-        pill.style.border = 'none';
-        pill.style.whiteSpace = 'nowrap';
-        pill.style.fontSize = '0.85rem';
-        pill.style.fontWeight = '600';
-        pill.style.cursor = 'pointer';
-        pill.style.transition = 'all 0.2s';
-        if (profileSelectedTerrain === terrainName) { pill.style.background = '#fff'; pill.style.color = '#000'; } 
-        else { pill.style.background = '#333'; pill.style.color = '#ccc'; }
         pill.onclick = () => { profileSelectedTerrain = terrainName; renderProfileSaved(); };
         return pill;
     };
@@ -663,8 +723,9 @@ function renderProfileSaved() {
         const niceName = t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ');
         pillsContainer.appendChild(createPill(t, niceName));
     });
-    profileContent.appendChild(pillsContainer);
+    dynamicContent.appendChild(pillsContainer);
     
+    // Mřížka map
     const gridContainer = document.createElement('div');
     gridContainer.style.display = 'grid';
     gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
@@ -676,8 +737,7 @@ function renderProfileSaved() {
     const groups = groupRoutesByMap(displayData);
     
     groups.forEach((group) => {
-        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        const thumbUrl = "tiles/3/1/2.png"; // Fixní čistá lokální dlaždice bez rozmazání
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
@@ -699,10 +759,10 @@ function renderProfileSaved() {
         el.addEventListener('click', () => openFeed(group.map_id, true));
         gridContainer.appendChild(el);
     });
-    profileContent.appendChild(gridContainer);
+    dynamicContent.appendChild(gridContainer);
 }
 
-// === UNIVERZÁLNÍ FEED OPENER (Pro Mapy i Jednotlivé postupy) ===
+// === UNIVERZÁLNÍ FEED OPENER ===
 function openFeed(map_id, isSavedMode) {
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
@@ -766,7 +826,7 @@ function closeSavedFeed() {
     document.getElementById('screen-profile').classList.add('active');
 }
 
-// === EXPLORE LOGIKA (Seskupeno podle map) ===
+// === EXPLORE LOGIKA ===
 let appState = { selectedTerrains: ['*'] };
 
 function setupExploreStories() {
@@ -834,7 +894,7 @@ function renderExploreGrid() {
         const countText = group.routes.length === 1 ? '1 postup' : (group.routes.length >= 2 && group.routes.length <= 4) ? `${group.routes.length} postupy` : `${group.routes.length} postupů`;
         
         el.innerHTML = `
-            <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: 250%; background-position: center; width: 100%; height: 100%;"></div>
+            <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: cover; background-position: center; width: 100%; height: 100%;"></div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
