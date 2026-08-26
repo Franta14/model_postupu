@@ -4,6 +4,7 @@ import glob
 import math
 import numpy as np
 import config
+import shutil
 
 def convert_to_geojson():
     print("🚀 Starting GeoJSON export for Mobile App...")
@@ -33,11 +34,9 @@ def convert_to_geojson():
     Image.MAX_IMAGE_PIXELS = None
     img = Image.open(config.PNG_FILE)
     w, h = img.size
-    max_zoom = math.ceil(math.log2(max(w, h) / 512)) # Změněno na 512px
+    max_zoom = math.ceil(math.log2(max(w, h) / 512))
     scale = 2 ** max_zoom
     
-    # Helper to convert (grid_y, grid_x) to (lng, lat) for CRS.Simple
-    # Leaflet CRS.Simple maps (x, y) pixels at Zoom 0 to LngLat (x, -y)
     def to_lnglat(gy, gx):
         OOM_x = min_x + (gx + 0.5) * grid_size
         OOM_y = min_y + (gy + 0.5) * grid_size
@@ -60,10 +59,8 @@ def convert_to_geojson():
         basename = os.path.basename(jfile)
         geojson_filename = basename.replace(".json", ".geojson")
         
-        # Build GeoJSON feature collection
         features = []
         
-        # 1. Start Point
         start_pt = data["start"]
         if "oom_x" in start_pt and "oom_y" in start_pt:
             OOM_x = start_pt["oom_x"]
@@ -78,17 +75,10 @@ def convert_to_geojson():
 
         features.append({
             "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": start_coord
-            },
-            "properties": {
-                "type": "start",
-                "isom": start_pt.get("isom", "Start")
-            }
+            "geometry": { "type": "Point", "coordinates": start_coord },
+            "properties": { "type": "start", "isom": start_pt.get("isom", "Start") }
         })
         
-        # 2. End Point
         end_pt = data["end"]
         if "oom_x" in end_pt and "oom_y" in end_pt:
             OOM_x = end_pt["oom_x"]
@@ -103,51 +93,33 @@ def convert_to_geojson():
 
         features.append({
             "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": end_coord
-            },
-            "properties": {
-                "type": "end",
-                "isom": end_pt.get("isom", "End")
-            }
+            "geometry": { "type": "Point", "coordinates": end_coord },
+            "properties": { "type": "end", "isom": end_pt.get("isom", "End") }
         })
         
-        # 3. Variants (Lines)
         colors = ["#ff4444", "#4444ff", "#44ff44", "#ffaa00", "#aa00ff"]
         variants_meta = []
         
         for v_idx, variant in enumerate(data.get("variants", [])):
             coords = []
             for point in variant["cesta"]:
-                # point is [y, x]
                 coords.append(to_lnglat(point[0], point[1]))
                 
             color = colors[v_idx % len(colors)]
             
             features.append({
                 "type": "Feature",
-                "geometry": {
-                    "type": "LineString",
-                    "coordinates": coords
-                },
+                "geometry": { "type": "LineString", "coordinates": coords },
                 "properties": {
-                    "type": "variant",
-                    "id": v_idx + 1,
-                    "color": color,
-                    "vzdal_m": variant["vzdal_m"],
-                    "prevyseni_m": variant["prevyseni_m"],
-                    "cas_s": variant["cas_s"],
-                    "tempo_str": variant.get("tempo_str", "")
+                    "type": "variant", "id": v_idx + 1, "color": color,
+                    "vzdal_m": variant["vzdal_m"], "prevyseni_m": variant["prevyseni_m"],
+                    "cas_s": variant["cas_s"], "tempo_str": variant.get("tempo_str", "")
                 }
             })
             
             variants_meta.append({
-                "id": v_idx + 1,
-                "color": color,
-                "vzdal_m": variant["vzdal_m"],
-                "prevyseni_m": variant["prevyseni_m"],
-                "cas_s": variant["cas_s"],
+                "id": v_idx + 1, "color": color, "vzdal_m": variant["vzdal_m"],
+                "prevyseni_m": variant["prevyseni_m"], "cas_s": variant["cas_s"],
                 "tempo_str": variant.get("tempo_str", "")
             })
             
@@ -160,7 +132,12 @@ def convert_to_geojson():
         with open(out_file, "w", encoding="utf-8") as f:
             json.dump(geojson, f, indent=2)
             
-        # Add to index
+        # PŘIDÁNO: Kopírování vygenerovaného náhledu PNG
+        png_src = jfile.replace(".json", ".png")
+        if os.path.exists(png_src):
+            png_dst = os.path.join(out_dir, basename.replace(".json", ".png"))
+            shutil.copy2(png_src, png_dst)
+            
         index_data.append({
             "id": idx + 1,
             "file": geojson_filename,
@@ -169,11 +146,10 @@ def convert_to_geojson():
             "variants": variants_meta
         })
         
-    # Write index
     with open(os.path.join(out_dir, "postupy_index.json"), "w", encoding="utf-8") as f:
         json.dump(index_data, f, indent=2)
         
-    print(f"✅ Exported {len(index_data)} procedures to GeoJSON.")
+    print(f"✅ Exported {len(index_data)} procedures and thumbnails.")
 
 if __name__ == "__main__":
     convert_to_geojson()
