@@ -566,11 +566,78 @@ function sharePostup(index) {
     else alert("Odkaz zkopírován do schránky.");
 }
 
+// === GENIÁLNÍ MINIMAPY ===
+// Pole pro úklid paměti po starých mapách
+window.miniMaps = window.miniMaps || [];
+
+function createMiniMap(containerId, mapData) {
+    const el = document.getElementById(containerId);
+    if (!el) return null;
+    
+    // Tvorba čisté mapy bez jakéhokoliv ovládání
+    const miniMap = L.map(containerId, {
+        crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomControl: false, attributionControl: false,
+        dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false
+    });
+
+    L.tileLayer('tiles/{z}/{x}/{y}.png', {
+        tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5, noWrap: true, keepBuffer: 2
+    }).addTo(miniMap);
+
+    if (geojsonCache[mapData.file]) {
+        drawMiniMap(miniMap, geojsonCache[mapData.file]);
+    } else {
+        fetch('postupy/' + mapData.file + '?v=' + Date.now())
+            .then(r => r.json())
+            .then(data => {
+                geojsonCache[mapData.file] = data;
+                drawMiniMap(miniMap, data);
+            }).catch(e => console.log(e));
+    }
+    return miniMap;
+}
+
+function drawMiniMap(miniMap, geojson) {
+    let allLngs = [], allLats = [];
+    let startC = null, endC = null;
+    
+    geojson.features.forEach(f => {
+        if (f.properties && f.properties.type === 'start') startC = f.geometry.coordinates;
+        if (f.properties && f.properties.type === 'end') endC = f.geometry.coordinates;
+        if (f.geometry.type === 'Point') {
+            allLngs.push(f.geometry.coordinates[0]); allLats.push(f.geometry.coordinates[1]);
+        } else if (f.geometry.type === 'LineString') {
+            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
+        }
+    });
+
+    // Nakreslení variant v jejich barvách
+    L.geoJSON(geojson, {
+        filter: f => (f.properties && f.properties.type === 'variant'),
+        style: f => ({ color: f.properties.color, weight: 3, opacity: 0.9 })
+    }).addTo(miniMap);
+
+    // Vykreslení zjednodušených kontrol (bez textu)
+    if (startC) L.circle([startC[1], startC[0]], {radius: 1.5, color: iofPurple, weight: 2, fill: false}).addTo(miniMap);
+    if (endC) L.circle([endC[1], endC[0]], {radius: 1.5, color: iofPurple, weight: 2, fill: false}).addTo(miniMap);
+
+    if (allLngs.length > 0) {
+        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+        // Vycentrujeme přímo na trasu s okrajem 15 pixelů
+        miniMap.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [15, 15], animate: false });
+    }
+}
+
 // === VYKRESLENÍ PROFILU ===
 function renderProfileSaved() {
     const profileScreen = document.getElementById('screen-profile');
     if (!profileScreen) return;
     
+    // Vyčistíme staré Leaflet minimapy z paměti
+    if (window.profileMaps) { window.profileMaps.forEach(m => m.remove()); }
+    window.profileMaps = [];
+
     const oldTabs = profileScreen.querySelectorAll('.profile-tabs, .nav-tabs');
     oldTabs.forEach(tab => tab.style.display = 'none');
     
@@ -643,27 +710,29 @@ function renderProfileSaved() {
     gridContainer.style.padding = '2px 0 80px 0';
     
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     displayData.forEach((map) => {
-        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
-        
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
         el.style.aspectRatio = '1 / 1';
-        el.style.background = '#1a1a1a';
-        el.style.overflow = 'hidden';
-        el.style.cursor = 'pointer';
         
-        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
+        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600; z-index: 1001;">${map.dist_m.toFixed(0)}m</div>` : '';
+        const minimapId = 'minimap-prof-' + map.id;
         
+        // Krycí DIV zachytí kliknutí, aby nepropadlo do Leafletu
         el.innerHTML = `
-            <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: 250%; background-position: center;"></div>
+            <div id="${minimapId}" style="width: 100%; height: 100%; background: #e5e5e5; z-index: 1;"></div>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; cursor:pointer;"></div>
             ${distBadge}
         `;
         el.addEventListener('click', () => openSavedMapInFeed(map.id));
         gridContainer.appendChild(el);
+        
+        setTimeout(() => {
+            const m = createMiniMap(minimapId, map);
+            if(m) window.profileMaps.push(m);
+        }, 50);
     });
     profileContent.appendChild(gridContainer);
 }
@@ -754,27 +823,25 @@ function updateExploreBadge(badgeEl) {
 function renderExploreGrid() {
     const container = document.getElementById('explore-grid-container');
     if (!container) return;
+    
+    if (window.exploreMaps) { window.exploreMaps.forEach(m => m.remove()); }
+    window.exploreMaps = [];
     container.innerHTML = '';
     
     let displayData = postupyData;
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     displayData.forEach((map) => {
-        const thumbUrl = localMapThumbs[(map.id - 1) % localMapThumbs.length] || localMapThumbs[0];
-        
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
         el.style.aspectRatio = '1 / 1';
-        el.style.overflow = 'hidden';
-        el.style.cursor = 'pointer';
         el.style.position = 'relative';
         
-        let distBadge = map.dist_m ? `<div style="position:absolute; bottom:6px; left:6px; background:rgba(0,0,0,0.7); color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:600;">${map.dist_m.toFixed(0)}m</div>` : '';
+        const minimapId = 'minimap-expl-' + map.id;
         
         el.innerHTML = `
-            <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: 250%; background-position: center; width: 100%; height: 100%;"></div>
-            ${distBadge}
+            <div id="${minimapId}" style="width:100%; height:100%; background:#e5e5e5; z-index:1;"></div>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; cursor:pointer;"></div>
         `;
         el.addEventListener('click', () => {
             const globalIndex = postupyData.findIndex(m => String(m.id) === String(map.id));
@@ -794,5 +861,10 @@ function renderExploreGrid() {
             if (targetReel && reelsContainer) reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'auto' });
         });
         container.appendChild(el);
+        
+        setTimeout(() => {
+            const m = createMiniMap(minimapId, map);
+            if(m) window.exploreMaps.push(m);
+        }, 50);
     });
 }
