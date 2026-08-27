@@ -10,9 +10,8 @@ let currentTileLayers = {};
 const iofPurple = "#b300ff";
 let profileSelectedTerrain = 'Vše';
 
-// Výchozí nastavení uživatele
 let userSettings = JSON.parse(localStorage.getItem('user_settings')) || {
-    pace: 220, // 3:40 min/km v sekundách
+    pace: 220, 
     language: 'cs',
     theme: 'system'
 };
@@ -65,14 +64,12 @@ function formatPace(sec) {
 }
 
 function getAdjustedTime(baseSeconds) {
-    // KOREKCE CHYBY BACKENDU: Python počítal tempo vůči staré ceně cesty (0.965),
-    // ale reálná cena v matici je 0.750. Časy proto byly o 28 % rychlejší.
     const pythonErrorCorrection = 0.965 / 0.750;
     return baseSeconds * pythonErrorCorrection * (userSettings.pace / 220);
 }
 
 function updateUITexts() {
-    const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"], input[placeholder*="Hledat"]');
+    const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"], input[placeholder*="Hledat"], input[placeholder*="Search"]');
     searchInputs.forEach(input => {
         input.placeholder = t('searchRoutes');
     });
@@ -94,6 +91,7 @@ style.innerHTML = `
     --pill-active-text: #fff;
     --accent: #b300ff;
     --nav-icon-color: #000000;
+    --search-bg: #f2f2f6;
 }
 :root[data-theme="dark"] {
     --bg-color: #000000;
@@ -105,18 +103,20 @@ style.innerHTML = `
     --pill-active-bg: #fff;
     --pill-active-text: #000;
     --nav-icon-color: #ffffff;
+    --search-bg: #2c2c2e;
 }
 @media (prefers-color-scheme: dark) {
     :root[data-theme="system"] {
         --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e;
         --border-color: #2c2c2e; --pill-bg: #2c2c2e; --pill-text: #fff;
         --pill-active-bg: #fff; --pill-active-text: #000; --nav-icon-color: #ffffff;
+        --search-bg: #2c2c2e;
     }
 }
 
 body, .app-screen { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
 
-/* FIX PRO SPODNÍ LIŠTU A IKONKY */
+/* SPODNÍ LIŠTA A IKONKY */
 div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { 
     background: var(--bg-color) !important; 
     background-color: var(--bg-color) !important; 
@@ -127,15 +127,35 @@ div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav {
 .nav-btn svg { stroke: var(--nav-icon-color); }
 .nav-btn.active svg { stroke: var(--nav-icon-color); }
 
-/* FIX PRO STORIES A SEARCH BAR */
-.story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
-input[type="text"], input[type="search"] { 
-    background-color: var(--secondary-bg) !important; 
-    color: var(--text-color) !important; 
-    border: 1px solid var(--border-color) !important; 
+/* VYPNUTÍ VÝCHOZÍHO SAFARI STYLU U HLEDÁNÍ */
+.nav-bar, .top-bar { background-color: var(--bg-color) !important; border: none !important;}
+.search-bar, .search-container, div:has(> input[type="search"]), div:has(> input[placeholder*="Hledat"]), div:has(> input[placeholder*="Search"]) {
+    background-color: var(--search-bg) !important;
+    border-radius: 12px !important;
+    border: none !important;
+}
+input[type="search"], input[type="text"], input[placeholder*="Hledat"], input[placeholder*="Search"] {
+    background-color: transparent !important;
+    color: var(--text-color) !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important; /* Extrémně důležité pro Safari iOS */
+    padding: 8px !important;
+    border-radius: 0 !important;
+}
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
 }
 input::placeholder { color: #888 !important; }
 
+/* STORIES A TEXTY */
+.story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
+
+/* PILLS */
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
 .ig-pill {
@@ -144,6 +164,7 @@ input::placeholder { color: #888 !important; }
 }
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
 
+/* SETTINGS */
 .settings-section { margin-bottom: 30px; }
 .settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
 .settings-row { 
@@ -156,6 +177,7 @@ input::placeholder { color: #888 !important; }
 }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
+/* IG-LIKE SAVED MODE */
 body.saved-mode-active .bottom-nav, 
 body.saved-mode-active .nav-bar { display: none !important; }
 #saved-mode-header {
@@ -257,6 +279,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed();
         }
     }, {passive: true});
+    
+    // Obnovení překladů UI prvků po prvním načtení dom
+    setTimeout(updateUITexts, 200);
 });
 
 let selectedTerrains = new Set();
@@ -309,7 +334,7 @@ function updateSettings(key, value) {
         mapInstances = {}; currentLayers = {}; currentOverlays = {}; currentTileLayers = {};
         
         buildReels();
-        setupObserver(); // Fix zamrznutí scrollu
+        setupObserver(); 
         renderProfileSaved();
         renderExploreGrid();
     }
@@ -963,6 +988,33 @@ function renderProfileSaved() {
     let videnoCislo = viewed.length;
     let hodinCislo = (accMs / 3600000).toFixed(1);
 
+    // Načtení profilového obrázku z paměti
+    let savedPic = localStorage.getItem('profile_picture');
+    let avatarContent = savedPic 
+        ? `<img src="${savedPic}" style="width:100%; height:100%; object-fit:cover;">`
+        : `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+
+    // Vytvoření skrytého inputu pro nahrání fotky
+    let oldUpload = document.getElementById('profile-pic-upload');
+    if (oldUpload) oldUpload.remove();
+    let fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = 'profile-pic-upload';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                localStorage.setItem('profile_picture', event.target.result);
+                renderProfileSaved(); // Okamžité překreslení
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    document.body.appendChild(fileInput);
+
     profileContent.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px 20px; color: inherit;">
             <div style="font-size: 1.4rem; font-weight: 700; display:flex; align-items:center; gap: 5px;">
@@ -972,8 +1024,8 @@ function renderProfileSaved() {
         </div>
 
         <div style="display:flex; padding: 15px 20px; align-items:center;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: #e0e0e0; overflow:hidden; flex-shrink: 0; border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <div onclick="document.getElementById('profile-pic-upload').click()" style="width: 80px; height: 80px; border-radius: 50%; background: var(--secondary-bg); overflow:hidden; flex-shrink: 0; border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; cursor: pointer;">
+                ${avatarContent}
             </div>
             <div style="display:flex; flex-grow: 1; justify-content: space-evenly; text-align:center;">
                 <div>
@@ -1185,10 +1237,12 @@ function renderExploreGrid() {
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
     const groups = groupRoutesByMap(displayData);
+    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     groups.forEach((group) => {
-        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        let hash = 0;
+        for(let i=0; i<group.map_id.length; i++) hash += group.map_id.charCodeAt(i);
+        const thumbUrl = localMapThumbs[hash % localMapThumbs.length];
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
