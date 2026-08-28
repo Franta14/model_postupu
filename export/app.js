@@ -17,7 +17,7 @@ let userSettings = JSON.parse(localStorage.getItem('user_settings')) || {
 };
 
 // ==========================================
-// 2. JAZYKOVÝ SLOVNÍK (i18n)
+// 2. JAZYKOVÝ SLOVNÍK (i18n) A TUTORIAL
 // ==========================================
 const i18n = {
     cs: {
@@ -105,35 +105,20 @@ style.innerHTML = `
 html, body { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
     background-color: var(--bg-color) !important; color: var(--text-color) !important; 
-    overflow: hidden; /* Zakáže pružný pohyb celé stránky na iOS */
+    overflow: hidden; 
 }
 
-/* FIX SCROLLOVÁNÍ NA IPHONECH */
-#screen-scroll {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    height: 100dvh !important; 
-    overflow: hidden;
-}
+/* SCROLLOVÁNÍ NA IPHONECH */
+#screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
 #reels-container {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    height: 100dvh !important;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none; /* Extrémně důležité pro plynulý swipe na prvním postupu */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important;
+    overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none;
 }
-.reel {
-    height: 100dvh !important; width: 100%;
-    scroll-snap-align: start; scroll-snap-stop: always;
-}
-.leaflet-container {
-    touch-action: pan-y !important; /* Dovolí plynule scrollovat přes mapu */
-}
+.reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.leaflet-container { touch-action: pan-y !important; }
 
 /* SPODNÍ LIŠTA A IKONKY */
-div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { 
-    background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; 
-}
+div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; }
 .nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; }
 .nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
 .nav-btn svg { stroke: var(--nav-icon-color); }
@@ -162,13 +147,10 @@ input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, 
 body.saved-mode-active .bottom-nav,
-body.saved-mode-active nav { 
-    display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important;
-}
+body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header {
-    position: fixed; top: 0; left: 0; width: 100%; height: 90px;
-    z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
     background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
     color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer;
 }
@@ -177,8 +159,7 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 /* TUTORIAL OVERLAY */
 #tutorial-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 10000;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;
     color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px);
 }
 .tut-item { display: flex; align-items: center; gap: 20px; margin: 25px 20px; font-size: 1.2rem; font-weight: 600; width: 80%; }
@@ -671,11 +652,12 @@ function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
-        tap: false // ZABRÁNÍ LEAFLETU KRADENÍ PRVNÍHO DOTYKU (Opravuje první scroll na iOS)
+        tap: false // DŮLEŽITÉ PRO ZABRÁNĚNÍ BLOKOVÁNÍ SCROLLOVÁNÍ V SAFARI
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
     map.doubleClickZoom.disable();
+    map.getContainer().style.touchAction = 'pan-y'; 
     
     let lastClickTime = 0;
     map.on('click', function(e) {
@@ -808,7 +790,7 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            // ZMĚNA 1: Využijeme 90 % obrazovky místo 70 %, aby byl postup masivně přiblížen a zmizely bílé pruhy nahoře a dole
+            // 90 % obrazovky pro maximální přiblížení
             let targetPixelsY = h * 0.90; 
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
@@ -830,8 +812,7 @@ function renderMapData(index, geojsonOriginal) {
             
             let pixelScale = Math.pow(2, idealZoom); 
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
-            
-            // ZMĚNA 2: Menší vata (padding) zmenší díry okolo trasy ve vyřezané masce
+            // Menší padding pro užší vyřezanou masku
             let routeHalfW = maxAbsX + (40 / pixelScale), routeHalfH = (dist / 2) + (40 / pixelScale);
             
             let holeHalfW = Math.max(screenHalfW, routeHalfW), holeHalfH = Math.max(screenHalfH, routeHalfH);
@@ -854,6 +835,91 @@ function renderMapData(index, geojsonOriginal) {
             }, 50);
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
+}
+
+// === KALIBRACE VČETNĚ FUNKCE, KTERÁ MINULE VYPADLA ===
+let calibMode = false;
+let calibX = 400;
+let calibY = -300;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'k') {
+        calibMode = !calibMode;
+        let ui = document.getElementById('calibration-ui');
+        if(ui) ui.style.display = calibMode ? 'block' : 'none';
+        if (calibMode) updateCalibrationShift();
+        return;
+    }
+    if (!calibMode) return;
+    if (e.key === 'ArrowLeft') calibX -= 1;
+    else if (e.key === 'ArrowRight') calibX += 1;
+    else if (e.key === 'ArrowUp') calibY -= 1;
+    else if (e.key === 'ArrowDown') calibY += 1;
+    else return;
+    e.preventDefault();
+    let xspan = document.getElementById('calib-x');
+    let yspan = document.getElementById('calib-y');
+    if (xspan) xspan.innerText = calibX;
+    if (yspan) yspan.innerText = calibY;
+    updateCalibrationShift();
+});
+
+function updateCalibrationShift() {
+    if (typeof activeIndex === 'undefined') return;
+    let map = mapInstances[activeIndex];
+    if (!map) return;
+    let pane = map.getPane('markerPane');
+    if (!pane) return;
+    let shiftXConfig = calibX - 400;
+    let shiftYConfig = calibY - (-300);
+    let scale = Math.pow(2, map.getZoom()) / 64;
+    pane.style.marginLeft = (shiftXConfig * scale) + 'px';
+    pane.style.marginTop = (shiftYConfig * scale) + 'px';
+}
+
+async function startOfflineSync() {
+    let btn = document.getElementById('offline-sync-btn');
+    if (btn) btn.disabled = true;
+    let progressOverlay = document.getElementById('sync-progress');
+    let bar = document.getElementById('sync-bar');
+    let text = document.getElementById('sync-text');
+    if (progressOverlay) progressOverlay.style.display = 'flex';
+    
+    try {
+        let urlsToFetch = ['postupy/postupy_index.json'];
+        postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
+        text.innerText = "Získávám index dlaždic...";
+        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
+        if (tilesResponse.ok) {
+            let tiles = await tilesResponse.json();
+            urlsToFetch = urlsToFetch.concat(tiles);
+        }
+        
+        let total = urlsToFetch.length;
+        let done = 0;
+        const chunkSize = 20;
+        for (let i = 0; i < total; i += chunkSize) {
+            let chunk = urlsToFetch.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (url) => {
+                try { await fetch(url, { cache: 'no-store' }); } catch(e) {}
+                done++;
+            }));
+            if (bar) bar.style.width = Math.floor((done / total) * 100) + '%';
+            if (text) text.innerText = `${done} / ${total}`;
+        }
+        
+        setTimeout(() => {
+            if (progressOverlay) progressOverlay.style.display = 'none';
+            if (btn) {
+                btn.innerHTML = t('download');
+                btn.disabled = false;
+            }
+            updateCacheSize();
+        }, 500);
+    } catch (err) {
+        alert("Chyba při stahování: " + err.message);
+        if (progressOverlay) progressOverlay.style.display = 'none';
+    }
 }
 
 function toggleLike(index, btn) {
