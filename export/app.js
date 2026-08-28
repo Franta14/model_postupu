@@ -102,18 +102,11 @@ style.innerHTML = `
     }
 }
 
-html, body { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
-    background-color: var(--bg-color) !important; color: var(--text-color) !important; 
-    overflow: hidden; 
-}
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
-#reels-container {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important;
-    overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none;
-}
+#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
 .reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
 .leaflet-container { touch-action: pan-y !important; }
 
@@ -131,10 +124,7 @@ div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-
 /* STORIES A HLEDÁNÍ */
 .story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
 .search-bar, .search-container, div:has(> input[type="search"]) { background-color: var(--search-bg) !important; border-radius: 12px !important; border: none !important; }
-input[type="search"], input[type="text"] {
-    background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important;
-    -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important;
-}
+input[type="search"], input[type="text"] { background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important; }
 input::placeholder { color: #888 !important; }
 
 /* PILLS A NASTAVENÍ */
@@ -149,31 +139,19 @@ input::placeholder { color: #888 !important; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
 /* IG-LIKE SAVED MODE */
-body.saved-mode-active #bottom-nav, 
-body.saved-mode-active .bottom-nav,
-body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
+body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
-#saved-mode-header {
-    position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-    color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer;
-}
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* TUTORIAL OVERLAY */
-#tutorial-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-    color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px);
-}
+#tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px); }
 .tut-item { display: flex; align-items: center; gap: 20px; margin: 25px 20px; font-size: 1.2rem; font-weight: 600; width: 80%; }
 .tut-icon { width: 45px; height: 45px; flex-shrink: 0; }
 `;
 document.head.appendChild(style);
 
-function applyTheme() {
-    document.documentElement.setAttribute('data-theme', userSettings.theme);
-}
+function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
 
 // ==========================================
@@ -206,10 +184,7 @@ function showTutorial() {
             </div>
             <button style="margin-top:50px; padding: 12px 30px; border-radius:25px; background:var(--accent); color:white; border:none; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 15px rgba(179,0,255,0.4);">${t('tutBtn')}</button>
         `;
-        tut.onclick = () => {
-            tut.remove();
-            localStorage.setItem('tutorial_seen', 'true');
-        };
+        tut.onclick = () => { tut.remove(); localStorage.setItem('tutorial_seen', 'true'); };
         document.body.appendChild(tut);
     }
 }
@@ -255,7 +230,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const reelsContainer = document.getElementById('reels-container');
-            if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+            if (reelsContainer) {
+                reelsContainer.style.overflow = 'auto';
+                reelsContainer.style.overflowX = 'hidden';
+            }
 
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -266,8 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (targetId === 'screen-profile') renderProfileSaved();
                     if (targetId === 'screen-settings') renderSettings();
                     
-                    if (targetId === 'screen-scroll') {
-                        setTimeout(() => { activateReel(activeIndex); }, 150);
+                    if (targetId === 'screen-scroll' && activeIndex !== -1) {
+                        // POJISTKA: Po překliknutí se ujistíme, že mapa není zdeformovaná
+                        setTimeout(() => activateReel(activeIndex), 150);
                     }
                 } else {
                     screen.classList.remove('active');
@@ -283,16 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(smh);
 
     let startX = 0;
-    document.body.addEventListener('touchstart', e => {
-        if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX;
-    }, {passive: true});
-    
-    document.body.addEventListener('touchend', e => {
-        if (document.body.classList.contains('saved-mode-active')) {
-            if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed();
-        }
-    }, {passive: true});
-    
+    document.body.addEventListener('touchstart', e => { if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX; }, {passive: true});
+    document.body.addEventListener('touchend', e => { if (document.body.classList.contains('saved-mode-active')) { if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed(); } }, {passive: true});
     setTimeout(updateUITexts, 200);
 });
 
@@ -336,9 +307,7 @@ function updateSettings(key, value) {
     if (key === 'theme') applyTheme();
     if (key === 'language' || key === 'pace') {
         let smhTitle = document.getElementById('saved-mode-title');
-        if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) {
-            smhTitle.innerText = t('saved'); 
-        }
+        if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) { smhTitle.innerText = t('saved'); }
         
         renderSettings();
         updateUITexts();
@@ -350,6 +319,9 @@ function updateSettings(key, value) {
         setupObserver(); 
         renderProfileSaved();
         renderExploreGrid();
+        
+        // Okamžitá pojistka vycentrování po změně tempa
+        setTimeout(() => { if (activeIndex !== -1) activateReel(activeIndex); }, 300);
     }
 }
 
@@ -409,13 +381,8 @@ function renderSettings() {
 
     const paceSlider = document.getElementById('pace-slider');
     const paceValue = document.getElementById('pace-value');
-    paceSlider.addEventListener('input', (e) => {
-        paceValue.innerText = formatPace(e.target.value);
-    });
-    paceSlider.addEventListener('change', (e) => {
-        updateSettings('pace', parseInt(e.target.value));
-    });
-
+    paceSlider.addEventListener('input', (e) => { paceValue.innerText = formatPace(e.target.value); });
+    paceSlider.addEventListener('change', (e) => { updateSettings('pace', parseInt(e.target.value)); });
     updateCacheSize();
 }
 
@@ -431,10 +398,7 @@ async function updateCacheSize() {
                 const keys = await cache.keys();
                 for (let req of keys) {
                     const res = await cache.match(req);
-                    if (res) {
-                        const blob = await res.blob();
-                        total += blob.size;
-                    }
+                    if (res) { const blob = await res.blob(); total += blob.size; }
                 }
             }
         } catch(e) { console.warn(e); }
@@ -446,9 +410,7 @@ async function clearAppCache() {
     if (confirm(t('confirmClear'))) {
         if ('caches' in window) {
             const cacheNames = await caches.keys();
-            for (let name of cacheNames) {
-                await caches.delete(name);
-            }
+            for (let name of cacheNames) { await caches.delete(name); }
         }
         updateCacheSize();
         alert(t('cacheCleared'));
@@ -509,14 +471,13 @@ function setupObserver() {
     const rc = document.getElementById('reels-container');
     if (!rc) return;
     
-    // Obrovský threshold 0.8 zajišťuje stabilní spuštění přesně na postupu
-    let options = { root: rc, rootMargin: '0px', threshold: 0.8 };
+    // Práh 0.51: Mapě stačí být na displeji jen z 51 %, aby ji observer načetl a vycentroval
+    let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
                 if (activationTimeout) clearTimeout(activationTimeout);
-                // Krátké zpoždění, aby se scrollování plně dokončilo
                 activationTimeout = setTimeout(() => { activateReel(index); }, 150);
             }
         });
@@ -638,14 +599,18 @@ function activateReel(index) {
     }
     preloadReel(index);
     
-    // Zásadní krok pro Leaflet: Pokaždé když se scrollování zastaví na tomto postupu, natvrdo se mapě vnutí správný rozměr. Tím se zabrání uskočení mapy bokem.
-    setTimeout(() => {
+    // GIGANTICKÁ POJISTKA PROTI ÚSTŘELU: Vnutí mapě vycentrování pomocí agresivního timeoutu
+    function forceAlign(attempts = 0) {
         let m = mapInstances[index];
-        if (m && m.originalMidX !== undefined) {
+        let el = document.getElementById(`map-${index}`);
+        if (m && m.originalMidX !== undefined && el && el.clientHeight > 0) {
             m.invalidateSize();
             m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+        } else if (attempts < 10) {
+            setTimeout(() => forceAlign(attempts + 1), 100);
         }
-    }, 100);
+    }
+    forceAlign();
 }
 
 function preloadReel(i) {
@@ -708,6 +673,7 @@ function initMapForReel(index) {
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
+    // CHYTRÝ ZÁMEK SCROLLOVÁNÍ PŘI ZOOMU - Plný zámek overflow
     map.on('zoomend', function() {
         updateCalibrationShift();
         let currentZoom = map.getZoom();
@@ -715,10 +681,15 @@ function initMapForReel(index) {
         let reelsContainer = document.getElementById('reels-container');
         
         if (currentZoom > minZoom + 0.05) {
-            if (reelsContainer) reelsContainer.style.overflowY = 'hidden';
+            if (reelsContainer) {
+                reelsContainer.style.overflow = 'hidden'; 
+            }
             map.getContainer().style.touchAction = 'none';
         } else {
-            if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+            if (reelsContainer) {
+                reelsContainer.style.overflow = 'auto'; 
+                reelsContainer.style.overflowX = 'hidden';
+            }
             map.getContainer().style.touchAction = 'pan-y';
         }
     });
@@ -862,7 +833,7 @@ function renderMapData(index, geojsonOriginal) {
             let mask = L.polygon([outerRing, innerRing], { color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane' });
             overlays.addLayer(mask);
             
-            // Důležité! Okamžitě nastavit střed mapy, abychom nekoukali do bílé vaty
+            // Důležité! Okamžitě nastavit souřadnice nezávisle na rozměru okna (ochrana před bílou obrazovkou)
             map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
             map.setView([midY, midX], idealZoom, { animate: false });
         }
