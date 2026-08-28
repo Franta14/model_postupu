@@ -17,7 +17,7 @@ let userSettings = JSON.parse(localStorage.getItem('user_settings')) || {
 };
 
 // ==========================================
-// 2. JAZYKOVÝ SLOVNÍK (i18n) A TUTORIAL
+// 2. JAZYKOVÝ SLOVNÍK (i18n)
 // ==========================================
 const i18n = {
     cs: {
@@ -80,7 +80,7 @@ function updateUITexts() {
 }
 
 // ==========================================
-// 3. INJEKCE CSS STYLŮ (vč. fixů scrollování)
+// 3. INJEKCE CSS STYLŮ
 // ==========================================
 const style = document.createElement('style');
 style.innerHTML = `
@@ -102,23 +102,31 @@ style.innerHTML = `
     }
 }
 
-body, .app-screen { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
+html, body { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    background-color: var(--bg-color) !important; color: var(--text-color) !important; 
+    overflow: hidden; /* Zakáže pružný pohyb celé stránky na iOS */
+}
 
 /* FIX SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll {
-    height: 100vh !important; height: 100dvh !important; 
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    height: 100dvh !important; 
     overflow: hidden;
 }
 #reels-container {
-    height: 100vh !important; height: 100dvh !important;
-    scroll-snap-type: y mandatory; overflow-y: auto;
-    overscroll-behavior-y: none !important; /* Zabije to hnusné odskočení celého iPhonu */
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    height: 100dvh !important;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none; /* Extrémně důležité pro plynulý swipe na prvním postupu */
 }
 .reel {
-    height: 100vh !important; height: 100dvh !important;
+    height: 100dvh !important; width: 100%;
     scroll-snap-align: start; scroll-snap-stop: always;
 }
-.map-container, .leaflet-container {
+.leaflet-container {
     touch-action: pan-y !important; /* Dovolí plynule scrollovat přes mapu */
 }
 
@@ -151,7 +159,7 @@ input::placeholder { color: #888 !important; }
 .settings-row select, .settings-btn { background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
-/* IG-LIKE SAVED MODE (Opravdové schování lišty) */
+/* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, 
 body.saved-mode-active .bottom-nav,
 body.saved-mode-active nav { 
@@ -320,7 +328,7 @@ function loadData() {
             setTimeout(() => {
                 const loader = document.getElementById('loader');
                 if (loader) { loader.style.opacity = 0; setTimeout(() => loader.remove(), 500); }
-                showTutorial(); // Zobrazení tutorialu po načtení
+                showTutorial();
             }, 500);
         })
         .catch(err => console.error("Chyba při načítání dat: ", err));
@@ -456,7 +464,7 @@ async function clearAppCache() {
 }
 
 // ==========================================
-// 7. VYKRESLENÍ FEEDU
+// 7. VYKRESLENÍ FEEDU A MAPY
 // ==========================================
 function buildReels() {
     const container = document.getElementById('reels-container');
@@ -662,12 +670,12 @@ function initMapForReel(index) {
     if (!mapContainer) return;
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
-        zoomControl: false, gestureHandling: false, inertia: false
+        zoomControl: false, gestureHandling: false, inertia: false,
+        tap: false // ZABRÁNÍ LEAFLETU KRADENÍ PRVNÍHO DOTYKU (Opravuje první scroll na iOS)
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
     map.doubleClickZoom.disable();
-    map.getContainer().style.touchAction = 'pan-y'; // Důležité pro plynulé skrolování iOS
     
     let lastClickTime = 0;
     map.on('click', function(e) {
@@ -800,7 +808,8 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            let targetPixelsY = h * 0.70;
+            // ZMĚNA 1: Využijeme 90 % obrazovky místo 70 %, aby byl postup masivně přiblížen a zmizely bílé pruhy nahoře a dole
+            let targetPixelsY = h * 0.90; 
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
             
@@ -821,7 +830,9 @@ function renderMapData(index, geojsonOriginal) {
             
             let pixelScale = Math.pow(2, idealZoom); 
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
-            let routeHalfW = maxAbsX + (60 / pixelScale), routeHalfH = (dist / 2) + (80 / pixelScale);
+            
+            // ZMĚNA 2: Menší vata (padding) zmenší díry okolo trasy ve vyřezané masce
+            let routeHalfW = maxAbsX + (40 / pixelScale), routeHalfH = (dist / 2) + (40 / pixelScale);
             
             let holeHalfW = Math.max(screenHalfW, routeHalfW), holeHalfH = Math.max(screenHalfH, routeHalfH);
             
@@ -843,90 +854,6 @@ function renderMapData(index, geojsonOriginal) {
             }, 50);
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
-}
-
-let calibMode = false;
-let calibX = 400;
-let calibY = -300;
-
-document.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() === 'k') {
-        calibMode = !calibMode;
-        let ui = document.getElementById('calibration-ui');
-        if(ui) ui.style.display = calibMode ? 'block' : 'none';
-        if (calibMode) updateCalibrationShift();
-        return;
-    }
-    if (!calibMode) return;
-    if (e.key === 'ArrowLeft') calibX -= 1;
-    else if (e.key === 'ArrowRight') calibX += 1;
-    else if (e.key === 'ArrowUp') calibY -= 1;
-    else if (e.key === 'ArrowDown') calibY += 1;
-    else return;
-    e.preventDefault();
-    let xspan = document.getElementById('calib-x');
-    let yspan = document.getElementById('calib-y');
-    if (xspan) xspan.innerText = calibX;
-    if (yspan) yspan.innerText = calibY;
-    updateCalibrationShift();
-});
-
-function updateCalibrationShift() {
-    if (typeof activeIndex === 'undefined') return;
-    let map = mapInstances[activeIndex];
-    if (!map) return;
-    let pane = map.getPane('markerPane');
-    if (!pane) return;
-    let shiftXConfig = calibX - 400;
-    let shiftYConfig = calibY - (-300);
-    let scale = Math.pow(2, map.getZoom()) / 64;
-    pane.style.marginLeft = (shiftXConfig * scale) + 'px';
-    pane.style.marginTop = (shiftYConfig * scale) + 'px';
-}
-
-async function startOfflineSync() {
-    let btn = document.getElementById('offline-sync-btn');
-    if (btn) btn.disabled = true;
-    let progressOverlay = document.getElementById('sync-progress');
-    let bar = document.getElementById('sync-bar');
-    let text = document.getElementById('sync-text');
-    if (progressOverlay) progressOverlay.style.display = 'flex';
-    
-    try {
-        let urlsToFetch = ['postupy/postupy_index.json'];
-        postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
-        text.innerText = "Získávám index dlaždic...";
-        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
-        if (tilesResponse.ok) {
-            let tiles = await tilesResponse.json();
-            urlsToFetch = urlsToFetch.concat(tiles);
-        }
-        
-        let total = urlsToFetch.length;
-        let done = 0;
-        const chunkSize = 20;
-        for (let i = 0; i < total; i += chunkSize) {
-            let chunk = urlsToFetch.slice(i, i + chunkSize);
-            await Promise.all(chunk.map(async (url) => {
-                try { await fetch(url, { cache: 'no-store' }); } catch(e) {}
-                done++;
-            }));
-            if (bar) bar.style.width = Math.floor((done / total) * 100) + '%';
-            if (text) text.innerText = `${done} / ${total}`;
-        }
-        
-        setTimeout(() => {
-            if (progressOverlay) progressOverlay.style.display = 'none';
-            if (btn) {
-                btn.innerHTML = t('download');
-                btn.disabled = false;
-            }
-            updateCacheSize();
-        }, 500);
-    } catch (err) {
-        alert("Chyba při stahování: " + err.message);
-        if (progressOverlay) progressOverlay.style.display = 'none';
-    }
 }
 
 function toggleLike(index, btn) {
