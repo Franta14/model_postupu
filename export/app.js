@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateExploreBadge(document.getElementById('nav-badge'));
             }
 
+            // Ošetření odemčení scrollování
             const reelsContainer = document.getElementById('reels-container');
             if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
 
@@ -265,6 +266,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     screen.classList.add('active');
                     if (targetId === 'screen-profile') renderProfileSaved();
                     if (targetId === 'screen-settings') renderSettings();
+                    
+                    // POJISTKA PŘI NÁVRATU DO FEEDU: Donutí aktuální mapu se překreslit a narovnat
+                    if (targetId === 'screen-scroll') {
+                        setTimeout(() => { activateReel(activeIndex); }, 50);
+                    }
                 } else {
                     screen.classList.remove('active');
                 }
@@ -498,40 +504,23 @@ function buildReels() {
 }
 
 let reelObserver = null;
-let activationTimeout = null;
-let centerFallbackTimeout = null;
-
 function setupObserver() {
     if (reelObserver) reelObserver.disconnect();
     const rc = document.getElementById('reels-container');
     if (!rc) return;
     
-    let options = { root: rc, rootMargin: '0px', threshold: 0.6 };
+    // Obrovský threshold 0.8 zajišťuje, že postup musí být převážně na obrazovce, než se aktivuje
+    let options = { root: rc, rootMargin: '0px', threshold: 0.8 };
     reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
-                if (activationTimeout) clearTimeout(activationTimeout);
-                activationTimeout = setTimeout(() => { activateReel(index); }, 150);
+                activateReel(index);
             }
         });
     }, options);
     
     document.querySelectorAll('.reel').forEach(reel => reelObserver.observe(reel));
-
-    // POJISTKA SCROLLOVÁNÍ: Když uživatel zastaví, natvrdo se mapě vnutí vycentrování
-    rc.addEventListener('scroll', () => {
-        if (centerFallbackTimeout) clearTimeout(centerFallbackTimeout);
-        centerFallbackTimeout = setTimeout(() => {
-            if (activeIndex !== -1 && mapInstances[activeIndex]) {
-                let m = mapInstances[activeIndex];
-                if (m.originalMidX !== undefined) {
-                    m.invalidateSize();
-                    m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
-                }
-            }
-        }, 200);
-    }, {passive: true});
 }
 
 let showVariantsForIndex = {};
@@ -642,6 +631,15 @@ function activateReel(index) {
         activeIndex = index;
     }
     preloadReel(index);
+    
+    // GIGANTICKÁ POJISTKA PROTI ÚSTŘELU: Vždy po aktivaci (doscrollování) vnutíme mapě správný rozměr a vycentrování
+    setTimeout(() => {
+        let m = mapInstances[index];
+        if (m && m.originalMidX !== undefined) {
+            m.invalidateSize();
+            m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+        }
+    }, 100);
 }
 
 function preloadReel(i) {
@@ -726,7 +724,7 @@ function initMapForReel(index) {
 function renderMapData(index, geojsonOriginal) {
     try {
         const mContainer = document.getElementById(`map-${index}`);
-        if (!mContainer || mContainer.offsetWidth === 0) return;
+        if (!mContainer) return; // Odstraněn offsetWidth block, ať se mapy kreslí i na pozadí
 
         const map = mapInstances[index];
         if (!map) return;
@@ -829,7 +827,7 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            // IDEÁLNÍ ZOOM: Vráceno na 82% výšky, aby byla trasa velká, ale kontroly nebyly seříznuté na okrajích
+            // IDEÁLNÍ ZOOM: Vráceno na 82%
             let targetPixelsY = h * 0.82; 
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
@@ -868,7 +866,7 @@ function renderMapData(index, geojsonOriginal) {
             
             setTimeout(() => {
                 map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
-                // ZÁBRANA PROTI POSUNU BĚHEM SCROLLOVÁNÍ
+                // Zákaz svévolného překreslování posunutých map za jízdy:
                 if (index === activeIndex) {
                     map.invalidateSize();
                     map.setView([midY, midX], idealZoom, { animate: false });
@@ -962,9 +960,6 @@ async function startOfflineSync() {
     }
 }
 
-// ==========================================
-// OPRAVA: FUNKCE PRO ANIMACI LIKU
-// ==========================================
 function triggerLikeAnimation(index) {
     let anim = document.getElementById(`like-anim-${index}`);
     if (anim) {
@@ -1231,6 +1226,7 @@ function openFeed(map_id, isSavedMode) {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
             let activeMap = mapInstances[firstVisibleIndex];
             if (activeMap) activeMap.invalidateSize();
+            activateReel(firstVisibleIndex);
         }, 10);
     }
 }
