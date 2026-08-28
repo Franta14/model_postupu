@@ -17,7 +17,7 @@ let userSettings = JSON.parse(localStorage.getItem('user_settings')) || {
 };
 
 // ==========================================
-// 2. JAZYKOVÝ SLOVNÍK (i18n)
+// 2. JAZYKOVÝ SLOVNÍK (i18n) A TUTORIAL
 // ==========================================
 const i18n = {
     cs: {
@@ -31,7 +31,9 @@ const i18n = {
         options: "Volby", aerial: "m vzdušně",
         bioDesc: "Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.",
         confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána.",
-        searchRoutes: "Hledat postupy..."
+        searchRoutes: "Hledat postupy...",
+        tutSwipe: "Potáhni nahoru pro další", tutLike: "Dvojklik pro To se mi líbí",
+        tutOptions: "Klikni na Volby pro srovnání", tutBtn: "Rozumím!"
     },
     en: {
         settings: "Settings", runner: "RUNNER", paceOnRoad: "Pace on road",
@@ -44,7 +46,9 @@ const i18n = {
         options: "Options", aerial: "m aerial",
         bioDesc: "Here you can find all your favorite route choices from training and races.",
         confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared.",
-        searchRoutes: "Search routes..."
+        searchRoutes: "Search routes...",
+        tutSwipe: "Swipe up for next route", tutLike: "Double tap to like",
+        tutOptions: "Click Options for comparisons", tutBtn: "Got it!"
     }
 };
 
@@ -76,110 +80,84 @@ function updateUITexts() {
 }
 
 // ==========================================
-// 3. INJEKCE CSS STYLŮ
+// 3. INJEKCE CSS STYLŮ (vč. fixů scrollování)
 // ==========================================
 const style = document.createElement('style');
 style.innerHTML = `
 :root {
-    --bg-color: #ffffff;
-    --text-color: #000000;
-    --secondary-bg: #f2f2f6;
-    --border-color: #e5e5ea;
-    --pill-bg: #e5e5ea;
-    --pill-text: #000;
-    --pill-active-bg: #000;
-    --pill-active-text: #fff;
-    --accent: #b300ff;
-    --nav-icon-color: #000000;
-    --search-bg: #f2f2f6;
+    --bg-color: #ffffff; --text-color: #000000; --secondary-bg: #f2f2f6; --border-color: #e5e5ea;
+    --pill-bg: #e5e5ea; --pill-text: #000; --pill-active-bg: #000; --pill-active-text: #fff;
+    --accent: #b300ff; --nav-icon-color: #000000; --search-bg: #f2f2f6;
 }
 :root[data-theme="dark"] {
-    --bg-color: #000000;
-    --text-color: #ffffff;
-    --secondary-bg: #1c1c1e;
-    --border-color: #2c2c2e;
-    --pill-bg: #2c2c2e;
-    --pill-text: #fff;
-    --pill-active-bg: #fff;
-    --pill-active-text: #000;
-    --nav-icon-color: #ffffff;
-    --search-bg: #2c2c2e;
+    --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e; --border-color: #2c2c2e;
+    --pill-bg: #2c2c2e; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
+    --nav-icon-color: #ffffff; --search-bg: #2c2c2e;
 }
 @media (prefers-color-scheme: dark) {
     :root[data-theme="system"] {
-        --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e;
-        --border-color: #2c2c2e; --pill-bg: #2c2c2e; --pill-text: #fff;
-        --pill-active-bg: #fff; --pill-active-text: #000; --nav-icon-color: #ffffff;
-        --search-bg: #2c2c2e;
+        --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e; --border-color: #2c2c2e;
+        --pill-bg: #2c2c2e; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
+        --nav-icon-color: #ffffff; --search-bg: #2c2c2e;
     }
 }
 
 body, .app-screen { background-color: var(--bg-color) !important; color: var(--text-color) !important; }
 
+/* FIX SCROLLOVÁNÍ NA IPHONECH */
+#screen-scroll {
+    height: 100vh !important; height: 100dvh !important; 
+    overflow: hidden;
+}
+#reels-container {
+    height: 100vh !important; height: 100dvh !important;
+    scroll-snap-type: y mandatory; overflow-y: auto;
+    overscroll-behavior-y: none !important; /* Zabije to hnusné odskočení celého iPhonu */
+}
+.reel {
+    height: 100vh !important; height: 100dvh !important;
+    scroll-snap-align: start; scroll-snap-stop: always;
+}
+.map-container, .leaflet-container {
+    touch-action: pan-y !important; /* Dovolí plynule scrollovat přes mapu */
+}
+
 /* SPODNÍ LIŠTA A IKONKY */
 div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { 
-    background: var(--bg-color) !important; 
-    background-color: var(--bg-color) !important; 
-    border-top: 1px solid var(--border-color) !important; 
+    background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; 
 }
 .nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; }
 .nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
 .nav-btn svg { stroke: var(--nav-icon-color); }
 .nav-btn.active svg { stroke: var(--nav-icon-color); }
 
-/* VYPNUTÍ VÝCHOZÍHO SAFARI STYLU U HLEDÁNÍ */
-.nav-bar, .top-bar { background-color: var(--bg-color) !important; border: none !important;}
-.search-bar, .search-container, div:has(> input[type="search"]), div:has(> input[placeholder*="Hledat"]), div:has(> input[placeholder*="Search"]) {
-    background-color: var(--search-bg) !important;
-    border-radius: 12px !important;
-    border: none !important;
-}
-input[type="search"], input[type="text"], input[placeholder*="Hledat"], input[placeholder*="Search"] {
-    background-color: transparent !important;
-    color: var(--text-color) !important;
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    -webkit-appearance: none !important; /* Extrémně důležité pro Safari iOS */
-    padding: 8px !important;
-    border-radius: 0 !important;
-}
-input[type="search"]::-webkit-search-decoration,
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-results-button,
-input[type="search"]::-webkit-search-results-decoration {
-  -webkit-appearance: none;
+/* STORIES A HLEDÁNÍ */
+.story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
+.search-bar, .search-container, div:has(> input[type="search"]) { background-color: var(--search-bg) !important; border-radius: 12px !important; border: none !important; }
+input[type="search"], input[type="text"] {
+    background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important;
+    -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important;
 }
 input::placeholder { color: #888 !important; }
 
-/* STORIES A TEXTY */
-.story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
-
-/* PILLS */
+/* PILLS A NASTAVENÍ */
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
-.ig-pill {
-    padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color);
-    background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
-}
+.ig-pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
-
-/* SETTINGS */
 .settings-section { margin-bottom: 30px; }
 .settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
-.settings-row { 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color);
-}
-.settings-row select, .settings-btn { 
-    background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); 
-    padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none;
-}
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); }
+.settings-row select, .settings-btn { background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
-/* IG-LIKE SAVED MODE */
-body.saved-mode-active .bottom-nav, 
-body.saved-mode-active .nav-bar { display: none !important; }
+/* IG-LIKE SAVED MODE (Opravdové schování lišty) */
+body.saved-mode-active #bottom-nav, 
+body.saved-mode-active .bottom-nav,
+body.saved-mode-active nav { 
+    display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important;
+}
+body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header {
     position: fixed; top: 0; left: 0; width: 100%; height: 90px;
     z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
@@ -187,8 +165,16 @@ body.saved-mode-active .nav-bar { display: none !important; }
     color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer;
 }
 body.saved-mode-active #saved-mode-header { display: flex; }
-body.saved-mode-active #screen-scroll { height: 100vh; padding-bottom: 0; }
-body.saved-mode-active .reel { height: 100vh; }
+
+/* TUTORIAL OVERLAY */
+#tutorial-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 10000;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px);
+}
+.tut-item { display: flex; align-items: center; gap: 20px; margin: 25px 20px; font-size: 1.2rem; font-weight: 600; width: 80%; }
+.tut-icon { width: 45px; height: 45px; flex-shrink: 0; }
 `;
 document.head.appendChild(style);
 
@@ -198,7 +184,7 @@ function applyTheme() {
 applyTheme();
 
 // ==========================================
-// 4. MĚŘENÍ ČASU V APLIKACI
+// 4. MĚŘENÍ ČASU V APLIKACI A TUTORIAL
 // ==========================================
 setInterval(() => {
     let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
@@ -207,6 +193,33 @@ setInterval(() => {
     const hrsEl = document.getElementById('stat-hours');
     if (hrsEl) hrsEl.innerText = (accMs / 3600000).toFixed(1);
 }, 5000);
+
+function showTutorial() {
+    if (!localStorage.getItem('tutorial_seen')) {
+        const tut = document.createElement('div');
+        tut.id = 'tutorial-overlay';
+        tut.innerHTML = `
+            <div class="tut-item">
+                <svg class="tut-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path></svg>
+                <span>${t('tutSwipe')}</span>
+            </div>
+            <div class="tut-item">
+                <svg class="tut-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+                <span>${t('tutLike')}</span>
+            </div>
+            <div class="tut-item">
+                <svg class="tut-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                <span>${t('tutOptions')}</span>
+            </div>
+            <button style="margin-top:50px; padding: 12px 30px; border-radius:25px; background:var(--accent); color:white; border:none; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 15px rgba(179,0,255,0.4);">${t('tutBtn')}</button>
+        `;
+        tut.onclick = () => {
+            tut.remove();
+            localStorage.setItem('tutorial_seen', 'true');
+        };
+        document.body.appendChild(tut);
+    }
+}
 
 // ==========================================
 // 5. INICIALIZACE APLIKACE
@@ -280,7 +293,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, {passive: true});
     
-    // Obnovení překladů UI prvků po prvním načtení dom
     setTimeout(updateUITexts, 200);
 });
 
@@ -308,6 +320,7 @@ function loadData() {
             setTimeout(() => {
                 const loader = document.getElementById('loader');
                 if (loader) { loader.style.opacity = 0; setTimeout(() => loader.remove(), 500); }
+                showTutorial(); // Zobrazení tutorialu po načtení
             }, 500);
         })
         .catch(err => console.error("Chyba při načítání dat: ", err));
@@ -654,6 +667,7 @@ function initMapForReel(index) {
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
     map.doubleClickZoom.disable();
+    map.getContainer().style.touchAction = 'pan-y'; // Důležité pro plynulé skrolování iOS
     
     let lastClickTime = 0;
     map.on('click', function(e) {
@@ -988,13 +1002,11 @@ function renderProfileSaved() {
     let videnoCislo = viewed.length;
     let hodinCislo = (accMs / 3600000).toFixed(1);
 
-    // Načtení profilového obrázku z paměti
     let savedPic = localStorage.getItem('profile_picture');
     let avatarContent = savedPic 
         ? `<img src="${savedPic}" style="width:100%; height:100%; object-fit:cover;">`
         : `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
 
-    // Vytvoření skrytého inputu pro nahrání fotky
     let oldUpload = document.getElementById('profile-pic-upload');
     if (oldUpload) oldUpload.remove();
     let fileInput = document.createElement('input');
@@ -1008,7 +1020,7 @@ function renderProfileSaved() {
             const reader = new FileReader();
             reader.onload = function(event) {
                 localStorage.setItem('profile_picture', event.target.result);
-                renderProfileSaved(); // Okamžité překreslení
+                renderProfileSaved();
             };
             reader.readAsDataURL(file);
         }
