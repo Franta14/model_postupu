@@ -250,6 +250,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateExploreBadge(document.getElementById('nav-badge'));
             }
 
+            // Ošetření odemčení scrollování, pokud bychom překlikli pryč z mapy během zoomu
+            const reelsContainer = document.getElementById('reels-container');
+            if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
@@ -652,7 +656,7 @@ function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
-        tap: false // DŮLEŽITÉ PRO ZABRÁNĚNÍ BLOKOVÁNÍ SCROLLOVÁNÍ V SAFARI
+        tap: false // DŮLEŽITÉ: Zakáže Leafletu blokování scrollování pro Safari iOS
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
@@ -680,7 +684,25 @@ function initMapForReel(index) {
     });
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
-    map.on('zoomend', updateCalibrationShift);
+
+    // CHYTRÝ ZÁMEK SCROLLOVÁNÍ (Smart Scroll Lock)
+    map.on('zoomend', function() {
+        updateCalibrationShift();
+        let currentZoom = map.getZoom();
+        let minZoom = map.getMinZoom();
+        let reelsContainer = document.getElementById('reels-container');
+        
+        if (currentZoom > minZoom + 0.05) {
+            // Přiblíženo: Zakázat scrollování na další postupy, povolit pan mapy
+            if (reelsContainer) reelsContainer.style.overflowY = 'hidden';
+            map.getContainer().style.touchAction = 'none';
+        } else {
+            // Oddáleno: Povolit scrollování
+            if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+            map.getContainer().style.touchAction = 'pan-y';
+        }
+    });
+
     mapInstances[index] = map;
 }
 
@@ -790,8 +812,8 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            // 90 % obrazovky pro maximální přiblížení
-            let targetPixelsY = h * 0.90; 
+            // VRÁCENO NA 82% výšky obrazovky (Zpět menší rezerva, ale mapy stále využijí maximum prostoru)
+            let targetPixelsY = h * 0.82; 
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
             
@@ -812,8 +834,7 @@ function renderMapData(index, geojsonOriginal) {
             
             let pixelScale = Math.pow(2, idealZoom); 
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
-            // Menší padding pro užší vyřezanou masku
-            let routeHalfW = maxAbsX + (40 / pixelScale), routeHalfH = (dist / 2) + (40 / pixelScale);
+            let routeHalfW = maxAbsX + (50 / pixelScale), routeHalfH = (dist / 2) + (50 / pixelScale);
             
             let holeHalfW = Math.max(screenHalfW, routeHalfW), holeHalfH = Math.max(screenHalfH, routeHalfH);
             
@@ -837,7 +858,6 @@ function renderMapData(index, geojsonOriginal) {
     } catch (e) { console.warn("Silent ignore map render error", e); }
 }
 
-// === KALIBRACE VČETNĚ FUNKCE, KTERÁ MINULE VYPADLA ===
 let calibMode = false;
 let calibX = 400;
 let calibY = -300;
@@ -922,12 +942,21 @@ async function startOfflineSync() {
     }
 }
 
+// VRÁCENÁ FUNKCE ANIMACE SRDÍČKA, KTERÁ OPRAVUJE CHYBU PŘI DVOJKLIKU
+function triggerLikeAnimation(index) {
+    let anim = document.getElementById(`like-anim-${index}`);
+    if (anim) {
+        anim.classList.remove('active');
+        void anim.offsetWidth; 
+        anim.classList.add('active');
+    }
+}
+
 function toggleLike(index, btn) {
     btn.classList.toggle('liked');
     if (btn.classList.contains('liked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        let anim = document.getElementById(`like-anim-${index}`);
-        if (anim) { anim.classList.remove('active'); void anim.offsetWidth; anim.classList.add('active'); }
+        triggerLikeAnimation(index);
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
     }
