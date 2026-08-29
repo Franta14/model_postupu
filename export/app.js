@@ -102,24 +102,15 @@ style.innerHTML = `
     }
 }
 
-html, body { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
-    background-color: var(--bg-color) !important; color: var(--text-color) !important; 
-    overflow: hidden; 
-}
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
-#reels-container {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important;
-    overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none;
-}
+#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
 .reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
-.leaflet-container { touch-action: pan-y !important; }
 
-/* FIX DEFORMACE MAPY BĚHEM SCROLLOVÁNÍ */
-.map-clip { position: relative; width: 100%; height: 100%; overflow: hidden; }
-.map-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+/* DŮLEŽITÉ: Touch akce povoluje scrollování a pan v mapě */
+.leaflet-container { touch-action: pan-y !important; }
 
 /* SPODNÍ LIŠTA A IKONKY */
 div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; }
@@ -131,10 +122,7 @@ div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-
 /* STORIES A HLEDÁNÍ */
 .story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
 .search-bar, .search-container, div:has(> input[type="search"]) { background-color: var(--search-bg) !important; border-radius: 12px !important; border: none !important; }
-input[type="search"], input[type="text"] {
-    background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important;
-    -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important;
-}
+input[type="search"], input[type="text"] { background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important; }
 input::placeholder { color: #888 !important; }
 
 /* PILLS A NASTAVENÍ */
@@ -149,31 +137,19 @@ input::placeholder { color: #888 !important; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
 
 /* IG-LIKE SAVED MODE */
-body.saved-mode-active #bottom-nav, 
-body.saved-mode-active .bottom-nav,
-body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
+body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
-#saved-mode-header {
-    position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-    color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer;
-}
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* TUTORIAL OVERLAY */
-#tutorial-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-    color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px);
-}
+#tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px); }
 .tut-item { display: flex; align-items: center; gap: 20px; margin: 25px 20px; font-size: 1.2rem; font-weight: 600; width: 80%; }
 .tut-icon { width: 45px; height: 45px; flex-shrink: 0; }
 `;
 document.head.appendChild(style);
 
-function applyTheme() {
-    document.documentElement.setAttribute('data-theme', userSettings.theme);
-}
+function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
 
 // ==========================================
@@ -206,10 +182,7 @@ function showTutorial() {
             </div>
             <button style="margin-top:50px; padding: 12px 30px; border-radius:25px; background:var(--accent); color:white; border:none; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 15px rgba(179,0,255,0.4);">${t('tutBtn')}</button>
         `;
-        tut.onclick = () => {
-            tut.remove();
-            localStorage.setItem('tutorial_seen', 'true');
-        };
+        tut.onclick = () => { tut.remove(); localStorage.setItem('tutorial_seen', 'true'); };
         document.body.appendChild(tut);
     }
 }
@@ -254,11 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateExploreBadge(document.getElementById('nav-badge'));
             }
 
-            const reelsContainer = document.getElementById('reels-container');
-            if (reelsContainer) {
-                reelsContainer.style.overflowY = 'scroll';
-            }
-
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
@@ -268,9 +236,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (targetId === 'screen-profile') renderProfileSaved();
                     if (targetId === 'screen-settings') renderSettings();
                     
-                    // Bezpečnostní pojistka po návratu domů
-                    if (targetId === 'screen-scroll' && activeIndex !== -1) {
-                        setTimeout(() => activateReel(activeIndex), 150);
+                    // LÉK NA BÍLOU OBRAZOVKU PŘI PŘEPNUTÍ DO FEEDU Z PROFILU
+                    if (targetId === 'screen-scroll') {
+                        setTimeout(() => {
+                            Object.values(mapInstances).forEach(m => {
+                                m.invalidateSize();
+                                if (m.originalMidX !== undefined) {
+                                    m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+                                }
+                            });
+                            if (activeIndex !== -1) activateReel(activeIndex);
+                        }, 50);
                     }
                 } else {
                     screen.classList.remove('active');
@@ -286,16 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(smh);
 
     let startX = 0;
-    document.body.addEventListener('touchstart', e => {
-        if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX;
-    }, {passive: true});
-    
-    document.body.addEventListener('touchend', e => {
-        if (document.body.classList.contains('saved-mode-active')) {
-            if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed();
-        }
-    }, {passive: true});
-    
+    document.body.addEventListener('touchstart', e => { if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX; }, {passive: true});
+    document.body.addEventListener('touchend', e => { if (document.body.classList.contains('saved-mode-active')) { if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed(); } }, {passive: true});
     setTimeout(updateUITexts, 200);
 });
 
@@ -339,9 +307,7 @@ function updateSettings(key, value) {
     if (key === 'theme') applyTheme();
     if (key === 'language' || key === 'pace') {
         let smhTitle = document.getElementById('saved-mode-title');
-        if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) {
-            smhTitle.innerText = t('saved'); 
-        }
+        if (smhTitle && smhTitle.innerText === i18n[userSettings.language === 'cs' ? 'en' : 'cs'].saved) { smhTitle.innerText = t('saved'); }
         
         renderSettings();
         updateUITexts();
@@ -412,13 +378,8 @@ function renderSettings() {
 
     const paceSlider = document.getElementById('pace-slider');
     const paceValue = document.getElementById('pace-value');
-    paceSlider.addEventListener('input', (e) => {
-        paceValue.innerText = formatPace(e.target.value);
-    });
-    paceSlider.addEventListener('change', (e) => {
-        updateSettings('pace', parseInt(e.target.value));
-    });
-
+    paceSlider.addEventListener('input', (e) => { paceValue.innerText = formatPace(e.target.value); });
+    paceSlider.addEventListener('change', (e) => { updateSettings('pace', parseInt(e.target.value)); });
     updateCacheSize();
 }
 
@@ -434,10 +395,7 @@ async function updateCacheSize() {
                 const keys = await cache.keys();
                 for (let req of keys) {
                     const res = await cache.match(req);
-                    if (res) {
-                        const blob = await res.blob();
-                        total += blob.size;
-                    }
+                    if (res) { const blob = await res.blob(); total += blob.size; }
                 }
             }
         } catch(e) { console.warn(e); }
@@ -449,9 +407,7 @@ async function clearAppCache() {
     if (confirm(t('confirmClear'))) {
         if ('caches' in window) {
             const cacheNames = await caches.keys();
-            for (let name of cacheNames) {
-                await caches.delete(name);
-            }
+            for (let name of cacheNames) { await caches.delete(name); }
         }
         updateCacheSize();
         alert(t('cacheCleared'));
@@ -512,8 +468,8 @@ function setupObserver() {
     const rc = document.getElementById('reels-container');
     if (!rc) return;
     
-    // Práh sjednocen na 0.6
-    let options = { root: rc, rootMargin: '0px', threshold: 0.6 };
+    // Observer už nespouští zpožděné centrování do zdi.
+    let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
@@ -628,8 +584,6 @@ function activateReel(index) {
             const panel = document.getElementById('global-variants-panel');
             if (panel) { panel.classList.remove('active'); panel.classList.remove('collapsed'); }
             isPanelOpen = false;
-            
-            // Ochrana před ustřelením při rychlém posunu a otevřených volbách
             if (activeIndex !== -1) {
                 showVariantsForIndex[activeIndex] = false;
                 const prevPostup = postupyData[activeIndex];
@@ -640,20 +594,7 @@ function activateReel(index) {
         }
         activeIndex = index;
     }
-    
-    // Načteme současný postup a ty kolem něj
     preloadReel(index);
-    preloadReel(index + 1);
-    preloadReel(index - 1);
-    
-    // ZÁSAH: Bezpodmínečné vycentrování mapy poté, co se zastaví scrollování
-    setTimeout(() => {
-        let m = mapInstances[index];
-        if (m && m.originalMidX !== undefined) {
-            m.invalidateSize();
-            m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
-        }
-    }, 100);
 }
 
 function preloadReel(i) {
@@ -684,24 +625,27 @@ L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
 function initMapForReel(index) {
     const mapContainer = document.getElementById(`map-${index}`);
     if (!mapContainer) return;
-    
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
         tap: false 
     });
-    
-    // ZÁSAH: Neustálý hlídač rozměrů okna
-    if (window.ResizeObserver) {
-        new ResizeObserver(() => {
-            map.invalidateSize();
-        }).observe(mapContainer);
-    }
-    
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
     map.doubleClickZoom.disable();
-    map.getContainer().style.touchAction = 'pan-y'; 
+    
+    let mc = map.getContainer();
+    mc.style.touchAction = 'pan-y'; 
+    
+    // ZÁKAZ SCROLLOVÁNÍ PŘI ZKOUMÁNÍ DETAILU MAPY (Zablokuje touchmove do posuvníku)
+    const stopProp = (e) => {
+        if (map.getZoom() > map.getMinZoom() + 0.05) {
+            e.stopPropagation();
+        }
+    };
+    mc.addEventListener('touchstart', stopProp, { passive: true });
+    mc.addEventListener('touchmove', stopProp, { passive: false });
+    mc.addEventListener('touchend', stopProp, { passive: true });
     
     let lastClickTime = 0;
     map.on('click', function(e) {
@@ -725,23 +669,8 @@ function initMapForReel(index) {
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    // CHYTRÝ ZÁMEK SCROLLOVÁNÍ PŘI ZOOMU
     map.on('zoomend', function() {
         updateCalibrationShift();
-        let currentZoom = map.getZoom();
-        let minZoom = map.getMinZoom();
-        let reelsContainer = document.getElementById('reels-container');
-        
-        if (currentZoom > minZoom + 0.05) {
-            if (reelsContainer) reelsContainer.style.overflow = 'hidden'; 
-            map.getContainer().style.touchAction = 'none';
-        } else {
-            if (reelsContainer) {
-                reelsContainer.style.overflow = 'auto'; 
-                reelsContainer.style.overflowX = 'hidden';
-            }
-            map.getContainer().style.touchAction = 'pan-y';
-        }
     });
 
     mapInstances[index] = map;
@@ -749,17 +678,10 @@ function initMapForReel(index) {
 
 function renderMapData(index, geojsonOriginal) {
     try {
-        const mContainer = document.getElementById(`map-${index}`);
-        if (!mContainer) return;
-
-        // OCHRANA PROTI BÍLÉ OBRAZOVCE: Pokud se okno ještě reálně nenačetlo na obrazovce, odložíme kreslení mapy o chviličku.
-        if (mContainer.clientHeight === 0) {
-            setTimeout(() => renderMapData(index, geojsonOriginal), 100);
-            return;
-        }
-
         const map = mapInstances[index];
         if (!map) return;
+        
+        let isInitialRender = !currentLayers[index];
         
         if (currentLayers[index]) map.removeLayer(currentLayers[index]);
         if (currentOverlays[index]) map.removeLayer(currentOverlays[index]);
@@ -781,6 +703,13 @@ function renderMapData(index, geojsonOriginal) {
         });
         
         if (!currentTileLayers[index] && allLngs.length > 0) {
+            let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+            let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+            let marginLng = Math.max(100, (maxLng - minLng) * 0.50);
+            let marginLat = Math.max(100, (maxLat - minLat) * 0.50);
+            let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
+            
+            map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
                 tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5,
                 noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
@@ -811,6 +740,7 @@ function renderMapData(index, geojsonOriginal) {
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
                 
+                const mContainer = document.getElementById(`map-${index}`);
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
                 
                 let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
@@ -885,19 +815,11 @@ function renderMapData(index, geojsonOriginal) {
             let mask = L.polygon([outerRing, innerRing], { color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane' });
             overlays.addLayer(mask);
             
-            // Záloha původního středu, abychom měli k čemu centrovat
-            map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
-            
-            // Okamžité vycentrování mapy hned při vykreslení
-            map.setView([midY, midX], idealZoom, { animate: false });
-            
-            // Bezpečnostní vycentrování i o moment později pro jistotu
-            setTimeout(() => {
-                if (index === activeIndex) {
-                    map.invalidateSize();
-                }
+            // CENTROVÁNÍ POUZE PŘI PRVNÍM VYKRESLENÍ (Eliminuje uskakování při otevírání Volbách)
+            if (isInitialRender) {
+                map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
                 map.setView([midY, midX], idealZoom, { animate: false });
-            }, 50);
+            }
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
 }
@@ -1245,15 +1167,22 @@ function openFeed(map_id, isSavedMode) {
     }
     document.getElementById('screen-scroll').classList.add('active');
 
-    // Mimořádně důležité - po zobrazení okna ho necháme načíst v CSS a teprve poté vycentrujeme.
-    setTimeout(() => {
-        const reelsContainer = document.getElementById('reels-container');
-        const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
-        if (targetReel && reelsContainer) {
+    const reelsContainer = document.getElementById('reels-container');
+    const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
+    if (targetReel && reelsContainer) {
+        setTimeout(() => {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
+            
+            // Masivní re-kalkulace všech map po otevření Feed zóny z Profilu
+            Object.values(mapInstances).forEach(m => {
+                m.invalidateSize();
+                if (m.originalMidX !== undefined) {
+                    m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+                }
+            });
             activateReel(firstVisibleIndex);
-        }
-    }, 150);
+        }, 50); 
+    }
 }
 
 function closeSavedFeed() {
