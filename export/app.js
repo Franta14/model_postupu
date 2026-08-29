@@ -641,7 +641,8 @@ function initMapForReel(index) {
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
-        tap: false 
+        tap: false,
+        maxBoundsViscosity: 1.0 // Zabrání "gumovému" přetahování mimo okraje
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
@@ -720,8 +721,10 @@ function renderMapData(index, geojsonOriginal) {
         if (!currentTileLayers[index] && allLngs.length > 0) {
             let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
             let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-            let marginLng = Math.max(100, (maxLng - minLng) * 0.50);
-            let marginLat = Math.max(100, (maxLat - minLat) * 0.50);
+            
+            // Minimalizovaný margin (5 %) místo původních 50 %
+            let marginLng = (maxLng - minLng) * 0.05;
+            let marginLat = (maxLat - minLat) * 0.05;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
             
             map.setMaxBounds(tileBounds);
