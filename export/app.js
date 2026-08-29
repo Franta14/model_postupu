@@ -643,7 +643,8 @@ function initMapForReel(index) {
         zoomControl: false, gestureHandling: false, inertia: false,
         tap: false,
         maxBoundsViscosity: 1.0,
-        dragging: false // Výchozí stav: posouvání zakázáno
+        dragging: false, // Výchozí stav: posouvání zakázáno
+        bounceAtZoomLimits: false // Zakáže "gumové" oddalování pod povolený minZoom
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
@@ -699,6 +700,7 @@ function initMapForReel(index) {
 
     mapInstances[index] = map;
 }
+
 
 function renderMapData(index, geojsonOriginal) {
     try {
