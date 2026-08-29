@@ -109,8 +109,9 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 #reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
 .reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
 
-/* DŮLEŽITÉ: Touch akce povoluje scrollování a pan v mapě */
-.leaflet-container { touch-action: pan-y !important; }
+/* DŮLEŽITÉ: Touch akce povoluje scrollování a pinch zoom v mapě */
+.leaflet-container { touch-action: pan-y pinch-zoom !important; }
+.leaflet-container.zoomed-in { touch-action: none !important; }
 
 /* SPODNÍ LIŠTA A IKONKY */
 div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; }
@@ -580,6 +581,18 @@ function activateReel(index) {
     }
 
     if (activeIndex !== index) {
+        // Resetovat zoom předešlé mapy, aby nezůstal viset overflowY='hidden' na kontejneru
+        if (activeIndex !== -1 && mapInstances[activeIndex]) {
+            let oldMap = mapInstances[activeIndex];
+            if (oldMap.getZoom() > oldMap.getMinZoom() + 0.05) {
+                if (oldMap.originalMidX !== undefined) {
+                    oldMap.setView([oldMap.originalMidY, oldMap.originalMidX], oldMap.originalZoom, { animate: false });
+                } else {
+                    oldMap.setZoom(oldMap.getMinZoom(), { animate: false });
+                }
+            }
+        }
+
         if (isPanelOpen) {
             const panel = document.getElementById('global-variants-panel');
             if (panel) { panel.classList.remove('active'); panel.classList.remove('collapsed'); }
@@ -635,17 +648,6 @@ function initMapForReel(index) {
     map.doubleClickZoom.disable();
     
     let mc = map.getContainer();
-    mc.style.touchAction = 'pan-y'; 
-    
-    // ZÁKAZ SCROLLOVÁNÍ PŘI ZKOUMÁNÍ DETAILU MAPY (Zablokuje touchmove do posuvníku)
-    const stopProp = (e) => {
-        if (map.getZoom() > map.getMinZoom() + 0.05) {
-            e.stopPropagation();
-        }
-    };
-    mc.addEventListener('touchstart', stopProp, { passive: true });
-    mc.addEventListener('touchmove', stopProp, { passive: false });
-    mc.addEventListener('touchend', stopProp, { passive: true });
     
     let lastClickTime = 0;
     map.on('click', function(e) {
@@ -671,6 +673,19 @@ function initMapForReel(index) {
 
     map.on('zoomend', function() {
         updateCalibrationShift();
+
+        const reelsContainer = document.getElementById('reels-container');
+        const minZoom = map.getMinZoom();
+        
+        if (map.getZoom() > minZoom + 0.05) {
+            // Přiblíženo - zablokovat scrollování reels a povolit pan do všech směrů
+            if (reelsContainer) reelsContainer.style.overflowY = 'hidden';
+            mc.classList.add('zoomed-in');
+        } else {
+            // Oddáleno - povolit scrollování reels
+            if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+            mc.classList.remove('zoomed-in');
+        }
     });
 
     mapInstances[index] = map;
