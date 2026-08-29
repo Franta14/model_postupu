@@ -722,13 +722,13 @@ function renderMapData(index, geojsonOriginal) {
             let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
             let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
             
-            // Zajištění dostatečného okraje i pro velmi úzké/rovné postupy
             let spanLng = maxLng - minLng;
             let spanLat = maxLat - minLat;
             let maxSpan = Math.max(spanLng, spanLat, 200); 
             
-            let marginLng = maxSpan * 0.25;
-            let marginLat = maxSpan * 0.25;
+            // Zvětšená rezerva (45 %), aby rohy zrotované mapy nenarazily do maxBounds limitu
+            let marginLng = maxSpan * 0.45;
+            let marginLat = maxSpan * 0.45;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
             
             map.setMaxBounds(tileBounds);
@@ -824,7 +824,9 @@ function renderMapData(index, geojsonOriginal) {
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
             let routeHalfW = maxAbsX + (50 / pixelScale), routeHalfH = (dist / 2) + (50 / pixelScale);
             
-            let holeHalfW = Math.max(screenHalfW, routeHalfW), holeHalfH = Math.max(screenHalfH, routeHalfH);
+            // Přidání 15% rezervy, aby se maska nedostala do vizuálního pole obrazovky
+            let holeHalfW = Math.max(screenHalfW * 1.15, routeHalfW);
+            let holeHalfH = Math.max(screenHalfH * 1.15, routeHalfH);
             
             let innerRing = [
                 [midY + uy * holeHalfH + vy * holeHalfW, midX + ux * holeHalfH + vx * holeHalfW],
@@ -844,7 +846,6 @@ function renderMapData(index, geojsonOriginal) {
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
 }
-
 
 let calibMode = false;
 let calibX = 400;
