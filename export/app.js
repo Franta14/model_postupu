@@ -642,7 +642,8 @@ function initMapForReel(index) {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
         tap: false,
-        maxBoundsViscosity: 1.0 // Zabrání "gumovému" přetahování mimo okraje
+        maxBoundsViscosity: 1.0,
+        dragging: false // Výchozí stav: posouvání zakázáno
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
@@ -679,13 +680,20 @@ function initMapForReel(index) {
         const minZoom = map.getMinZoom();
         
         if (map.getZoom() > minZoom + 0.05) {
-            // Přiblíženo - zablokovat scrollování reels a povolit pan do všech směrů
+            // Přiblíženo - zablokovat scrollování reels a povolit panování
             if (reelsContainer) reelsContainer.style.overflowY = 'hidden';
             mc.classList.add('zoomed-in');
+            map.dragging.enable();
         } else {
-            // Oddáleno - povolit scrollování reels
+            // Oddáleno - povolit scrollování reels a zakázat panování
             if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
             mc.classList.remove('zoomed-in');
+            map.dragging.disable();
+            
+            // Pro jistotu vycentrovat, pokud uživatel mapu při oddálení zanechal posunutou
+            if (map.originalMidX !== undefined) {
+                map.panTo([map.originalMidY, map.originalMidX], { animate: false });
+            }
         }
     });
 
