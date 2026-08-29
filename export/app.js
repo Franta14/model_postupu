@@ -722,9 +722,13 @@ function renderMapData(index, geojsonOriginal) {
             let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
             let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
             
-            // Minimalizovaný margin (5 %) místo původních 50 %
-            let marginLng = (maxLng - minLng) * 0.05;
-            let marginLat = (maxLat - minLat) * 0.05;
+            // Zajištění dostatečného okraje i pro velmi úzké/rovné postupy
+            let spanLng = maxLng - minLng;
+            let spanLat = maxLat - minLat;
+            let maxSpan = Math.max(spanLng, spanLat, 200); 
+            
+            let marginLng = maxSpan * 0.25;
+            let marginLat = maxSpan * 0.25;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
             
             map.setMaxBounds(tileBounds);
@@ -833,7 +837,6 @@ function renderMapData(index, geojsonOriginal) {
             let mask = L.polygon([outerRing, innerRing], { color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane' });
             overlays.addLayer(mask);
             
-            // CENTROVÁNÍ POUZE PŘI PRVNÍM VYKRESLENÍ (Eliminuje uskakování při otevírání Volbách)
             if (isInitialRender) {
                 map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
                 map.setView([midY, midX], idealZoom, { animate: false });
@@ -841,6 +844,7 @@ function renderMapData(index, geojsonOriginal) {
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
 }
+
 
 let calibMode = false;
 let calibX = 400;
