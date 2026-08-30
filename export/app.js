@@ -143,11 +143,12 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
-/* TUTORIAL OVERLAY */
-#tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif; pointer-events: auto; backdrop-filter: blur(5px); }
-.tut-item { display: flex; align-items: center; gap: 20px; margin: 25px 20px; font-size: 1.2rem; font-weight: 600; width: 80%; }
-.tut-icon { width: 45px; height: 45px; flex-shrink: 0; }
-`;
+/* TUTORIAL OVERLAY (NOVÝ INTERAKTIVNÍ) */
+#interactive-tutorial { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; pointer-events: auto; }
+#tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
+#tut-content { position: absolute; left: 5%; width: 90%; color: white; text-align: center; transition: all 0.4s ease-in-out; pointer-events: none; font-size: 1.1rem; font-weight: 600; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
+.tut-hint { margin-top: 20px; font-size: 0.85rem; font-weight: normal; opacity: 0.6; }
+
 document.head.appendChild(style);
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
@@ -165,27 +166,120 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    if (!localStorage.getItem('tutorial_seen')) {
-        const tut = document.createElement('div');
-        tut.id = 'tutorial-overlay';
-        tut.innerHTML = `
-            <div class="tut-item">
-                <svg class="tut-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path></svg>
-                <span>${t('tutSwipe')}</span>
-            </div>
-            <div class="tut-item">
-                <svg class="tut-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
-                <span>${t('tutLike')}</span>
-            </div>
-            <div class="tut-item">
-                <svg class="tut-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                <span>${t('tutOptions')}</span>
-            </div>
-            <button style="margin-top:50px; padding: 12px 30px; border-radius:25px; background:var(--accent); color:white; border:none; font-size:1.2rem; font-weight:bold; cursor:pointer; box-shadow: 0 4px 15px rgba(179,0,255,0.4);">${t('tutBtn')}</button>
-        `;
-        tut.onclick = () => { tut.remove(); localStorage.setItem('tutorial_seen', 'true'); };
-        document.body.appendChild(tut);
+    // Prozatím zakomentováno, aby se tutoriál ukázal pokaždé při testování
+    // if (localStorage.getItem('tutorial_seen')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'interactive-tutorial';
+    
+    const hole = document.createElement('div');
+    hole.id = 'tut-hole';
+    
+    const content = document.createElement('div');
+    content.id = 'tut-content';
+    
+    overlay.appendChild(hole);
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+
+    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16M19 13l-7 7-7-7"/></svg>`;
+    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg>`;
+
+    let currentStep = 0;
+    
+    // Definice jednotlivých kroků tutoriálu
+    const steps = [
+        { 
+            msg: "Vítej! Tohle je hlavní feed postupů.<br>Potáhni nahoru nebo dolů pro přesun na další.", 
+            selector: null // Null znamená, že se to vycentruje doprostřed bez díry
+        },
+        { 
+            msg: "Pohybem dvou prstů mapu přiblížíš.<br>Až bude přiblížená, můžeš s ní volně posouvat a detailně ji zkoumat.", 
+            selector: null 
+        },
+        { 
+            msg: "Rychlým dvojklikem mapu opět oddálíš.<br>Pokud už oddálená je, dáš tím postupu 'To se mi líbí'.", 
+            selector: ".like-btn" 
+        },
+        { 
+            msg: "Zde si můžeš své postupy filtrovat podle konkrétních terénů a hledat inspiraci.", 
+            pre: () => document.querySelector('.nav-btn[data-target="screen-profile"]')?.click(),
+            selector: ".profile-pills-container", 
+            delay: 400 // Čekání na překreslení profilu
+        },
+        { 
+            msg: "Tady si upravíš své reálné tempo na silnici. Zpřesní to výpočty a odhady časů variant.", 
+            pre: () => document.querySelector('.nav-btn[data-target="screen-settings"]')?.click(),
+            selector: "#pace-slider", 
+            delay: 400 
+        },
+        { 
+            msg: "To je vše! Nyní se můžeš pustit do prohlížení.", 
+            pre: () => document.querySelector('.nav-btn[data-target="screen-scroll"]')?.click(),
+            selector: null, 
+            delay: 400 
+        }
+    ];
+
+    function renderStep() {
+        if (currentStep >= steps.length) {
+            overlay.remove();
+            localStorage.setItem('tutorial_seen', 'true');
+            return;
+        }
+
+        let step = steps[currentStep];
+        
+        // Pokud má krok přednastavenou akci (např. přepnutí tabu), provedeme ji
+        if (step.pre) step.pre();
+
+        // Počkáme na případné vykreslení DOMu
+        setTimeout(() => {
+            let el = step.selector ? document.querySelector(step.selector) : null;
+            let finalMsg = step.msg;
+
+            if (el) {
+                let rect = el.getBoundingClientRect();
+                let pad = 12;
+                
+                // Přesun díry na cíl
+                hole.style.opacity = '1';
+                hole.style.width = (rect.width + pad * 2) + 'px';
+                hole.style.height = (rect.height + pad * 2) + 'px';
+                hole.style.left = (rect.left - pad) + 'px';
+                hole.style.top = (rect.top - pad) + 'px';
+                hole.style.borderRadius = '16px'; // Zaoblení výřezu
+
+                // Umístění textu a šipky podle toho, kde se cíl nachází na obrazovce
+                if (rect.top > window.innerHeight / 2) {
+                    content.style.top = (rect.top - pad - 100) + 'px'; // Text nad výřezem
+                    finalMsg = step.msg + arrowDown;
+                } else {
+                    content.style.top = (rect.bottom + pad + 20) + 'px'; // Text pod výřezem
+                    finalMsg = arrowUp + step.msg;
+                }
+            } else {
+                // Pokud nemáme cíl, vycentrujeme text a skryjeme výřez
+                hole.style.opacity = '0';
+                hole.style.width = '0px'; 
+                hole.style.height = '0px';
+                hole.style.left = '50%'; 
+                hole.style.top = '50%';
+                
+                content.style.top = '40%';
+            }
+            
+            content.innerHTML = finalMsg + '<div class="tut-hint">Klikni kamkoliv pro pokračování</div>';
+        }, step.delay || 50);
     }
+
+    // Kliknutím kamkoliv se posuneš na další krok
+    overlay.addEventListener('click', () => {
+        currentStep++;
+        renderStep();
+    });
+
+    renderStep(); // Spuštění prvního kroku
 }
 
 // ==========================================
