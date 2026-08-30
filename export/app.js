@@ -148,6 +148,7 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 #tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
 #tut-content { position: absolute; left: 5%; width: 90%; color: white; text-align: center; transition: all 0.4s ease-in-out; pointer-events: none; font-size: 1.1rem; font-weight: 600; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
 .tut-hint { margin-top: 20px; font-size: 0.85rem; font-weight: normal; opacity: 0.6; }
+`;
 
 document.head.appendChild(style);
 
