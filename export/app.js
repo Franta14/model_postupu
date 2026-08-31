@@ -102,7 +102,7 @@ style.innerHTML = `
     }
 }
 
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
@@ -114,8 +114,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 .leaflet-container.zoomed-in { touch-action: none !important; }
 
 /* SPODNÍ LIŠTA A IKONKY */
-div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; }
-.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; }
+div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; display: flex; justify-content: space-around; align-items: center; }
+.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; background: transparent; border: none; padding: 10px; cursor: pointer; flex: 1; text-align: center; }
 .nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
 .nav-btn svg { stroke: var(--nav-icon-color); }
 .nav-btn.active svg { stroke: var(--nav-icon-color); }
@@ -136,7 +136,8 @@ input::placeholder { color: #888 !important; }
 .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); box-sizing: border-box; width: 100%; }
 .settings-row select, .settings-btn { background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
-#screen-settings { box-sizing: border-box; overflow-x: hidden; width: 100%; }
+#screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: 100dvh; padding-bottom: 80px; overflow-y: auto; display: none; }
+#screen-settings.active, #screen-chat.active { display: block; }
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
@@ -144,7 +145,7 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
-/* TUTORIAL OVERLAY (NATIVNÍ & MINIMALISTICKÝ) */
+/* TUTORIAL OVERLAY */
 #interactive-tutorial { 
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
     z-index: 10000; overflow: hidden; pointer-events: auto; transition: opacity 0.4s; 
@@ -155,19 +156,15 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 }
 #tut-hotspot { 
     position: absolute; z-index: 10005; cursor: pointer; 
-    background: transparent; display: none; border-radius: 12px; 
-    pointer-events: auto;
+    background: transparent; display: none; border-radius: 12px; pointer-events: auto;
 }
 #tut-content { 
     position: absolute; left: 10%; width: 80%; color: white; text-align: center; 
     transition: all 0.3s ease-in-out; pointer-events: none; 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1.15rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px;
-    text-shadow: 0px 2px 5px rgba(0,0,0,0.95), 0px 4px 15px rgba(0,0,0,0.8);
-    z-index: 10002;
+    text-shadow: 0px 2px 5px rgba(0,0,0,0.95), 0px 4px 15px rgba(0,0,0,0.8); z-index: 10002;
 }
 
-/* Zamezení prokliknutí jinam během tutoriálu */
 body.tutorial-active button:not(.tut-allow-interaction),
 body.tutorial-active .nav-btn:not(.tut-allow-interaction),
 body.tutorial-active .story-item:not(.tut-allow-interaction),
@@ -175,13 +172,67 @@ body.tutorial-active input:not(.tut-allow-interaction),
 body.tutorial-active select:not(.tut-allow-interaction) {
     pointer-events: none !important;
 }
-.tut-allow-interaction {
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 10002 !important;
+.tut-allow-interaction { pointer-events: auto !important; position: relative !important; z-index: 10006 !important; }
+
+/* --------------------------------- */
+/* NOVÁ SOCIÁLNÍ VRSTVA (Komentáře)  */
+/* --------------------------------- */
+#comments-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+#comments-overlay.active { opacity: 1; pointer-events: auto; }
+
+#comments-panel { 
+    position: fixed; bottom: 0; left: 0; right: 0; height: 65vh; 
+    background: var(--bg-color); z-index: 9999; border-radius: 20px 20px 0 0; 
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1); 
+    display: flex; flex-direction: column; box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
 }
+#comments-panel.active { transform: translateY(0); }
 
+.comments-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1.1rem; }
+.comments-close { cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.6; padding: 0 5px; }
+.comments-list { flex: 1; overflow-y: auto; padding: 15px 20px; display: flex; flex-direction: column; gap: 15px; }
+.comment-item { display: flex; gap: 12px; }
+.comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: #ccc; flex-shrink: 0; overflow: hidden; }
+.comment-body { display: flex; flex-direction: column; font-size: 0.9rem; }
+.comment-author { font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
+.comment-time { font-size: 0.75rem; opacity: 0.5; font-weight: 400; }
+.comments-input-area { padding: 15px 20px 25px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: var(--bg-color); }
+.comments-input-area input { flex: 1; padding: 10px 15px !important; border-radius: 20px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; }
+.comments-input-area button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
 
+/* --------------------------------- */
+/* NOVÁ SOCIÁLNÍ VRSTVA (Chat Zprávy)*/
+/* --------------------------------- */
+.chat-header-main { padding: 20px; font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid var(--border-color); }
+.chat-list { display: flex; flex-direction: column; }
+.chat-row { display: flex; align-items: center; gap: 15px; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+.chat-row:active { background: var(--secondary-bg); }
+.chat-row-avatar { width: 50px; height: 50px; border-radius: 50%; background: #ddd; overflow: hidden; }
+.chat-row-info { flex: 1; display: flex; flex-direction: column; }
+.chat-row-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
+.chat-row-msg { font-size: 0.9rem; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.chat-row-time { font-size: 0.8rem; opacity: 0.4; }
+
+/* Aktivní Konverzace */
+#chat-conversation { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: var(--bg-color); z-index: 10005; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+#chat-conversation.active { transform: translateX(0); }
+.conv-header { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1.1rem; gap: 15px; background: var(--bg-color); }
+.conv-back { cursor: pointer; opacity: 0.7; }
+.conv-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: var(--secondary-bg); }
+.msg-bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; }
+.msg-incoming { background: var(--bg-color); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+.msg-outgoing { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+/* Rich Link (Nasdílená mapa v chatu) */
+.rich-link-card { width: 220px; border-radius: 16px; overflow: hidden; background: var(--bg-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; border: 1px solid var(--border-color); margin-top: 5px; align-self: flex-start;}
+.rich-link-img { width: 100%; height: 120px; background-size: cover; background-position: center; position: relative; }
+.rich-link-info { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.rich-link-title { font-weight: 700; font-size: 0.95rem; color: var(--text-color); }
+.rich-link-sub { font-size: 0.8rem; opacity: 0.6; color: var(--text-color); }
+
+.conv-input { padding: 15px 20px 25px 20px; background: var(--bg-color); display: flex; gap: 10px; border-top: 1px solid var(--border-color); }
+.conv-input input { flex: 1; padding: 10px 15px !important; border-radius: 20px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; }
+.conv-input button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
 `;
 document.head.appendChild(style);
 
@@ -201,7 +252,7 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Pro produkci odkomentuj tento řádek, teď je zakomentováno pro trvalé zobrazování:
+    // Pro produkci odkomentuj, teď je zakomentováno pro testování:
     // if (localStorage.getItem('tutorial_seen')) return;
 
     document.body.classList.add('tutorial-active');
@@ -218,7 +269,6 @@ function showTutorial() {
     const content = document.createElement('div');
     content.id = 'tut-content';
     
-    // Panel chránící spodní lištu před omyly během nativního scrollování a přibližování
     const navBlocker = document.createElement('div');
     navBlocker.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:80px; z-index:10001; display:none; pointer-events: auto;';
     
@@ -231,7 +281,6 @@ function showTutorial() {
     let currentStep = 0;
     const navBtns = document.querySelectorAll('.nav-btn');
     
-    // Čistě informativní texty bez vybízejících pádů.
     const steps = [
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
@@ -281,7 +330,6 @@ function showTutorial() {
             delay: 100
         },
         {
-            // Krok, kdy se odkryje obrazovka a je vidět klasické UI voleb
             undarken: true,
             selector: null,
             msg: "Zde je zobrazeno porovnání. Aplikace časy přepočítává přímo na míru tvému tempu.",
@@ -348,7 +396,6 @@ function showTutorial() {
         let step = steps[currentStep];
         if (step.pre) step.pre();
 
-        // Ošetření odčernění (pro panel voleb)
         if (step.undarken) {
             hole.style.boxShadow = 'none';
         } else {
@@ -357,9 +404,8 @@ function showTutorial() {
 
         setTimeout(() => {
             let el = getTargetElement(step.selector);
-            let pad = 8;
+            let pad = 12;
             
-            // Logika elegantního rozvržení textu
             if (el && el.getBoundingClientRect().width > 0) {
                 let rect = el.getBoundingClientRect();
                 
@@ -405,7 +451,6 @@ function showTutorial() {
             overlay.onclick = null; 
             hotspot.onclick = null;
             
-            // Režimy interakce - "native_..." propustí interakci na samotnou mapu/slider
             if (step.action === 'click_anywhere' || step.action === 'end') {
                 overlay.style.pointerEvents = 'auto';
                 navBlocker.style.display = 'none';
@@ -492,8 +537,145 @@ function showTutorial() {
 }
 
 // ==========================================
-// 5. INICIALIZACE APLIKACE
+// 5. INICIALIZACE APLIKACE A UI SOCIÁLNÍCH FUNKCÍ
 // ==========================================
+function injectChatAndCommentsUI() {
+    // Přidání 5. ikony (Zprávy) do spodního menu, pokud tam ještě není
+    const navContainer = document.querySelector('nav') || document.querySelector('.bottom-nav');
+    if (navContainer && navContainer.querySelectorAll('.nav-btn').length === 4) {
+        const chatBtn = document.createElement('button');
+        chatBtn.className = 'nav-btn';
+        chatBtn.setAttribute('data-target', 'screen-chat');
+        // Ikonka "Zprávy/Paper Plane" pro Instagram feel
+        chatBtn.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`;
+        
+        // Vložení před profil
+        const profileBtn = navContainer.querySelector('[data-target="screen-profile"]');
+        if (profileBtn) navContainer.insertBefore(chatBtn, profileBtn);
+        else navContainer.appendChild(chatBtn);
+    }
+
+    // Vygenerování globálního panelu pro Komentáře
+    const commentsOverlay = document.createElement('div');
+    commentsOverlay.id = 'comments-overlay';
+    commentsOverlay.onclick = closeComments;
+
+    const commentsPanel = document.createElement('div');
+    commentsPanel.id = 'comments-panel';
+    commentsPanel.innerHTML = `
+        <div class="comments-header">Komentáře <span class="comments-close" onclick="closeComments()">&times;</span></div>
+        <div class="comments-list">
+            <!-- Dummy komentáře -->
+            <div class="comment-item">
+                <div class="comment-avatar" style="background-image:url('https://i.pravatar.cc/100?img=11'); background-size:cover;"></div>
+                <div class="comment-body">
+                    <div class="comment-author">Tomas_bez <span class="comment-time">2h</span></div>
+                    <div class="comment-text">Ty jo, ta levá varianta vypadá rychlejší, zkoušel to někdo? 🤔</div>
+                </div>
+            </div>
+            <div class="comment-item">
+                <div class="comment-avatar" style="background-image:url('https://i.pravatar.cc/100?img=5'); background-size:cover;"></div>
+                <div class="comment-body">
+                    <div class="comment-author">Klara123 <span class="comment-time">5h</span></div>
+                    <div class="comment-text">Šla jsem rovně a bylo tam hrozný hustníkové peklo... Doporučuju obíhat. 🌲🏃‍♀️</div>
+                </div>
+            </div>
+        </div>
+        <div class="comments-input-area">
+            <input type="text" placeholder="Přidat komentář...">
+            <button><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        </div>
+    `;
+    document.body.appendChild(commentsOverlay);
+    document.body.appendChild(commentsPanel);
+}
+
+function renderChatScreen() {
+    let screen = document.getElementById('screen-chat');
+    if (!screen) {
+        screen = document.createElement('div');
+        screen.id = 'screen-chat';
+        screen.className = 'app-screen';
+        document.body.appendChild(screen);
+    }
+    
+    screen.innerHTML = `
+        <div class="chat-header-main">Zprávy</div>
+        <div class="chat-list">
+            <div class="chat-row" onclick="openChatConversation('Karel Novák')">
+                <div class="chat-row-avatar" style="background-image:url('https://i.pravatar.cc/100?img=33'); background-size:cover;"></div>
+                <div class="chat-row-info">
+                    <div class="chat-row-name">Karel Novák</div>
+                    <div class="chat-row-msg">Koukej na tuhle volbu na Homolce!</div>
+                </div>
+                <div class="chat-row-time">1h</div>
+            </div>
+            <div class="chat-row" onclick="openChatConversation('Jana Dvořáková')">
+                <div class="chat-row-avatar" style="background-image:url('https://i.pravatar.cc/100?img=44'); background-size:cover;"></div>
+                <div class="chat-row-info">
+                    <div class="chat-row-name">Jana Dvořáková</div>
+                    <div class="chat-row-msg">Díky za tip, pomohlo to. 🔥</div>
+                </div>
+                <div class="chat-row-time">Včera</div>
+            </div>
+        </div>
+    `;
+
+    // Pokud neexistuje okno konverzace, vytvoříme ho
+    if (!document.getElementById('chat-conversation')) {
+        const conv = document.createElement('div');
+        conv.id = 'chat-conversation';
+        conv.innerHTML = `
+            <div class="conv-header">
+                <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+                <div id="conv-name">Karel Novák</div>
+            </div>
+            <div class="conv-messages">
+                <div class="msg-bubble msg-incoming">Zdar! Jak jsi běžel tu trojku na Homolce? Já tam nechal aspoň minutu. 🤦‍♂️</div>
+                <div class="msg-bubble msg-outgoing">Ahoj, já šel úplně zleva po cestě, bylo to mnohem čistší. Koukni na to:</div>
+                
+                <!-- Nasimulovaná Rich Link kartička, která po kliknutí hodí uživatele přímo do feedu na danou mapu -->
+                <div class="rich-link-card" onclick="openSharedRoute('homolka')">
+                    <div class="rich-link-img" style="background-image: url('tiles/3/1/2.png')"></div>
+                    <div class="rich-link-info">
+                        <div class="rich-link-title">Homolka</div>
+                        <div class="rich-link-sub">3240 m vzdušně • 8 postupů</div>
+                    </div>
+                </div>
+            </div>
+            <div class="conv-input">
+                <input type="text" placeholder="Napsat zprávu...">
+                <button><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+            </div>
+        `;
+        document.body.appendChild(conv);
+    }
+}
+
+function openChatConversation(name) {
+    document.getElementById('conv-name').innerText = name;
+    document.getElementById('chat-conversation').classList.add('active');
+}
+
+function closeChatConversation() {
+    document.getElementById('chat-conversation').classList.remove('active');
+}
+
+function openSharedRoute(mapId) {
+    closeChatConversation();
+    openFeed(mapId, false);
+}
+
+function openComments(index) {
+    document.getElementById('comments-overlay').classList.add('active');
+    document.getElementById('comments-panel').classList.add('active');
+}
+
+function closeComments() {
+    document.getElementById('comments-overlay').classList.remove('active');
+    document.getElementById('comments-panel').classList.remove('active');
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     try {
         let originalUpdatePosition = L.Draggable.prototype._updatePosition;
@@ -518,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     } catch (e) {}
 
-    loadData();
+    injectChatAndCommentsUI(); // Inicializace nových UI komponent
 
     const navButtons = document.querySelectorAll('.nav-btn');
     const screens = document.querySelectorAll('.app-screen');
@@ -539,6 +721,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     screen.classList.add('active');
                     if (targetId === 'screen-profile') renderProfileSaved();
                     if (targetId === 'screen-settings') renderSettings();
+                    if (targetId === 'screen-chat') renderChatScreen();
                     
                     if (targetId === 'screen-scroll') {
                         setTimeout(() => {
@@ -567,6 +750,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let startX = 0;
     document.body.addEventListener('touchstart', e => { if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX; }, {passive: true});
     document.body.addEventListener('touchend', e => { if (document.body.classList.contains('saved-mode-active')) { if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed(); } }, {passive: true});
+    
+    loadData();
     setTimeout(updateUITexts, 200);
 });
 
@@ -589,6 +774,7 @@ function loadData() {
             renderExploreGrid();
             setupExploreStories();
             renderProfileSaved();
+            renderChatScreen(); // Předgenerujeme chat screen
             updateUITexts(); 
             
             setTimeout(() => {
@@ -740,6 +926,7 @@ function buildReels() {
             ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
             : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
 
+        // Přidána ikonka pro KOMENTÁŘE mezi like a share
         reel.innerHTML = `
             <div class="map-clip" id="clip-${index}">
                 <div class="map-container" id="map-${index}"></div>
@@ -749,8 +936,9 @@ function buildReels() {
             </div>
             <div class="reel-actions">
                 <button class="action-btn like-btn" onclick="toggleLike(${index}, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
-                <button class="${bookmarkClass}" onclick="toggleBookmark(${index}, this)">${bookmarkSvg}</button>
+                <button class="action-btn comment-btn" onclick="openComments(${index})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></button>
                 <button class="action-btn share-btn" onclick="sharePostup(${index})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+                <button class="${bookmarkClass}" onclick="toggleBookmark(${index}, this)">${bookmarkSvg}</button>
             </div>
             <div class="reel-ui">
                 <div class="reel-header">
@@ -950,7 +1138,7 @@ function initMapForReel(index) {
     });
     map.createPane('maskPane');
     map.getPane('maskPane').style.zIndex = 250; 
-    map.doubleClickZoom.disable(); // Původní Leaflet double click zoom se vypne
+    map.doubleClickZoom.disable();
     
     let mc = map.getContainer();
     
@@ -958,7 +1146,6 @@ function initMapForReel(index) {
     map.on('click', function(e) {
         let currentTime = Date.now();
         if (currentTime - lastClickTime < 400) {
-            // Tohle je náš vlastní Double Click handler
             let currentZoom = map.getZoom();
             let minZoom = map.getMinZoom();
             if (currentZoom > minZoom + 0.05) {
