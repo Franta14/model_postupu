@@ -167,62 +167,6 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Prozatím zakomentováno, aby se tutoriál ukázal pokaždé při testování
-    // if (localStorage.getItem('tutorial_seen')) return;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'interactive-tutorial';
-    
-    const hole = document.createElement('div');
-    hole.id = 'tut-hole';
-    
-    const content = document.createElement('div');
-    content.id = 'tut-content';
-    
-    overlay.appendChild(hole);
-    overlay.appendChild(content);
-    document.body.appendChild(overlay);
-
-    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16M19 13l-7 7-7-7"/></svg>`;
-    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg>`;
-
-    let currentStep = 0;
-    
-    // Definice jednotlivých kroků tutoriálu
-    const steps = [
-        { 
-            msg: "Vítej! Tohle je hlavní feed postupů.<br>Potáhni nahoru nebo dolů pro přesun na další.", 
-            selector: null // Null znamená, že se to vycentruje doprostřed bez díry
-        },
-        { 
-            msg: "Pohybem dvou prstů mapu přiblížíš.<br>Až bude přiblížená, můžeš s ní volně posouvat a detailně ji zkoumat.", 
-            selector: null 
-        },
-        { 
-            msg: "Rychlým dvojklikem mapu opět oddálíš.<br>Pokud už oddálená je, dáš tím postupu 'To se mi líbí'.", 
-            selector: ".like-btn" 
-        },
-        { 
-            msg: "Zde si můžeš své postupy filtrovat podle konkrétních terénů a hledat inspiraci.", 
-            pre: () => document.querySelector('.nav-btn[data-target="screen-profile"]')?.click(),
-            selector: ".profile-pills-container", 
-            delay: 400 // Čekání na překreslení profilu
-        },
-        { 
-            msg: "Tady si upravíš své reálné tempo na silnici. Zpřesní to výpočty a odhady časů variant.", 
-            pre: () => document.querySelector('.nav-btn[data-target="screen-settings"]')?.click(),
-            selector: "#pace-slider", 
-            delay: 400 
-        },
-        { 
-            msg: "To je vše! Nyní se můžeš pustit do prohlížení.", 
-            pre: () => document.querySelector('.nav-btn[data-target="screen-scroll"]')?.click(),
-            selector: null, 
-            delay: 400 
-        }
-    ];
-
- function showTutorial() {
     // Prozatím zakomentováno, aby se tutoriál ukázal pokaždé při zapnutí (pro účely ladění)
     // if (localStorage.getItem('tutorial_seen')) return;
 
@@ -370,7 +314,6 @@ function showTutorial() {
 
     renderStep(); // Spuštění prvního kroku
 }
-
 
 // ==========================================
 // 5. INICIALIZACE APLIKACE
