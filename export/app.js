@@ -297,13 +297,20 @@ function showTutorial() {
         renderStep();
     }
 
+    // --- POMOCNÁ FUNKCE PRO BEZPEČNÉ ZÍSKÁNÍ ELEMENTU ---
+    function getTargetElement(stepSelector) {
+        if (!stepSelector) return null;
+        let res = typeof stepSelector === 'function' ? stepSelector() : stepSelector;
+        return typeof res === 'string' ? document.querySelector(res) : res;
+    }
+
     function renderStep() {
         if (currentStep >= steps.length) {
             overlay.style.opacity = '0';
             setTimeout(() => overlay.remove(), 400);
             navBlocker.remove();
             localStorage.setItem('tutorial_seen', 'true');
-            if (navBtns[0]) navBtns[0].click();
+            if (navBtns[0]) navBtns[0].click(); // Návrat na Objevuj
             return;
         }
 
@@ -311,8 +318,7 @@ function showTutorial() {
         if (step.pre) step.pre();
 
         setTimeout(() => {
-            let sel = typeof step.selector === 'function' ? step.selector() : step.selector;
-            let el = sel ? document.querySelector(sel) : null;
+            let el = getTargetElement(step.selector);
             let finalMsg = step.msg;
             let pad = 12;
 
@@ -409,7 +415,71 @@ function showTutorial() {
         }, step.delay || 50);
     }
 
-    // Odchyt mimo hotspot upozorní animací
+    // Odchyt gest na hlavní tmavé vrstvě
+    let touchStartY = 0;
+    let lastTapTime = 0;
+
+    overlay.addEventListener('touchstart', (e) => {
+        const step = steps[currentStep];
+        
+        if (e.touches.length === 1) {
+            touchStartY = e.touches[0].clientY;
+            
+            // Detekce dvojkliku
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            if (tapLength < 400 && tapLength > 0) {
+                if (step.action === 'native_dblclick') {
+                    let activeMap = mapInstances[activeIndex];
+                    if (activeMap) activeMap.setZoom(activeMap.getMinZoom(), { animate: false });
+                    advanceTutorial();
+                }
+            }
+            lastTapTime = currentTime;
+            
+        } else if (e.touches.length === 2) {
+            // Detekce zoomu
+            if (step.action === 'native_zoom') {
+                let activeMap = mapInstances[activeIndex];
+                if (activeMap) activeMap.setZoom(activeMap.getMinZoom() + 1, { animate: false });
+                advanceTutorial();
+            }
+        }
+    });
+
+    overlay.addEventListener('touchmove', (e) => {
+        const step = steps[currentStep];
+        if (step.action === 'native_scroll' && e.touches.length === 1) {
+            let dy = touchStartY - e.touches[0].clientY;
+            // Pokud uživatel potáhne dostatečně razantně
+            if (Math.abs(dy) > 40) {
+                const rc = document.getElementById('reels-container');
+                if (rc) {
+                    rc.scrollBy({ top: dy > 0 ? window.innerHeight : -window.innerHeight, behavior: 'smooth' });
+                }
+                touchStartY = e.touches[0].clientY; // zabrání spuštění vícekrát
+                advanceTutorial();
+            }
+        }
+    });
+
+    // Podpora pro desktopové uživatele
+    overlay.addEventListener('wheel', (e) => {
+        if (steps[currentStep].action === 'native_scroll') {
+            const rc = document.getElementById('reels-container');
+            if(rc) rc.scrollBy({ top: e.deltaY > 0 ? window.innerHeight : -window.innerHeight, behavior: 'smooth' });
+            advanceTutorial();
+        }
+    });
+    overlay.addEventListener('dblclick', (e) => {
+        if (steps[currentStep].action === 'native_dblclick') {
+            let activeMap = mapInstances[activeIndex];
+            if (activeMap) activeMap.setZoom(activeMap.getMinZoom(), { animate: false });
+            advanceTutorial();
+        }
+    });
+
+    // Zamezení prokliknutí jinam (upozorní uživatele vibrací/zvětšením rámečku)
     overlay.onclick = (e) => {
         const step = steps[currentStep];
         if (step.action && step.action !== 'click_anywhere' && step.action !== 'end') {
@@ -420,20 +490,20 @@ function showTutorial() {
         advanceTutorial();
     };
 
-    // Propustí klik a postoupí (pro tlačítka atd.)
+    // Propustí a simuluje klik, pokud uživatel klikne přímo do přesně vyznačeného hotspotu
     hotspot.onclick = (e) => {
         e.stopPropagation();
         const step = steps[currentStep];
         if (step.action === 'click_target') {
-            let sel = typeof step.selector === 'function' ? step.selector() : step.selector;
-            const el = sel ? document.querySelector(sel) : null;
-            if (el) el.click();
+            let el = getTargetElement(step.selector);
+            if (el) el.click(); // Reálný klik v aplikaci
             advanceTutorial();
         }
     };
 
     renderStep(); 
 }
+
 
 // ==========================================
 // 5. INICIALIZACE APLIKACE
