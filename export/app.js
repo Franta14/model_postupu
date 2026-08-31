@@ -144,18 +144,25 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
-/* TUTORIAL OVERLAY (ČISTÝ & MINIMALISTICKÝ BEZ RÁMEČKŮ A ŠIPEK) */
+/* TUTORIAL OVERLAY (VRÁCENÉ DÍRY + ČISTÝ TEXT) */
 #interactive-tutorial { 
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-    z-index: 10000; overflow: hidden; pointer-events: auto; 
-    background: rgba(0, 0, 0, 0.65); transition: opacity 0.4s; 
+    z-index: 10000; overflow: hidden; pointer-events: auto; transition: opacity 0.4s; 
+}
+#tut-hole { 
+    position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.75); 
+    transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; 
+}
+#tut-hotspot { 
+    position: absolute; z-index: 10001; cursor: pointer; 
+    background: transparent; display: none; border-radius: 12px; 
 }
 #tut-content { 
     position: absolute; left: 10%; width: 80%; color: white; text-align: center; 
     transition: all 0.3s ease-in-out; pointer-events: none; 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-size: 1.1rem; font-weight: 500; line-height: 1.5; letter-spacing: 0.3px;
-    text-shadow: 0px 2px 5px rgba(0,0,0,0.8), 0px 4px 15px rgba(0,0,0,0.6);
+    text-shadow: 0px 2px 5px rgba(0,0,0,0.9), 0px 4px 15px rgba(0,0,0,0.7);
 }
 
 /* Zamezení prokliknutí jinam během tutoriálu */
@@ -172,6 +179,7 @@ body.tutorial-active input[type="range"] {
 }
 `;
 document.head.appendChild(style);
+
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
@@ -196,11 +204,23 @@ function showTutorial() {
     const overlay = document.createElement('div');
     overlay.id = 'interactive-tutorial';
     
+    const hole = document.createElement('div');
+    hole.id = 'tut-hole';
+    
+    const hotspot = document.createElement('div');
+    hotspot.id = 'tut-hotspot';
+    
     const content = document.createElement('div');
     content.id = 'tut-content';
     
+    const navBlocker = document.createElement('div');
+    navBlocker.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:80px; z-index:10001; display:none;';
+    
+    overlay.appendChild(hole);
+    overlay.appendChild(hotspot);
     overlay.appendChild(content);
     document.body.appendChild(overlay);
+    document.body.appendChild(navBlocker);
 
     let currentStep = 0;
     const navBtns = document.querySelectorAll('.nav-btn');
@@ -316,6 +336,7 @@ function showTutorial() {
 
         setTimeout(() => {
             let el = getTargetElement(step.selector);
+            let pad = 12;
             
             // Logika elegantního rozvržení textu nahoru/dolu, aby se nezakrýval target prvek
             if (el && el.getBoundingClientRect().width > 0) {
@@ -327,9 +348,34 @@ function showTutorial() {
                     content.style.bottom = '25%';
                     content.style.top = 'auto';
                 }
+                
+                // Umístění vyřezané díry nad prvkem
+                hole.style.opacity = '1';
+                hole.style.width = (rect.width + pad * 2) + 'px';
+                hole.style.height = (rect.height + pad * 2) + 'px';
+                hole.style.left = (rect.left - pad) + 'px';
+                hole.style.top = (rect.top - pad) + 'px';
+                
+                if (step.action === 'click_target') {
+                    hotspot.style.display = 'block';
+                    hotspot.style.width = (rect.width + pad * 2) + 'px';
+                    hotspot.style.height = (rect.height + pad * 2) + 'px';
+                    hotspot.style.left = (rect.left - pad) + 'px';
+                    hotspot.style.top = (rect.top - pad) + 'px';
+                } else {
+                    hotspot.style.display = 'none';
+                }
             } else {
                 content.style.top = '45%';
                 content.style.bottom = 'auto';
+                
+                // Zmenšení díry na střed - vytvoří tak celistvou tmavou plochu
+                hole.style.opacity = '1';
+                hole.style.width = '0px'; 
+                hole.style.height = '0px';
+                hole.style.left = '50%'; 
+                hole.style.top = '50%';
+                hotspot.style.display = 'none';
             }
             
             content.innerHTML = step.msg;
@@ -339,13 +385,16 @@ function showTutorial() {
             // Nastavení interakce dle dané akce (nativní propouštění vs. manuální odchytávání)
             if (step.action === 'click_anywhere' || step.action === 'end') {
                 overlay.style.pointerEvents = 'auto';
+                navBlocker.style.display = 'none';
                 overlay.onclick = () => advanceTutorial();
             } else {
                 overlay.style.pointerEvents = 'none'; // Propouští doteky dolů na skutečnou aplikaci
+                navBlocker.style.display = 'block'; // Brání klikání na dolní lištu během scrollování v mapě
 
                 if (step.action === 'click_target' && el) {
                     el.classList.add('tut-allow-interaction');
                     const handler = (e) => {
+                        e.stopPropagation();
                         el.removeEventListener('click', handler);
                         advanceTutorial();
                     };
