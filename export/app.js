@@ -222,45 +222,131 @@ function showTutorial() {
         }
     ];
 
+ function showTutorial() {
+    // Prozatím zakomentováno, aby se tutoriál ukázal pokaždé při zapnutí (pro účely ladění)
+    // if (localStorage.getItem('tutorial_seen')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'interactive-tutorial';
+    
+    const hole = document.createElement('div');
+    hole.id = 'tut-hole';
+    
+    const content = document.createElement('div');
+    content.id = 'tut-content';
+    
+    overlay.appendChild(hole);
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+
+    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16M19 13l-7 7-7-7"/></svg>`;
+    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg>`;
+
+    let currentStep = 0;
+    
+    // Získání tlačítek spodní navigace (předpoklad: 0 = Objevuj, 1 = Feed, 2 = Profil, 3 = Nastavení)
+    const navBtns = document.querySelectorAll('.nav-btn');
+    
+    const steps = [
+        // 1. ZÁLOŽKA: OBJEVUJ
+        {
+            pre: () => { if (navBtns[0]) navBtns[0].click(); },
+            selector: ".story-item", 
+            msg: "Záložka Objevuj. Kliknutím na tato kolečka filtruješ mapy podle terénu. Dole se následně zobrazí dostupné postupy.",
+            delay: 400
+        },
+        {
+            selector: ".nav-btn:nth-child(2)",
+            msg: "Zde se přidávají čísla podle toho, kolik typů terénu máš právě vybráno.",
+            delay: 100
+        },
+        // 2. ZÁLOŽKA: FEED (TROJÚHELNÍK)
+        {
+            pre: () => { if (navBtns[1]) navBtns[1].click(); },
+            selector: null,
+            msg: "Tohle je hlavní feed. Tahem nahoru a dolů listuješ mezi jednotlivými postupy.",
+            delay: 500
+        },
+        {
+            selector: null,
+            msg: "Pohybem dvou prstů mapu přiblížíš. Poté s ní můžeš volně posouvat. Během přiblížení nejde scrollovat na další postup.",
+            delay: 100
+        },
+        {
+            selector: ".reel:not([style*='display: none']) .reel-actions",
+            msg: "Dvojklikem mapu opět oddálíš. Pokud je už oddálená, přidáš dvojklikem 'To se mi líbí'. Postup zde můžeš také uložit (ikonka záložky) nebo sdílet.",
+            delay: 100
+        },
+        {
+            selector: ".reel:not([style*='display: none']) .btn-primary",
+            msg: "Tlačítko 'Volby' ti zobrazí detaily dostupných variant postupu a jejich porovnání.",
+            delay: 100
+        },
+        // 3. ZÁLOŽKA: PROFIL
+        {
+            pre: () => { if (navBtns[2]) navBtns[2].click(); },
+            selector: "#profile-content-wrapper",
+            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy, ke kterým se chceš vrátit.",
+            delay: 500
+        },
+        // 4. ZÁLOŽKA: NASTAVENÍ
+        {
+            pre: () => { if (navBtns[3]) navBtns[3].click(); },
+            selector: ".settings-section", 
+            msg: "V nastavení si uprav 'Tempo na cestě'. Aplikace podle toho výrazně zpřesní odhady časů variant přímo pro tebe.",
+            delay: 500
+        },
+        // KONEC
+        {
+            selector: null,
+            msg: "To je vše! Tutoriál je u konce.",
+            delay: 100
+        }
+    ];
+
     function renderStep() {
         if (currentStep >= steps.length) {
             overlay.remove();
             localStorage.setItem('tutorial_seen', 'true');
+            // Po dokončení vrátíme uživatele na první záložku (Objevuj)
+            if (navBtns[0]) navBtns[0].click();
             return;
         }
 
         let step = steps[currentStep];
         
-        // Pokud má krok přednastavenou akci (např. přepnutí tabu), provedeme ji
+        // Akce před vykreslením (např. přepnutí obrazovky)
         if (step.pre) step.pre();
 
-        // Počkáme na případné vykreslení DOMu
         setTimeout(() => {
             let el = step.selector ? document.querySelector(step.selector) : null;
             let finalMsg = step.msg;
 
-            if (el) {
+            if (el && el.getBoundingClientRect().width > 0) {
                 let rect = el.getBoundingClientRect();
                 let pad = 12;
                 
-                // Přesun díry na cíl
                 hole.style.opacity = '1';
                 hole.style.width = (rect.width + pad * 2) + 'px';
                 hole.style.height = (rect.height + pad * 2) + 'px';
                 hole.style.left = (rect.left - pad) + 'px';
                 hole.style.top = (rect.top - pad) + 'px';
-                hole.style.borderRadius = '16px'; // Zaoblení výřezu
+                hole.style.borderRadius = '16px';
 
-                // Umístění textu a šipky podle toho, kde se cíl nachází na obrazovce
+                // Dynamické umístění textu podle toho, kde se nachází zvýrazněný prvek
                 if (rect.top > window.innerHeight / 2) {
-                    content.style.top = (rect.top - pad - 100) + 'px'; // Text nad výřezem
+                    // Prvek je dole, text dáme nad něj
+                    content.style.bottom = (window.innerHeight - rect.top + pad + 10) + 'px';
+                    content.style.top = 'auto';
                     finalMsg = step.msg + arrowDown;
                 } else {
-                    content.style.top = (rect.bottom + pad + 20) + 'px'; // Text pod výřezem
+                    // Prvek je nahoře, text dáme pod něj
+                    content.style.top = (rect.bottom + pad + 10) + 'px';
+                    content.style.bottom = 'auto';
                     finalMsg = arrowUp + step.msg;
                 }
             } else {
-                // Pokud nemáme cíl, vycentrujeme text a skryjeme výřez
+                // Bez konkrétního prvku vycentrujeme text a skryjeme díru
                 hole.style.opacity = '0';
                 hole.style.width = '0px'; 
                 hole.style.height = '0px';
@@ -268,13 +354,15 @@ function showTutorial() {
                 hole.style.top = '50%';
                 
                 content.style.top = '40%';
+                content.style.bottom = 'auto';
             }
             
             content.innerHTML = finalMsg + '<div class="tut-hint">Klikni kamkoliv pro pokračování</div>';
-        }, step.delay || 50);
+            
+        }, step.delay || 100);
     }
 
-    // Kliknutím kamkoliv se posuneš na další krok
+    // Prokliknutí na další krok
     overlay.addEventListener('click', () => {
         currentStep++;
         renderStep();
@@ -282,6 +370,7 @@ function showTutorial() {
 
     renderStep(); // Spuštění prvního kroku
 }
+
 
 // ==========================================
 // 5. INICIALIZACE APLIKACE
