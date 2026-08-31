@@ -34,44 +34,43 @@ loginOverlay.innerHTML = `
 `;
 document.body.appendChild(loginOverlay);
 
-// Akce pro přihlášení (Změněno pro spolehlivost na mobilech)
+// Návrat k Popup metodě (Nyní bude fungovat, protože doména je autorizovaná)
 document.getElementById('google-login-btn').addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider);
+    auth.signInWithPopup(provider).catch(err => {
+        alert("Chyba: " + err.message);
+    });
 });
 
-// Zachycení případných chyb po návratu z přesměrování
-auth.getRedirectResult().catch(err => {
-    alert("Chyba přihlášení: " + err.message);
-});
-
-
-// Sledování stavu (je uživatel přihlášen?)
+// Sledování stavu
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
+        // Skrytí overlaye
         loginOverlay.style.opacity = '0';
         setTimeout(() => loginOverlay.style.display = 'none', 500);
         
-        // Zápis uživatele do databáze Firestore
-        const userRef = db.collection('users').doc(user.uid);
-        const doc = await userRef.get();
-        
-        if (!doc.exists) {
-            // Pokud je to první přihlášení, přesuneme uložené postupy z localStorage
-            let localSaved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
-            await userRef.set({
-                name: user.displayName,
-                email: user.email,
-                photo: user.photoURL,
-                saved_routes: localSaved,
-                created_at: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        try {
+            // Zápis do databáze
+            const userRef = db.collection('users').doc(user.uid);
+            const doc = await userRef.get();
+            
+            if (!doc.exists) {
+                let localSaved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+                await userRef.set({
+                    name: user.displayName,
+                    email: user.email,
+                    photo: user.photoURL,
+                    saved_routes: localSaved,
+                    created_at: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            
+            localStorage.setItem('profile_picture', user.photoURL);
+            if (typeof renderProfileSaved === "function") renderProfileSaved();
+        } catch (e) {
+            console.error("Chyba při komunikaci s databází:", e);
         }
-        
-        // Změna profilové fotky v UI profilu za reálnou Google fotku
-        localStorage.setItem('profile_picture', user.photoURL);
-        if (typeof renderProfileSaved === "function") renderProfileSaved();
         
     } else {
         currentUser = null;
@@ -79,6 +78,7 @@ auth.onAuthStateChanged(async (user) => {
         loginOverlay.style.opacity = '1';
     }
 });
+
 // ==========================================
 // 1. GLOBÁLNÍ DATA A NASTAVENÍ (STATE)
 // ==========================================
