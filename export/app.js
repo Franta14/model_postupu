@@ -177,8 +177,9 @@ body.tutorial-active input[type="range"] {
 .tut-allow-interaction {
     pointer-events: auto !important;
     position: relative !important;
-    z-index: 10006 !important;
+    z-index: 10002 !important;
 }
+
 `;
 document.head.appendChild(style);
 
