@@ -143,25 +143,28 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
-/* TUTORIAL OVERLAY (ELEGANTNÍ) */
+/* TUTORIAL OVERLAY (NATIVNÍ & MINIMALISTICKÝ GLASSMORPHISM) */
 #interactive-tutorial { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; pointer-events: auto; transition: opacity 0.4s; }
-#tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
+#tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.75); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
 #tut-hotspot { position: absolute; z-index: 10001; cursor: pointer; background: transparent; display: none; transition: all 0.4s ease-in-out; border-radius: 12px; }
 
-/* Elegantní čistý text s jemným stínem pro maximální čitelnost a "prolnutí" s aplikací */
+/* Elegantní skleněný design místo černého boxu */
 #tut-content { 
-    position: absolute; left: 5%; width: 90%; color: white; text-align: center; 
+    position: absolute; left: 10%; width: 80%; color: white; text-align: center; 
     transition: all 0.3s ease-in-out; pointer-events: none; 
-    font-size: 1.25rem; font-weight: 700; line-height: 1.4;
-    text-shadow: 0px 2px 4px rgba(0,0,0,0.9), 0px 5px 15px rgba(0,0,0,0.8), 0px 0px 25px rgba(0,0,0,0.7);
-}
-.tut-hint { 
-    margin-top: 20px; font-size: 0.9rem; font-weight: 700; color: #f0b3ff; 
-    text-transform: uppercase; letter-spacing: 0.8px; 
-    text-shadow: 0px 1px 4px rgba(0,0,0,0.9), 0px 0px 10px rgba(0,0,0,0.8); 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.05rem; font-weight: 500; line-height: 1.45; letter-spacing: 0.2px;
+    text-shadow: 0px 1px 3px rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px; padding: 18px 24px; 
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
-/* Ochrana před nechtěnými kliky během tutoriálu - zablokuje vše kromě výjimek */
+/* Zamezení prokliknutí jinam */
 body.tutorial-active button,
 body.tutorial-active .nav-btn,
 body.tutorial-active .story-item,
@@ -173,6 +176,7 @@ body.tutorial-active input[type="range"] {
 }
 `;
 document.head.appendChild(style);
+
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
@@ -192,7 +196,7 @@ function showTutorial() {
     // Pro produkci odkomentuj, teď zakomentováno, ať se tutoriál ukazuje pořád pro testování:
     // if (localStorage.getItem('tutorial_seen')) return;
 
-    document.body.classList.add('tutorial-active'); // Zapne plošné blokování tlačítek
+    document.body.classList.add('tutorial-active');
 
     const overlay = document.createElement('div');
     overlay.id = 'interactive-tutorial';
@@ -206,7 +210,6 @@ function showTutorial() {
     const content = document.createElement('div');
     content.id = 'tut-content';
     
-    // Ochranný panel spodní lišty, když je overlay dočasně klikací skrz (nativní akce)
     const navBlocker = document.createElement('div');
     navBlocker.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:80px; z-index:10001; display:none;';
     
@@ -216,105 +219,249 @@ function showTutorial() {
     document.body.appendChild(overlay);
     document.body.appendChild(navBlocker);
 
-    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16M19 13l-7 7-7-7"/></svg>`;
-    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg>`;
+    // Elegantní zahnuté šipky se stínem
+    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 Q 14 14 10 19 M 15 15 L 10 19 L 8 14"/></svg>`;
+    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20 Q 14 10 14 5 M 9 9 L 14 5 L 16 10"/></svg>`;
 
     let currentStep = 0;
     const navBtns = document.querySelectorAll('.nav-btn');
     
+    // Informativní zprávy bez "klikni", "zkus" atd.
     const steps = [
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
             selector: null,
-            msg: "Vítej! Právě se nacházíš v záložce Objevuj. Tady najdeš mapy roztříděné podle terénů.",
+            msg: "Záložka Objevuj. Výběr terénů pro filtrování map.",
             action: 'click_anywhere'
         },
         {
             selector: ".story-item", 
-            msg: "Zkus si to! Kliknutím na toto kolečko vyfiltruješ postupy dostupné pouze pro tento terén.",
+            msg: "Aktivace filtru konkrétního terénu.",
             action: 'click_target'
         },
         {
             selector: ".nav-btn[data-target='screen-scroll']",
-            msg: "Dole se přidalo číslo ukazující počet vybraných terénů. Klikni na ikonku Feed (trojúhelník), ať vidíme postupy!",
+            msg: "Přechod do hlavního feedu k prohlížení postupů.",
             action: 'click_target',
             delay: 300
         },
         {
             selector: null,
-            msg: "Tohle je hlavní feed. Plynule potáhni prstem nahoru (nebo posuň kolečkem myši) pro přesun na další mapu.",
+            msg: "Hlavní feed. Posun mezi mapami plynulým tahem.",
             action: 'native_scroll',
             delay: 400
         },
         {
             selector: null,
-            msg: "Výborně! Nyní udělej na mapě gesto přiblížení (roztáhni dva prsty od sebe).",
+            msg: "Detailní průzkum mapy přiblížením dvěma prsty.",
             action: 'native_zoom',
             delay: 100
         },
         {
             selector: null,
-            msg: "Když je mapa přiblížená, posouvání se zamkne a můžeš ji detailně zkoumat. Rychlým dvojklikem na mapu ji opět oddálíš. Vyzkoušej to!",
+            msg: "Rychlé oddálení mapy dvojitým poklepáním.",
             action: 'native_dblclick',
             delay: 100
         },
         {
             selector: () => `.reel[data-index="${Math.max(0, activeIndex)}"] .bookmark-btn`,
-            msg: "Máme oddáleno. Postup si můžeš uložit do sbírky kliknutím na tuto záložku.",
+            msg: "Uložení aktuálního postupu do osobní sbírky.",
             action: 'click_target',
             delay: 100
         },
         {
             selector: () => `.reel[data-index="${Math.max(0, activeIndex)}"] .btn-primary`,
-            msg: "Zajímá tě, kudy běželi ostatní? Klikni na tlačítko 'Volby'.",
+            msg: "Zobrazení detailního porovnání variant a časů.",
             action: 'click_target',
             delay: 100
-        },
-        {
-            selector: null,
-            msg: "Tady vidíš porovnání dostupných variant a jejich časů. Aplikace je přepočítává přímo pro tvé tempo.",
-            action: 'click_anywhere',
-            delay: 200
         },
         {
             pre: () => { if (isPanelOpen && typeof toggleVariants === 'function') toggleVariants(activeIndex); },
             selector: ".nav-btn[data-target='screen-profile']",
-            msg: "Nyní se podíváme na tvůj profil. Klikni dole na ikonku panáčka.",
+            msg: "Osobní profil s uloženými postupy a statistikami.",
             action: 'click_target',
-            delay: 100
-        },
-        {
-            selector: "#profile-content-wrapper",
-            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy pěkně pohromadě.",
-            action: 'click_anywhere',
-            delay: 400
+            delay: 500
         },
         {
             selector: ".nav-btn[data-target='screen-settings']",
-            msg: "Poslední zastávka je nastavení, klikni na ozubené kolo.",
+            msg: "Nastavení aplikace a personalizace výpočtů.",
             action: 'click_target',
             delay: 100
         },
         {
             selector: "#pace-slider", 
-            msg: "Zde si uprav 'Tempo na cestě'. Aplikace díky tomu přesně spočítá odhady časů variant přímo pro tebe. Zkus posunout slider doleva nebo doprava.",
+            msg: "Úprava průměrného tempa pro přesnější odhady časů.",
             action: 'native_input',
             delay: 400
         },
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
             selector: null,
-            msg: "To je vše! Tutoriál je u konce. Dvojklik na oddálené mapě jinak slouží i jako To se mi líbí. Užívej aplikaci!",
+            msg: "Konec tutoriálu.",
             action: 'end'
         }
     ];
 
     function advanceTutorial() {
-        overlay.style.pointerEvents = 'auto'; // Vrácení překrytí
+        overlay.style.pointerEvents = 'auto';
         navBlocker.style.display = 'none';
         currentStep++;
         renderStep();
     }
+
+    function getTargetElement(stepSelector) {
+        if (!stepSelector) return null;
+        let res = typeof stepSelector === 'function' ? stepSelector() : stepSelector;
+        return typeof res === 'string' ? document.querySelector(res) : res;
+    }
+
+    function renderStep() {
+        if (currentStep >= steps.length) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.remove();
+                document.body.classList.remove('tutorial-active');
+            }, 400);
+            navBlocker.remove();
+            localStorage.setItem('tutorial_seen', 'true');
+            if (navBtns[0]) navBtns[0].click();
+            return;
+        }
+
+        let step = steps[currentStep];
+        if (step.pre) step.pre();
+
+        document.querySelectorAll('.tut-allow-interaction').forEach(e => e.classList.remove('tut-allow-interaction'));
+
+        setTimeout(() => {
+            let el = getTargetElement(step.selector);
+            let finalMsg = step.msg;
+            let pad = 12;
+
+            if (step.action.startsWith('native_')) {
+                overlay.style.pointerEvents = 'none'; 
+                navBlocker.style.display = 'block';
+                
+                if (step.action === 'native_scroll') {
+                    let startIdx = activeIndex;
+                    let scrollCheck = setInterval(() => {
+                        if (activeIndex !== startIdx && activeIndex !== -1) {
+                            clearInterval(scrollCheck);
+                            advanceTutorial();
+                        }
+                    }, 200);
+                } else if (step.action === 'native_zoom') {
+                    let zoomCheck = setInterval(() => {
+                        let map = mapInstances[activeIndex];
+                        if (map) {
+                            clearInterval(zoomCheck);
+                            const handler = () => {
+                                if (map.getZoom() > map.getMinZoom() + 0.05) {
+                                    map.off('zoomend', handler);
+                                    advanceTutorial();
+                                }
+                            };
+                            map.on('zoomend', handler);
+                        }
+                    }, 200);
+                } else if (step.action === 'native_dblclick') {
+                    let dblCheck = setInterval(() => {
+                        let map = mapInstances[activeIndex];
+                        if (map) {
+                            clearInterval(dblCheck);
+                            const handler = () => {
+                                if (map.getZoom() <= map.getMinZoom() + 0.05) {
+                                    map.off('zoomend', handler);
+                                    advanceTutorial();
+                                }
+                            };
+                            map.on('zoomend', handler);
+                        }
+                    }, 200);
+                } else if (step.action === 'native_input') {
+                    if (el) {
+                        el.classList.add('tut-allow-interaction');
+                        const handler = () => {
+                            el.removeEventListener('change', handler);
+                            advanceTutorial();
+                        };
+                        el.addEventListener('change', handler);
+                    } else {
+                        advanceTutorial();
+                    }
+                }
+            } else {
+                overlay.style.pointerEvents = 'auto';
+                navBlocker.style.display = 'none';
+            }
+
+            if (el && el.getBoundingClientRect().width > 0) {
+                let rect = el.getBoundingClientRect();
+                
+                hole.style.opacity = '1';
+                hole.style.width = (rect.width + pad * 2) + 'px';
+                hole.style.height = (rect.height + pad * 2) + 'px';
+                hole.style.left = (rect.left - pad) + 'px';
+                hole.style.top = (rect.top - pad) + 'px';
+                hole.style.borderRadius = '16px';
+
+                if (step.action === 'click_target') {
+                    hotspot.style.display = 'block';
+                    hotspot.style.width = (rect.width + pad * 2) + 'px';
+                    hotspot.style.height = (rect.height + pad * 2) + 'px';
+                    hotspot.style.left = (rect.left - pad) + 'px';
+                    hotspot.style.top = (rect.top - pad) + 'px';
+                } else {
+                    hotspot.style.display = 'none';
+                }
+
+                if (rect.top > window.innerHeight / 2) {
+                    content.style.bottom = (window.innerHeight - rect.top + pad + 20) + 'px';
+                    content.style.top = 'auto';
+                    finalMsg = finalMsg + arrowDown;
+                } else {
+                    content.style.top = (rect.bottom + pad + 20) + 'px';
+                    content.style.bottom = 'auto';
+                    finalMsg = arrowUp + finalMsg;
+                }
+            } else {
+                hole.style.opacity = '0';
+                hole.style.width = '0px'; 
+                hole.style.height = '0px';
+                hole.style.left = '50%'; 
+                hole.style.top = '50%';
+                hotspot.style.display = 'none';
+                content.style.top = '40%';
+                content.style.bottom = 'auto';
+            }
+            
+            content.innerHTML = finalMsg;
+            
+        }, step.delay || 50);
+    }
+
+    overlay.onclick = (e) => {
+        const step = steps[currentStep];
+        if (step.action && step.action !== 'click_anywhere' && step.action !== 'end') {
+            content.style.transform = 'scale(1.02)';
+            setTimeout(() => content.style.transform = 'none', 150);
+            return;
+        }
+        advanceTutorial();
+    };
+
+    hotspot.onclick = (e) => {
+        e.stopPropagation();
+        const step = steps[currentStep];
+        if (step.action === 'click_target') {
+            let el = getTargetElement(step.selector);
+            if (el) el.click();
+            advanceTutorial();
+        }
+    };
+
+    renderStep(); 
+}
 
     // Bezpečné načtení prvku, ať už přes string nebo přes funkci
     function getTargetElement(stepSelector) {
