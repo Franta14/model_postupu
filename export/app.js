@@ -1,4 +1,79 @@
 // ==========================================
+// 0. FIREBASE INICIALIZACE A PŘIHLÁŠENÍ
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBDlLvcLPqZ3iyy8ugDqHH-KJZa_t0tvgM",
+  authDomain: "scrollienteering.firebaseapp.com",
+  projectId: "scrollienteering",
+  storageBucket: "scrollienteering.firebasestorage.app",
+  messagingSenderId: "1062555766603",
+  appId: "1:1062555766603:web:be09e089f80bfef04fa2ce",
+  measurementId: "G-YE6PPNFZ54"
+};
+
+// Inicializace Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+
+// Dynamické vytvoření přihlašovací obrazovky (Overlay)
+const loginOverlay = document.createElement('div');
+loginOverlay.id = 'login-overlay';
+loginOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: #000; z-index: 30000; display: flex; justify-content: center; align-items: center; color: white; transition: opacity 0.5s;';
+loginOverlay.innerHTML = `
+    <div style="text-align: center; padding: 20px;">
+        <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 10px;">Scrollienteering</h1>
+        <p style="opacity: 0.7; margin-bottom: 40px;">Prohlížej, analyzuj a sdílej postupy.</p>
+        <button id="google-login-btn" style="background: white; color: black; border: none; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; box-shadow: 0 4px 15px rgba(255,255,255,0.2);">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Přihlásit se přes Google
+        </button>
+    </div>
+`;
+document.body.appendChild(loginOverlay);
+
+// Akce pro přihlášení
+document.getElementById('google-login-btn').addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => alert("Chyba přihlášení: " + err.message));
+});
+
+// Sledování stavu (je uživatel přihlášen?)
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        loginOverlay.style.opacity = '0';
+        setTimeout(() => loginOverlay.style.display = 'none', 500);
+        
+        // Zápis uživatele do databáze Firestore
+        const userRef = db.collection('users').doc(user.uid);
+        const doc = await userRef.get();
+        
+        if (!doc.exists) {
+            // Pokud je to první přihlášení, přesuneme uložené postupy z localStorage
+            let localSaved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+            await userRef.set({
+                name: user.displayName,
+                email: user.email,
+                photo: user.photoURL,
+                saved_routes: localSaved,
+                created_at: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        
+        // Změna profilové fotky v UI profilu za reálnou Google fotku
+        localStorage.setItem('profile_picture', user.photoURL);
+        if (typeof renderProfileSaved === "function") renderProfileSaved();
+        
+    } else {
+        currentUser = null;
+        loginOverlay.style.display = 'flex';
+        loginOverlay.style.opacity = '1';
+    }
+});
+// ==========================================
 // 1. GLOBÁLNÍ DATA A NASTAVENÍ (STATE)
 // ==========================================
 let postupyData = [];
