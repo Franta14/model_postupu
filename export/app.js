@@ -34,11 +34,17 @@ loginOverlay.innerHTML = `
 `;
 document.body.appendChild(loginOverlay);
 
-// Akce pro přihlášení
+// Akce pro přihlášení (Změněno pro spolehlivost na mobilech)
 document.getElementById('google-login-btn').addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(err => alert("Chyba přihlášení: " + err.message));
+    auth.signInWithRedirect(provider);
 });
+
+// Zachycení případných chyb po návratu z přesměrování
+auth.getRedirectResult().catch(err => {
+    alert("Chyba přihlášení: " + err.message);
+});
+
 
 // Sledování stavu (je uživatel přihlášen?)
 auth.onAuthStateChanged(async (user) => {
