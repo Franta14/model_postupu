@@ -219,14 +219,12 @@ function showTutorial() {
     document.body.appendChild(overlay);
     document.body.appendChild(navBlocker);
 
-    // Elegantní zahnuté šipky se stínem
-    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 Q 14 14 10 19 M 15 15 L 10 19 L 8 14"/></svg>`;
-    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20 Q 14 10 14 5 M 9 9 L 14 5 L 16 10"/></svg>`;
+    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 4 Q 14 14 10 19 M 15 15 L 10 19 L 8 14"/></svg>`;
+    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10 20 Q 14 10 14 5 M 9 9 L 14 5 L 16 10"/></svg>`;
 
     let currentStep = 0;
     const navBtns = document.querySelectorAll('.nav-btn');
     
-    // Informativní zprávy bez "klikni", "zkus" atd.
     const steps = [
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
@@ -246,19 +244,19 @@ function showTutorial() {
             delay: 300
         },
         {
-            selector: null,
+            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
             msg: "Hlavní feed. Posun mezi mapami plynulým tahem.",
             action: 'native_scroll',
             delay: 400
         },
         {
-            selector: null,
+            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
             msg: "Detailní průzkum mapy přiblížením dvěma prsty.",
             action: 'native_zoom',
             delay: 100
         },
         {
-            selector: null,
+            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
             msg: "Rychlé oddálení mapy dvojitým poklepáním.",
             action: 'native_dblclick',
             delay: 100
@@ -283,6 +281,12 @@ function showTutorial() {
             delay: 500
         },
         {
+            selector: "#profile-content-wrapper",
+            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy pěkně pohromadě.",
+            action: 'click_anywhere',
+            delay: 400
+        },
+        {
             selector: ".nav-btn[data-target='screen-settings']",
             msg: "Nastavení aplikace a personalizace výpočtů.",
             action: 'click_target',
@@ -303,12 +307,13 @@ function showTutorial() {
     ];
 
     function advanceTutorial() {
-        overlay.style.pointerEvents = 'auto';
+        overlay.style.pointerEvents = 'auto'; // Vrácení překrytí
         navBlocker.style.display = 'none';
         currentStep++;
         renderStep();
     }
 
+    // BEZPEČNÁ FUNKCE - Opravuje chybu se stringem vs HTML elementem
     function getTargetElement(stepSelector) {
         if (!stepSelector) return null;
         let res = typeof stepSelector === 'function' ? stepSelector() : stepSelector;
@@ -334,13 +339,14 @@ function showTutorial() {
         document.querySelectorAll('.tut-allow-interaction').forEach(e => e.classList.remove('tut-allow-interaction'));
 
         setTimeout(() => {
+            // Použití opravené funkce místo document.querySelector
             let el = getTargetElement(step.selector);
             let finalMsg = step.msg;
             let pad = 12;
 
             if (step.action.startsWith('native_')) {
                 overlay.style.pointerEvents = 'none'; 
-                navBlocker.style.display = 'block';
+                navBlocker.style.display = 'block'; 
                 
                 if (step.action === 'native_scroll') {
                     let startIdx = activeIndex;
@@ -380,7 +386,7 @@ function showTutorial() {
                     }, 200);
                 } else if (step.action === 'native_input') {
                     if (el) {
-                        el.classList.add('tut-allow-interaction');
+                        el.classList.add('tut-allow-interaction'); 
                         const handler = () => {
                             el.removeEventListener('change', handler);
                             advanceTutorial();
@@ -416,13 +422,13 @@ function showTutorial() {
                 }
 
                 if (rect.top > window.innerHeight / 2) {
-                    content.style.bottom = (window.innerHeight - rect.top + pad + 20) + 'px';
+                    content.style.bottom = (window.innerHeight - rect.top + pad + 10) + 'px';
                     content.style.top = 'auto';
-                    finalMsg = finalMsg + arrowDown;
+                    finalMsg = step.msg + arrowDown;
                 } else {
-                    content.style.top = (rect.bottom + pad + 20) + 'px';
+                    content.style.top = (rect.bottom + pad + 10) + 'px';
                     content.style.bottom = 'auto';
-                    finalMsg = arrowUp + finalMsg;
+                    finalMsg = arrowUp + step.msg;
                 }
             } else {
                 hole.style.opacity = '0';
@@ -443,7 +449,7 @@ function showTutorial() {
     overlay.onclick = (e) => {
         const step = steps[currentStep];
         if (step.action && step.action !== 'click_anywhere' && step.action !== 'end') {
-            content.style.transform = 'scale(1.02)';
+            content.style.transform = 'scale(1.03)';
             setTimeout(() => content.style.transform = 'none', 150);
             return;
         }
@@ -454,6 +460,7 @@ function showTutorial() {
         e.stopPropagation();
         const step = steps[currentStep];
         if (step.action === 'click_target') {
+            // Použití opravené funkce i zde
             let el = getTargetElement(step.selector);
             if (el) el.click();
             advanceTutorial();
