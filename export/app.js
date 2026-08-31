@@ -131,11 +131,12 @@ input::placeholder { color: #888 !important; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
 .ig-pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
-.settings-section { margin-bottom: 30px; }
+.settings-section { margin-bottom: 30px; box-sizing: border-box; width: 100%; }
 .settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
-.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); }
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); box-sizing: border-box; width: 100%; }
 .settings-row select, .settings-btn { background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
 input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
+#screen-settings { box-sizing: border-box; overflow-x: hidden; width: 100%; }
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
@@ -143,28 +144,21 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
-/* TUTORIAL OVERLAY (NATIVNÍ & MINIMALISTICKÝ GLASSMORPHISM) */
-#interactive-tutorial { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; pointer-events: auto; transition: opacity 0.4s; }
-#tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.75); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
-#tut-hotspot { position: absolute; z-index: 10001; cursor: pointer; background: transparent; display: none; transition: all 0.4s ease-in-out; border-radius: 12px; }
-
-/* Elegantní skleněný design místo černého boxu */
+/* TUTORIAL OVERLAY (ČISTÝ & MINIMALISTICKÝ BEZ RÁMEČKŮ A ŠIPEK) */
+#interactive-tutorial { 
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+    z-index: 10000; overflow: hidden; pointer-events: auto; 
+    background: rgba(0, 0, 0, 0.65); transition: opacity 0.4s; 
+}
 #tut-content { 
     position: absolute; left: 10%; width: 80%; color: white; text-align: center; 
     transition: all 0.3s ease-in-out; pointer-events: none; 
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 1.05rem; font-weight: 500; line-height: 1.45; letter-spacing: 0.2px;
-    text-shadow: 0px 1px 3px rgba(0,0,0,0.8);
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 20px; padding: 18px 24px; 
-    box-sizing: border-box;
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    font-size: 1.1rem; font-weight: 500; line-height: 1.5; letter-spacing: 0.3px;
+    text-shadow: 0px 2px 5px rgba(0,0,0,0.8), 0px 4px 15px rgba(0,0,0,0.6);
 }
 
-/* Zamezení prokliknutí jinam */
+/* Zamezení prokliknutí jinam během tutoriálu */
 body.tutorial-active button,
 body.tutorial-active .nav-btn,
 body.tutorial-active .story-item,
@@ -173,10 +167,11 @@ body.tutorial-active input[type="range"] {
 }
 .tut-allow-interaction {
     pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10002 !important;
 }
 `;
 document.head.appendChild(style);
-
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
@@ -193,7 +188,7 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Pro produkci odkomentuj, teď zakomentováno, ať se tutoriál ukazuje pořád pro testování:
+    // Pro produkci odkomentuj, teď je zakomentováno, aby se to ukazovalo pořád:
     // if (localStorage.getItem('tutorial_seen')) return;
 
     document.body.classList.add('tutorial-active');
@@ -201,30 +196,16 @@ function showTutorial() {
     const overlay = document.createElement('div');
     overlay.id = 'interactive-tutorial';
     
-    const hole = document.createElement('div');
-    hole.id = 'tut-hole';
-    
-    const hotspot = document.createElement('div');
-    hotspot.id = 'tut-hotspot';
-    
     const content = document.createElement('div');
     content.id = 'tut-content';
     
-    const navBlocker = document.createElement('div');
-    navBlocker.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:80px; z-index:10001; display:none;';
-    
-    overlay.appendChild(hole);
-    overlay.appendChild(hotspot);
     overlay.appendChild(content);
     document.body.appendChild(overlay);
-    document.body.appendChild(navBlocker);
-
-    const arrowDown = `<svg style="display:block; margin: 15px auto 0 auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4 Q 14 14 10 19 M 15 15 L 10 19 L 8 14"/></svg>`;
-    const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto; filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20 Q 14 10 14 5 M 9 9 L 14 5 L 16 10"/></svg>`;
 
     let currentStep = 0;
     const navBtns = document.querySelectorAll('.nav-btn');
     
+    // Čistě informativní texty bez vybízejících pádů a šipek
     const steps = [
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
@@ -247,7 +228,7 @@ function showTutorial() {
             selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
             msg: "Hlavní feed. Posun mezi mapami plynulým tahem.",
             action: 'native_scroll',
-            delay: 400
+            delay: 500
         },
         {
             selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
@@ -282,7 +263,7 @@ function showTutorial() {
         },
         {
             selector: "#profile-content-wrapper",
-            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy pěkně pohromadě.",
+            msg: "Přehled všech uložených postupů a dat.",
             action: 'click_anywhere',
             delay: 400
         },
@@ -301,19 +282,17 @@ function showTutorial() {
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
             selector: null,
-            msg: "Konec tutoriálu.",
+            msg: "Konec tutoriálu. Dvojklik na oddálené mapě slouží také jako To se mi líbí.",
             action: 'end'
         }
     ];
 
     function advanceTutorial() {
-        overlay.style.pointerEvents = 'auto'; // Vrácení překrytí
-        navBlocker.style.display = 'none';
+        document.querySelectorAll('.tut-allow-interaction').forEach(e => e.classList.remove('tut-allow-interaction'));
         currentStep++;
         renderStep();
     }
 
-    // BEZPEČNÁ FUNKCE - Opravuje chybu se stringem vs HTML elementem
     function getTargetElement(stepSelector) {
         if (!stepSelector) return null;
         let res = typeof stepSelector === 'function' ? stepSelector() : stepSelector;
@@ -327,7 +306,6 @@ function showTutorial() {
                 overlay.remove();
                 document.body.classList.remove('tutorial-active');
             }, 400);
-            navBlocker.remove();
             localStorage.setItem('tutorial_seen', 'true');
             if (navBtns[0]) navBtns[0].click();
             return;
@@ -336,27 +314,56 @@ function showTutorial() {
         let step = steps[currentStep];
         if (step.pre) step.pre();
 
-        document.querySelectorAll('.tut-allow-interaction').forEach(e => e.classList.remove('tut-allow-interaction'));
-
         setTimeout(() => {
-            // Použití opravené funkce místo document.querySelector
             let el = getTargetElement(step.selector);
-            let finalMsg = step.msg;
-            let pad = 12;
+            
+            // Logika elegantního rozvržení textu nahoru/dolu, aby se nezakrýval target prvek
+            if (el && el.getBoundingClientRect().width > 0) {
+                let rect = el.getBoundingClientRect();
+                if (rect.top > window.innerHeight * 0.5) {
+                    content.style.top = '25%';
+                    content.style.bottom = 'auto';
+                } else {
+                    content.style.bottom = '25%';
+                    content.style.top = 'auto';
+                }
+            } else {
+                content.style.top = '45%';
+                content.style.bottom = 'auto';
+            }
+            
+            content.innerHTML = step.msg;
 
-            if (step.action.startsWith('native_')) {
-                overlay.style.pointerEvents = 'none'; 
-                navBlocker.style.display = 'block'; 
-                
-                if (step.action === 'native_scroll') {
+            overlay.onclick = null; // Vyčištění předešlých handlerů
+            
+            // Nastavení interakce dle dané akce (nativní propouštění vs. manuální odchytávání)
+            if (step.action === 'click_anywhere' || step.action === 'end') {
+                overlay.style.pointerEvents = 'auto';
+                overlay.onclick = () => advanceTutorial();
+            } else {
+                overlay.style.pointerEvents = 'none'; // Propouští doteky dolů na skutečnou aplikaci
+
+                if (step.action === 'click_target' && el) {
+                    el.classList.add('tut-allow-interaction');
+                    const handler = (e) => {
+                        el.removeEventListener('click', handler);
+                        advanceTutorial();
+                    };
+                    el.addEventListener('click', handler);
+                } 
+                else if (step.action === 'native_scroll') {
                     let startIdx = activeIndex;
-                    let scrollCheck = setInterval(() => {
-                        if (activeIndex !== startIdx && activeIndex !== -1) {
-                            clearInterval(scrollCheck);
-                            advanceTutorial();
-                        }
-                    }, 200);
-                } else if (step.action === 'native_zoom') {
+                    const rc = document.getElementById('reels-container');
+                    if (rc) {
+                        let scrollCheck = setInterval(() => {
+                            if (activeIndex !== startIdx && activeIndex !== -1) {
+                                clearInterval(scrollCheck);
+                                advanceTutorial();
+                            }
+                        }, 200);
+                    } else { advanceTutorial(); }
+                } 
+                else if (step.action === 'native_zoom') {
                     let zoomCheck = setInterval(() => {
                         let map = mapInstances[activeIndex];
                         if (map) {
@@ -370,7 +377,8 @@ function showTutorial() {
                             map.on('zoomend', handler);
                         }
                     }, 200);
-                } else if (step.action === 'native_dblclick') {
+                } 
+                else if (step.action === 'native_dblclick') {
                     let dblCheck = setInterval(() => {
                         let map = mapInstances[activeIndex];
                         if (map) {
@@ -384,88 +392,20 @@ function showTutorial() {
                             map.on('zoomend', handler);
                         }
                     }, 200);
-                } else if (step.action === 'native_input') {
-                    if (el) {
-                        el.classList.add('tut-allow-interaction'); 
-                        const handler = () => {
-                            el.removeEventListener('change', handler);
-                            advanceTutorial();
-                        };
-                        el.addEventListener('change', handler);
-                    } else {
+                } 
+                else if (step.action === 'native_input' && el) {
+                    el.classList.add('tut-allow-interaction');
+                    const handler = () => {
+                        el.removeEventListener('change', handler);
                         advanceTutorial();
-                    }
-                }
-            } else {
-                overlay.style.pointerEvents = 'auto';
-                navBlocker.style.display = 'none';
-            }
-
-            if (el && el.getBoundingClientRect().width > 0) {
-                let rect = el.getBoundingClientRect();
-                
-                hole.style.opacity = '1';
-                hole.style.width = (rect.width + pad * 2) + 'px';
-                hole.style.height = (rect.height + pad * 2) + 'px';
-                hole.style.left = (rect.left - pad) + 'px';
-                hole.style.top = (rect.top - pad) + 'px';
-                hole.style.borderRadius = '16px';
-
-                if (step.action === 'click_target') {
-                    hotspot.style.display = 'block';
-                    hotspot.style.width = (rect.width + pad * 2) + 'px';
-                    hotspot.style.height = (rect.height + pad * 2) + 'px';
-                    hotspot.style.left = (rect.left - pad) + 'px';
-                    hotspot.style.top = (rect.top - pad) + 'px';
+                    };
+                    el.addEventListener('change', handler);
                 } else {
-                    hotspot.style.display = 'none';
+                    advanceTutorial(); // Fallback v případě, že se element nenašel
                 }
-
-                if (rect.top > window.innerHeight / 2) {
-                    content.style.bottom = (window.innerHeight - rect.top + pad + 10) + 'px';
-                    content.style.top = 'auto';
-                    finalMsg = step.msg + arrowDown;
-                } else {
-                    content.style.top = (rect.bottom + pad + 10) + 'px';
-                    content.style.bottom = 'auto';
-                    finalMsg = arrowUp + step.msg;
-                }
-            } else {
-                hole.style.opacity = '0';
-                hole.style.width = '0px'; 
-                hole.style.height = '0px';
-                hole.style.left = '50%'; 
-                hole.style.top = '50%';
-                hotspot.style.display = 'none';
-                content.style.top = '40%';
-                content.style.bottom = 'auto';
             }
-            
-            content.innerHTML = finalMsg;
-            
         }, step.delay || 50);
     }
-
-    overlay.onclick = (e) => {
-        const step = steps[currentStep];
-        if (step.action && step.action !== 'click_anywhere' && step.action !== 'end') {
-            content.style.transform = 'scale(1.03)';
-            setTimeout(() => content.style.transform = 'none', 150);
-            return;
-        }
-        advanceTutorial();
-    };
-
-    hotspot.onclick = (e) => {
-        e.stopPropagation();
-        const step = steps[currentStep];
-        if (step.action === 'click_target') {
-            // Použití opravené funkce i zde
-            let el = getTargetElement(step.selector);
-            if (el) el.click();
-            advanceTutorial();
-        }
-    };
 
     renderStep(); 
 }
@@ -614,7 +554,7 @@ function renderSettings() {
     }
     
     screen.innerHTML = `
-        <div style="padding: 20px 0; padding-bottom: 100px;">
+        <div style="padding: 20px 0; padding-bottom: 100px; box-sizing: border-box; width: 100%;">
             <h1 style="font-size: 1.5rem; margin: 10px 20px 30px 20px; font-weight: 700;">${t('settings')}</h1>
             
             <div class="settings-section">
@@ -940,8 +880,9 @@ function initMapForReel(index) {
             let currentZoom = map.getZoom();
             let minZoom = map.getMinZoom();
             if (currentZoom > minZoom + 0.05) {
-                if (map.originalMidX !== undefined && map.originalMidY !== undefined) map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom);
-                else map.setZoom(minZoom);
+                // Přidáno animate: true pro zaručeně plynulé oddálení dvojklikem
+                if (map.originalMidX !== undefined && map.originalMidY !== undefined) map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom, { animate: true, duration: 0.3 });
+                else map.setZoom(minZoom, { animate: true, duration: 0.3 });
             } else {
                 let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
                 if (btn && !btn.classList.contains('liked')) toggleLike(index, btn);
