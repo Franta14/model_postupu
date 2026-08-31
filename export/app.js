@@ -144,12 +144,12 @@ body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* TUTORIAL OVERLAY (NOVÝ INTERAKTIVNÍ) */
-#interactive-tutorial { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; pointer-events: auto; }
+#interactive-tutorial { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 10000; overflow: hidden; pointer-events: auto; transition: opacity 0.4s; }
 #tut-hole { position: absolute; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85); transition: all 0.4s ease-in-out; pointer-events: none; border-radius: 12px; }
+#tut-hotspot { position: absolute; z-index: 10001; cursor: pointer; background: transparent; display: none; transition: all 0.4s ease-in-out; border-radius: 12px; }
 #tut-content { position: absolute; left: 5%; width: 90%; color: white; text-align: center; transition: all 0.4s ease-in-out; pointer-events: none; font-size: 1.1rem; font-weight: 600; text-shadow: 0 2px 6px rgba(0,0,0,0.8); }
 .tut-hint { margin-top: 20px; font-size: 0.85rem; font-weight: normal; opacity: 0.6; }
-`;
-
+`; // <-- TOTO BYLO OPRAVENO
 document.head.appendChild(style);
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
@@ -167,7 +167,7 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Prozatím zakomentováno, aby se tutoriál ukázal pokaždé při zapnutí (pro účely ladění)
+    // Odkomentuj tento řádek pro nasazení (zabrání spouštění pořád dokola)
     // if (localStorage.getItem('tutorial_seen')) return;
 
     const overlay = document.createElement('div');
@@ -176,10 +176,14 @@ function showTutorial() {
     const hole = document.createElement('div');
     hole.id = 'tut-hole';
     
+    const hotspot = document.createElement('div');
+    hotspot.id = 'tut-hotspot';
+    
     const content = document.createElement('div');
     content.id = 'tut-content';
     
     overlay.appendChild(hole);
+    overlay.appendChild(hotspot);
     overlay.appendChild(content);
     document.body.appendChild(overlay);
 
@@ -187,89 +191,113 @@ function showTutorial() {
     const arrowUp = `<svg style="display:block; margin: 0 auto 15px auto;" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg>`;
 
     let currentStep = 0;
-    
-    // Získání tlačítek spodní navigace (předpoklad: 0 = Objevuj, 1 = Feed, 2 = Profil, 3 = Nastavení)
     const navBtns = document.querySelectorAll('.nav-btn');
     
+    // DEFINICE JEDNOTLIVÝCH KROKŮ V CHRONOLOGICKÉM POŘADÍ
     const steps = [
         // 1. ZÁLOŽKA: OBJEVUJ
         {
             pre: () => { if (navBtns[0]) navBtns[0].click(); },
+            selector: null,
+            msg: "Vítej! Právě se nacházíš v záložce Objevuj. Tady najdeš mapy roztříděné podle terénů.",
+            requireClick: false
+        },
+        {
             selector: ".story-item", 
-            msg: "Záložka Objevuj. Kliknutím na tato kolečka filtruješ mapy podle terénu. Dole se následně zobrazí dostupné postupy.",
-            delay: 400
+            msg: "Zkus si to! Kliknutím na toto kolečko vyfiltruješ postupy dostupné v tomto terénu.",
+            requireClick: true
         },
         {
             selector: ".nav-btn:nth-child(2)",
-            msg: "Zde se přidávají čísla podle toho, kolik typů terénu máš právě vybráno.",
-            delay: 100
+            msg: "Všimni si, že dole u ikonky feedu (trojúhelník) se přidalo číslo. To značí počet vybraných terénů.",
+            requireClick: false,
+            delay: 150
         },
-        // 2. ZÁLOŽKA: FEED (TROJÚHELNÍK)
+        // 2. ZÁLOŽKA: FEED
         {
-            pre: () => { if (navBtns[1]) navBtns[1].click(); },
+            selector: ".nav-btn[data-target='screen-scroll']",
+            msg: "Klikni na ikonku trojúhelníku dole uprostřed a přejdeme k samotným postupům!",
+            requireClick: true
+        },
+        {
             selector: null,
-            msg: "Tohle je hlavní feed. Tahem nahoru a dolů listuješ mezi jednotlivými postupy.",
+            msg: "Tohle je hlavní feed. Tahem nahoru a dolů listuješ mezi jednotlivými mapami.",
+            requireClick: false,
             delay: 500
         },
         {
             selector: null,
-            msg: "Pohybem dvou prstů mapu přiblížíš. Poté s ní můžeš volně posouvat. Během přiblížení nejde scrollovat na další postup.",
-            delay: 100
+            msg: "Pohybem dvou prstů mapu přiblížíš. Scrollování se dočasně zamkne a ty můžeš s mapou volně posouvat a zkoumat detaily.",
+            requireClick: false
         },
         {
-            selector: ".reel:not([style*='display: none']) .reel-actions",
-            msg: "Dvojklikem mapu opět oddálíš. Pokud je už oddálená, přidáš dvojklikem 'To se mi líbí'. Postup zde můžeš také uložit (ikonka záložky) nebo sdílet.",
-            delay: 100
+            selector: ".reel:not([style*='display: none']) .like-btn",
+            msg: "Rychlým dvojklikem mapu opět oddálíš. Pokud už oddálená je, přidáš dvojklikem 'To se mi líbí'. Postup zde můžeš také uložit ikonkou záložky.",
+            requireClick: false
         },
         {
             selector: ".reel:not([style*='display: none']) .btn-primary",
-            msg: "Tlačítko 'Volby' ti zobrazí detaily dostupných variant postupu a jejich porovnání.",
-            delay: 100
+            msg: "Zajímá tě kudy se dalo běžet? Klikni na tlačítko 'Volby'.",
+            requireClick: true
         },
         // 3. ZÁLOŽKA: PROFIL
         {
-            pre: () => { if (navBtns[2]) navBtns[2].click(); },
+            pre: () => { 
+                // Zavření okna "Volby" z předchozího kroku, aby nepřekáželo
+                if (isPanelOpen && typeof toggleVariants === 'function') toggleVariants(activeIndex); 
+            },
+            selector: ".nav-btn[data-target='screen-profile']",
+            msg: "Tím se zobrazí porovnání variant a časů. Teď se podíváme na tvůj profil. Klikni dole na ikonku panáčka.",
+            requireClick: true
+        },
+        {
             selector: "#profile-content-wrapper",
-            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy, ke kterým se chceš vrátit.",
-            delay: 500
+            msg: "Na svém profilu vidíš statistiky a všechny uložené postupy pěkně pohromadě.",
+            requireClick: false,
+            delay: 400
         },
         // 4. ZÁLOŽKA: NASTAVENÍ
         {
-            pre: () => { if (navBtns[3]) navBtns[3].click(); },
+            selector: ".nav-btn[data-target='screen-settings']",
+            msg: "Na závěr se podíváme do nastavení. Klikni na ikonku ozubeného kola vpravo dole.",
+            requireClick: true
+        },
+        {
             selector: ".settings-section", 
-            msg: "V nastavení si uprav 'Tempo na cestě'. Aplikace podle toho výrazně zpřesní odhady časů variant přímo pro tebe.",
-            delay: 500
+            msg: "Nezapomeň si tu nastavit své 'Tempo na cestě'. Aplikace podle něj výrazně zpřesní odhady časů variant přímo pro tebe!",
+            requireClick: false,
+            delay: 400
         },
         // KONEC
         {
             selector: null,
-            msg: "To je vše! Tutoriál je u konce.",
-            delay: 100
+            msg: "To je vše! Tutoriál je u konce. Nyní se můžeš pustit do prohlížení.",
+            requireClick: false
         }
     ];
 
     function renderStep() {
         if (currentStep >= steps.length) {
-            overlay.remove();
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 400);
             localStorage.setItem('tutorial_seen', 'true');
-            // Po dokončení vrátíme uživatele na první záložku (Objevuj)
-            if (navBtns[0]) navBtns[0].click();
+            if (navBtns[0]) navBtns[0].click(); // Návrat na Objevuj
             return;
         }
 
         let step = steps[currentStep];
         
-        // Akce před vykreslením (např. přepnutí obrazovky)
         if (step.pre) step.pre();
 
         setTimeout(() => {
             let el = step.selector ? document.querySelector(step.selector) : null;
             let finalMsg = step.msg;
+            let pad = 12;
 
             if (el && el.getBoundingClientRect().width > 0) {
                 let rect = el.getBoundingClientRect();
-                let pad = 12;
                 
+                // Přesun díry
                 hole.style.opacity = '1';
                 hole.style.width = (rect.width + pad * 2) + 'px';
                 hole.style.height = (rect.height + pad * 2) + 'px';
@@ -277,42 +305,70 @@ function showTutorial() {
                 hole.style.top = (rect.top - pad) + 'px';
                 hole.style.borderRadius = '16px';
 
-                // Dynamické umístění textu podle toho, kde se nachází zvýrazněný prvek
+                // Aktivace klikacího místa pro uživatele
+                if (step.requireClick) {
+                    hotspot.style.display = 'block';
+                    hotspot.style.width = (rect.width + pad * 2) + 'px';
+                    hotspot.style.height = (rect.height + pad * 2) + 'px';
+                    hotspot.style.left = (rect.left - pad) + 'px';
+                    hotspot.style.top = (rect.top - pad) + 'px';
+                } else {
+                    hotspot.style.display = 'none';
+                }
+
+                // Umístění textu
                 if (rect.top > window.innerHeight / 2) {
-                    // Prvek je dole, text dáme nad něj
                     content.style.bottom = (window.innerHeight - rect.top + pad + 10) + 'px';
                     content.style.top = 'auto';
                     finalMsg = step.msg + arrowDown;
                 } else {
-                    // Prvek je nahoře, text dáme pod něj
                     content.style.top = (rect.bottom + pad + 10) + 'px';
                     content.style.bottom = 'auto';
                     finalMsg = arrowUp + step.msg;
                 }
             } else {
-                // Bez konkrétního prvku vycentrujeme text a skryjeme díru
                 hole.style.opacity = '0';
                 hole.style.width = '0px'; 
                 hole.style.height = '0px';
                 hole.style.left = '50%'; 
                 hole.style.top = '50%';
-                
+                hotspot.style.display = 'none';
                 content.style.top = '40%';
                 content.style.bottom = 'auto';
             }
             
-            content.innerHTML = finalMsg + '<div class="tut-hint">Klikni kamkoliv pro pokračování</div>';
+            const hintText = step.requireClick ? "Klikni na zvýrazněný prvek pro pokračování" : "Klikni kamkoliv pro pokračování";
+            content.innerHTML = finalMsg + `<div class="tut-hint">${hintText}</div>`;
             
-        }, step.delay || 100);
+        }, step.delay || 50);
     }
 
-    // Prokliknutí na další krok
-    overlay.addEventListener('click', () => {
+    // Kliknutí vedle (funguje jen pro kroky bez vyžadované interakce)
+    overlay.onclick = (e) => {
+        const step = steps[currentStep];
+        if (step.requireClick) {
+            // Zavibrování/zvětšení textu jako upozornění, že musí kliknout do díry
+            content.style.transform = 'scale(1.05)';
+            setTimeout(() => content.style.transform = 'none', 150);
+            return; 
+        }
         currentStep++;
         renderStep();
-    });
+    };
 
-    renderStep(); // Spuštění prvního kroku
+    // Kliknutí přímo na zvýrazněný interaktivní prvek (dovnitř "díry")
+    hotspot.onclick = (e) => {
+        e.stopPropagation();
+        const step = steps[currentStep];
+        if (step.requireClick && step.selector) {
+            const el = document.querySelector(step.selector);
+            if (el) el.click(); // Reálný klik v aplikaci
+            currentStep++;
+            renderStep();
+        }
+    };
+
+    renderStep();
 }
 
 // ==========================================
@@ -364,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (targetId === 'screen-profile') renderProfileSaved();
                     if (targetId === 'screen-settings') renderSettings();
                     
-                    // LÉK NA BÍLOU OBRAZOVKU PŘI PŘEPNUTÍ DO FEEDU Z PROFILU
                     if (targetId === 'screen-scroll') {
                         setTimeout(() => {
                             Object.values(mapInstances).forEach(m => {
@@ -827,7 +882,6 @@ function initMapForReel(index) {
 
     mapInstances[index] = map;
 }
-
 
 function renderMapData(index, geojsonOriginal) {
     try {
