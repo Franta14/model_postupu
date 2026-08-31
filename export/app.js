@@ -178,7 +178,7 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Pro produkci odkomentuj, teď zakomentováno, ať se tutoriál ukazuje pořád:
+    // Pro produkci odkomentuj, teď zakomentováno, ať se tutoriál ukazuje pořád pro testování:
     // if (localStorage.getItem('tutorial_seen')) return;
 
     const overlay = document.createElement('div');
@@ -228,20 +228,20 @@ function showTutorial() {
             delay: 300
         },
         {
-            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
-            msg: "Tohle je hlavní feed. Plynule potáhni prstem nahoru (jako na sítích) pro přesun na další mapu.",
+            selector: null,
+            msg: "Tohle je hlavní feed. Plynule potáhni prstem nahoru (nebo posuň kolečkem myši) pro přesun na další mapu.",
             action: 'native_scroll',
             delay: 400
         },
         {
-            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
-            msg: "Výborně! Nyní udělej na mapě gesto přiblížení (roztáhni dva prsty).",
+            selector: null,
+            msg: "Výborně! Nyní udělej na mapě gesto přiblížení (roztáhni dva prsty od sebe).",
             action: 'native_zoom',
             delay: 100
         },
         {
-            selector: () => document.querySelector('.reel.active') || document.querySelector('.reel'),
-            msg: "Když je mapa přiblížená, posouvání se zamkne a můžeš ji detailně zkoumat. Rychlým dvojklikem mapu opět oddálíš. Vyzkoušej to!",
+            selector: null,
+            msg: "Když je mapa přiblížená, posouvání se zamkne a můžeš ji detailně zkoumat. Rychlým dvojklikem na mapu ji opět oddálíš. Vyzkoušej to!",
             action: 'native_dblclick',
             delay: 100
         },
@@ -278,8 +278,8 @@ function showTutorial() {
         },
         {
             selector: "#pace-slider", 
-            msg: "Zde si uprav 'Tempo na cestě'. Aplikace díky tomu přesně spočítá odhady časů variant přímo pro tebe. Zkus posunout slider.",
-            action: 'click_target',
+            msg: "Zde si uprav 'Tempo na cestě'. Aplikace díky tomu přesně spočítá odhady časů variant přímo pro tebe. Zkus posunout slider doleva nebo doprava.",
+            action: 'native_input',
             delay: 400
         },
         {
@@ -297,7 +297,7 @@ function showTutorial() {
         renderStep();
     }
 
-    // --- POMOCNÁ FUNKCE PRO BEZPEČNÉ ZÍSKÁNÍ ELEMENTU ---
+    // Bezpečné načtení prvku, ať už přes string nebo přes funkci
     function getTargetElement(stepSelector) {
         if (!stepSelector) return null;
         let res = typeof stepSelector === 'function' ? stepSelector() : stepSelector;
@@ -310,7 +310,7 @@ function showTutorial() {
             setTimeout(() => overlay.remove(), 400);
             navBlocker.remove();
             localStorage.setItem('tutorial_seen', 'true');
-            if (navBtns[0]) navBtns[0].click(); // Návrat na Objevuj
+            if (navBtns[0]) navBtns[0].click();
             return;
         }
 
@@ -322,41 +322,57 @@ function showTutorial() {
             let finalMsg = step.msg;
             let pad = 12;
 
-            // Zajištění NATIVNÍ interakce pro specifické akce (necháme kliknutí "propadnout" aplikací)
+            // Nativní akce - uživatel musí fyzicky udělat gesto (overlay ho nesmí blokovat)
             if (step.action.startsWith('native_')) {
-                overlay.style.pointerEvents = 'none'; // Overlay už neblokuje dotyky
-                navBlocker.style.display = 'block'; // Zablokuje klikání na dolní lištu
+                overlay.style.pointerEvents = 'none'; 
+                navBlocker.style.display = 'block'; // Zablokování klikání na spodní menu během plnění úkolu
                 
                 if (step.action === 'native_scroll') {
-                    const rc = document.getElementById('reels-container');
-                    let initialY = rc.scrollTop;
-                    const handler = () => {
-                        if (Math.abs(rc.scrollTop - initialY) > window.innerHeight * 0.4) {
-                            rc.removeEventListener('scroll', handler);
+                    let startIdx = activeIndex;
+                    let scrollCheck = setInterval(() => {
+                        if (activeIndex !== startIdx && activeIndex !== -1) {
+                            clearInterval(scrollCheck);
                             advanceTutorial();
                         }
-                    };
-                    rc.addEventListener('scroll', handler);
+                    }, 200);
                 } else if (step.action === 'native_zoom') {
-                    let map = mapInstances[activeIndex];
-                    if (!map) return advanceTutorial();
-                    const handler = () => {
-                        if (map.getZoom() > map.getMinZoom() + 0.05) {
-                            map.off('zoomend', handler);
-                            advanceTutorial();
+                    let zoomCheck = setInterval(() => {
+                        let map = mapInstances[activeIndex];
+                        if (map) {
+                            clearInterval(zoomCheck);
+                            const handler = () => {
+                                if (map.getZoom() > map.getMinZoom() + 0.05) {
+                                    map.off('zoomend', handler);
+                                    advanceTutorial();
+                                }
+                            };
+                            map.on('zoomend', handler);
                         }
-                    };
-                    map.on('zoomend', handler);
+                    }, 200);
                 } else if (step.action === 'native_dblclick') {
-                    let map = mapInstances[activeIndex];
-                    if (!map) return advanceTutorial();
-                    const handler = () => {
-                        if (map.getZoom() <= map.getMinZoom() + 0.05) {
-                            map.off('zoomend', handler);
-                            advanceTutorial();
+                    let dblCheck = setInterval(() => {
+                        let map = mapInstances[activeIndex];
+                        if (map) {
+                            clearInterval(dblCheck);
+                            const handler = () => {
+                                if (map.getZoom() <= map.getMinZoom() + 0.05) {
+                                    map.off('zoomend', handler);
+                                    advanceTutorial();
+                                }
+                            };
+                            map.on('zoomend', handler);
                         }
-                    };
-                    map.on('zoomend', handler);
+                    }, 200);
+                } else if (step.action === 'native_input') {
+                    if (el) {
+                        const handler = () => {
+                            el.removeEventListener('change', handler);
+                            advanceTutorial();
+                        };
+                        el.addEventListener('change', handler);
+                    } else {
+                        advanceTutorial();
+                    }
                 }
             } else {
                 overlay.style.pointerEvents = 'auto';
@@ -408,6 +424,7 @@ function showTutorial() {
             else if (step.action === 'native_scroll') hintText = "Potáhni mapu prstem";
             else if (step.action === 'native_zoom') hintText = "Přibliž mapu dvěma prsty";
             else if (step.action === 'native_dblclick') hintText = "Dvakrát poklepej";
+            else if (step.action === 'native_input') hintText = "Posuň slider";
             else hintText = "Klikni kamkoliv pro pokračování";
 
             content.innerHTML = finalMsg + `<div class="tut-hint">${hintText}</div>`;
@@ -415,71 +432,6 @@ function showTutorial() {
         }, step.delay || 50);
     }
 
-    // Odchyt gest na hlavní tmavé vrstvě
-    let touchStartY = 0;
-    let lastTapTime = 0;
-
-    overlay.addEventListener('touchstart', (e) => {
-        const step = steps[currentStep];
-        
-        if (e.touches.length === 1) {
-            touchStartY = e.touches[0].clientY;
-            
-            // Detekce dvojkliku
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTapTime;
-            if (tapLength < 400 && tapLength > 0) {
-                if (step.action === 'native_dblclick') {
-                    let activeMap = mapInstances[activeIndex];
-                    if (activeMap) activeMap.setZoom(activeMap.getMinZoom(), { animate: false });
-                    advanceTutorial();
-                }
-            }
-            lastTapTime = currentTime;
-            
-        } else if (e.touches.length === 2) {
-            // Detekce zoomu
-            if (step.action === 'native_zoom') {
-                let activeMap = mapInstances[activeIndex];
-                if (activeMap) activeMap.setZoom(activeMap.getMinZoom() + 1, { animate: false });
-                advanceTutorial();
-            }
-        }
-    });
-
-    overlay.addEventListener('touchmove', (e) => {
-        const step = steps[currentStep];
-        if (step.action === 'native_scroll' && e.touches.length === 1) {
-            let dy = touchStartY - e.touches[0].clientY;
-            // Pokud uživatel potáhne dostatečně razantně
-            if (Math.abs(dy) > 40) {
-                const rc = document.getElementById('reels-container');
-                if (rc) {
-                    rc.scrollBy({ top: dy > 0 ? window.innerHeight : -window.innerHeight, behavior: 'smooth' });
-                }
-                touchStartY = e.touches[0].clientY; // zabrání spuštění vícekrát
-                advanceTutorial();
-            }
-        }
-    });
-
-    // Podpora pro desktopové uživatele
-    overlay.addEventListener('wheel', (e) => {
-        if (steps[currentStep].action === 'native_scroll') {
-            const rc = document.getElementById('reels-container');
-            if(rc) rc.scrollBy({ top: e.deltaY > 0 ? window.innerHeight : -window.innerHeight, behavior: 'smooth' });
-            advanceTutorial();
-        }
-    });
-    overlay.addEventListener('dblclick', (e) => {
-        if (steps[currentStep].action === 'native_dblclick') {
-            let activeMap = mapInstances[activeIndex];
-            if (activeMap) activeMap.setZoom(activeMap.getMinZoom(), { animate: false });
-            advanceTutorial();
-        }
-    });
-
-    // Zamezení prokliknutí jinam (upozorní uživatele vibrací/zvětšením rámečku)
     overlay.onclick = (e) => {
         const step = steps[currentStep];
         if (step.action && step.action !== 'click_anywhere' && step.action !== 'end') {
@@ -490,20 +442,18 @@ function showTutorial() {
         advanceTutorial();
     };
 
-    // Propustí a simuluje klik, pokud uživatel klikne přímo do přesně vyznačeného hotspotu
     hotspot.onclick = (e) => {
         e.stopPropagation();
         const step = steps[currentStep];
         if (step.action === 'click_target') {
             let el = getTargetElement(step.selector);
-            if (el) el.click(); // Reálný klik v aplikaci
+            if (el) el.click();
             advanceTutorial();
         }
     };
 
     renderStep(); 
 }
-
 
 // ==========================================
 // 5. INICIALIZACE APLIKACE
