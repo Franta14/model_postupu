@@ -160,6 +160,17 @@ body.saved-mode-active #saved-mode-header { display: flex; }
     text-transform: uppercase; letter-spacing: 0.8px; 
     text-shadow: 0px 1px 4px rgba(0,0,0,0.9), 0px 0px 10px rgba(0,0,0,0.8); 
 }
+
+/* Ochrana před nechtěnými kliky během tutoriálu - zablokuje vše kromě výjimek */
+body.tutorial-active button,
+body.tutorial-active .nav-btn,
+body.tutorial-active .story-item,
+body.tutorial-active input[type="range"] {
+    pointer-events: none !important;
+}
+.tut-allow-interaction {
+    pointer-events: auto !important;
+}
 `;
 document.head.appendChild(style);
 
@@ -180,6 +191,8 @@ setInterval(() => {
 function showTutorial() {
     // Pro produkci odkomentuj, teď zakomentováno, ať se tutoriál ukazuje pořád pro testování:
     // if (localStorage.getItem('tutorial_seen')) return;
+
+    document.body.classList.add('tutorial-active'); // Zapne plošné blokování tlačítek
 
     const overlay = document.createElement('div');
     overlay.id = 'interactive-tutorial';
@@ -258,11 +271,17 @@ function showTutorial() {
             delay: 100
         },
         {
+            selector: null,
+            msg: "Tady vidíš porovnání dostupných variant a jejich časů. Aplikace je přepočítává přímo pro tvé tempo.",
+            action: 'click_anywhere',
+            delay: 200
+        },
+        {
             pre: () => { if (isPanelOpen && typeof toggleVariants === 'function') toggleVariants(activeIndex); },
             selector: ".nav-btn[data-target='screen-profile']",
-            msg: "Tím se zobrazí porovnání variant a časů. Teď se podíváme na tvůj profil. Klikni dole na ikonku panáčka.",
+            msg: "Nyní se podíváme na tvůj profil. Klikni dole na ikonku panáčka.",
             action: 'click_target',
-            delay: 500
+            delay: 100
         },
         {
             selector: "#profile-content-wrapper",
@@ -307,7 +326,10 @@ function showTutorial() {
     function renderStep() {
         if (currentStep >= steps.length) {
             overlay.style.opacity = '0';
-            setTimeout(() => overlay.remove(), 400);
+            setTimeout(() => {
+                overlay.remove();
+                document.body.classList.remove('tutorial-active'); // Vypne plošné blokování tlačítek po konci
+            }, 400);
             navBlocker.remove();
             localStorage.setItem('tutorial_seen', 'true');
             if (navBtns[0]) navBtns[0].click();
@@ -316,6 +338,9 @@ function showTutorial() {
 
         let step = steps[currentStep];
         if (step.pre) step.pre();
+
+        // Vyčistit případné dočasné povolení interakce z předchozích kroků
+        document.querySelectorAll('.tut-allow-interaction').forEach(e => e.classList.remove('tut-allow-interaction'));
 
         setTimeout(() => {
             let el = getTargetElement(step.selector);
@@ -365,6 +390,7 @@ function showTutorial() {
                     }, 200);
                 } else if (step.action === 'native_input') {
                     if (el) {
+                        el.classList.add('tut-allow-interaction'); // Povolit interakci přes CSS bypass
                         const handler = () => {
                             el.removeEventListener('change', handler);
                             advanceTutorial();
