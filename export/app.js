@@ -168,10 +168,11 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 }
 
 /* Zamezení prokliknutí jinam během tutoriálu */
-body.tutorial-active button,
-body.tutorial-active .nav-btn,
-body.tutorial-active .story-item,
-body.tutorial-active input[type="range"] {
+body.tutorial-active button:not(.tut-allow-interaction),
+body.tutorial-active .nav-btn:not(.tut-allow-interaction),
+body.tutorial-active .story-item:not(.tut-allow-interaction),
+body.tutorial-active input:not(.tut-allow-interaction),
+body.tutorial-active select:not(.tut-allow-interaction) {
     pointer-events: none !important;
 }
 .tut-allow-interaction {
@@ -179,6 +180,7 @@ body.tutorial-active input[type="range"] {
     position: relative !important;
     z-index: 10002 !important;
 }
+
 
 `;
 document.head.appendChild(style);
