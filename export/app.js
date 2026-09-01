@@ -789,16 +789,12 @@ function injectChatAndCommentsUI() {
 
 function renderChatScreen() {
     let screen = document.getElementById('screen-chat');
-    if (!screen) {
-        screen = document.createElement('div');
-        screen.id = 'screen-chat';
-        screen.className = 'app-screen';
-        document.body.appendChild(screen);
-    }
+    if (!screen) return;
     
     screen.innerHTML = `
         <div class="chat-header-main">Zprávy</div>
         
+        <!-- VYHLEDÁVAČ -->
         <div style="padding: 0 20px 15px 20px;">
             <div style="display:flex; gap:10px; background:var(--secondary-bg); padding:10px 15px; border-radius:20px; border:1px solid var(--border-color); align-items:center;">
                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -806,8 +802,10 @@ function renderChatScreen() {
             </div>
         </div>
         
+        <!-- KONTEJNER PRO VÝSLEDKY -->
         <div id="user-search-results" style="padding: 0 20px; display: none; flex-direction: column; gap:10px;"></div>
 
+        <!-- SEZNAM AKTIVNÍCH CHATŮ -->
         <div class="chat-list" id="chat-list-container">
             <div class="chat-row" onclick="openChatConversation('Globální Diskuzní Klub')">
                 <div class="chat-row-avatar">
@@ -819,9 +817,21 @@ function renderChatScreen() {
                 </div>
             </div>
         </div>
+
+        <!-- SAMOTNÉ OKNO KONVERZACE -->
+        <div id="chat-conversation">
+            <div class="conv-header">
+                <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+                <div id="conv-name">Chat</div>
+            </div>
+            <div class="conv-messages" id="conv-messages-box"></div>
+            <div class="conv-input">
+                <input type="text" id="new-chat-input" placeholder="Napsat zprávu..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-color);">
+                <button id="send-chat-btn" style="background:var(--accent); color:white; border:none; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+            </div>
+        </div>
     `;
 
-    // Posluchač pro vyhledávací pole (aktivuje hledání v databázi při psaní)
     document.getElementById('user-search-input').addEventListener('input', debounceSearchUsers);
 }
 
