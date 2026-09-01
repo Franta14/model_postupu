@@ -8,14 +8,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Scrollienteering</title>
     
-    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
-    <!-- Custom PWA Styles -->
     <link rel="stylesheet" href="style.css?v=32"/>
 
     <script>
@@ -39,9 +37,7 @@
 </head>
 <body>
     <main id="app-content">
-        <!-- 1. OBRAZOVKA: OBJEVUJ -->
         <div id="screen-explore" class="app-screen active">
-            <!-- Search Bar -->
             <div class="explore-search-container">
                 <div class="explore-search-bar">
                     <svg viewBox="0 0 24 24" class="search-icon" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -49,7 +45,6 @@
                 </div>
             </div>
             
-            <!-- Stories / Regions -->
             <div class="explore-stories">
                 <div class="story-item" data-terrain="cesky-les">
                     <div class="story-ring"><div class="story-img" style="background-image: url('tiles/3/1/2.png');"></div></div>
@@ -77,13 +72,10 @@
                 </div>
             </div>
             
-            <!-- Explore Grid (3 columns IG style) -->
             <div class="explore-grid" id="explore-grid-container">
-                <!-- Grid items dynamically injected via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- 2. OBRAZOVKA: SCROLLUJ (Původní aplikace) -->
         <div id="screen-scroll" class="app-screen">
             <div id="loader">Načítám postupy...</div>
             
@@ -93,12 +85,9 @@
                 X: <span id="calib-x">400</span> | Y: <span id="calib-y">-300</span>
             </div>
             
-            <!-- Foreground scroll-snapping reels -->
             <div id="reels-container">
-                <!-- JS will inject .reel elements here -->
-            </div>
+                </div>
             
-            <!-- Global Variants Panel (Bottom Sheet) -->
             <div class="variants-panel pos-top-right" id="global-variants-panel">
                 <div class="panel-header">
                     <button class="toggle-btn" id="global-toggle-btn"><svg class="toggle-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
@@ -106,7 +95,6 @@
                 <div id="global-variants-content"></div>
             </div>
             
-            <!-- Sync Progress Overlay -->
             <div id="sync-progress" class="sync-progress-overlay">
                 <div class="sync-box">
                     <h4>Stahování dat...</h4>
@@ -116,7 +104,6 @@
             </div>
         </div>
 
-        <!-- 3. OBRAZOVKA: PROFIL -->
         <div id="screen-profile" class="app-screen">
             <div class="screen-header"><h2>Franta Orvaťák</h2></div>
             <div class="screen-content">
@@ -138,7 +125,6 @@
                     <div class="profile-tab"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></div>
                 </div>
                 <div class="profile-grid">
-                    <!-- Dummy items -->
                     <div class="grid-item"></div>
                     <div class="grid-item"></div>
                     <div class="grid-item"></div>
@@ -149,7 +135,6 @@
             </div>
         </div>
 
-        <!-- 4. OBRAZOVKA: NASTAVENÍ -->
         <div id="screen-settings" class="app-screen">
             <div class="screen-header"><h2>Nastavení</h2></div>
             <div class="screen-content">
@@ -184,22 +169,43 @@
                 </div>
             </div>
         </div>
+
+        <div id="screen-chat" class="app-screen">
+            <div class="chat-header-main">Zprávy</div>
+            <div class="chat-list">
+                <div class="chat-row" onclick="openChatConversation('Globální Diskuzní Klub')">
+                    <div class="chat-row-avatar">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#666" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="chat-row-info">
+                        <div class="chat-row-name">Globální Diskuzní Klub</div>
+                        <div class="chat-row-msg">Klikni a vstup do živého chatu!</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chat-conversation">
+                <div class="conv-header">
+                    <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+                    <div id="conv-name">Chat</div>
+                </div>
+                <div class="conv-messages" id="conv-messages-box"></div>
+                <div class="conv-input">
+                    <input type="text" id="new-chat-input" placeholder="Napsat zprávu..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-color);">
+                    <button id="send-chat-btn" style="background:var(--accent); color:white; border:none; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- SPODNÍ NAVIGACE (SVG liniové ikony) -->
     <nav id="bottom-nav">
         <button class="nav-btn active" data-target="screen-explore">
             <svg class="nav-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <!-- Baseplate -->
                 <path d="M 6 22 L 6 5 A 3 3 0 0 1 9 2 L 15 2 A 3 3 0 0 1 18 5 L 18 22 Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round" />
-                <!-- Lanyard hole -->
                 <circle cx="8" cy="4.5" r="1" stroke="currentColor" stroke-width="1.5" fill="none" />
-                <!-- Capsule -->
                 <circle cx="12" cy="11" r="5" stroke="currentColor" stroke-width="1.5" fill="none" />
-                <!-- Needle -->
                 <path d="M12 11 L12 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
                 <circle cx="12" cy="11" r="1" fill="currentColor" />
-                <!-- Arrow pointing down -->
                 <path d="M12 17 L12 21 M10 19 L12 21 L14 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
             </svg>
         </button>
@@ -225,7 +231,6 @@
         </button>
     </nav>
     
-    <!-- Firebase SDK (Základ, Auth, Databáze) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
