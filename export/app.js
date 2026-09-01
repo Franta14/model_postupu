@@ -674,6 +674,68 @@ function showTutorial() {
 // ==========================================
 // 5. INICIALIZACE APLIKACE A UI SOCIÁLNÍCH FUNKCÍ
 // ==========================================
+let searchTimeout = null;
+
+function debounceSearchUsers(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim().toLowerCase();
+    const resultsEl = document.getElementById('user-search-results');
+    const chatListEl = document.getElementById('chat-list-container');
+    
+    // Pokud je text moc krátký, vrátíme se na seznam chatů
+    if (query.length < 2) {
+        resultsEl.style.display = 'none';
+        chatListEl.style.display = 'block';
+        return;
+    }
+    
+    searchTimeout = setTimeout(async () => {
+        chatListEl.style.display = 'none';
+        resultsEl.style.display = 'flex';
+        resultsEl.innerHTML = '<div style="opacity:0.5; padding: 10px 0; text-align:center;">Hledám uživatele...</div>';
+        
+        try {
+            const usersRef = db.collection('users');
+            const snapshot = await usersRef.get();
+            
+            let found = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                // Filtrace jmen bez rozlišení velikosti písmen a vynechání vlastního profilu
+                if (data.name && data.name.toLowerCase().includes(query) && (!currentUser || doc.id !== currentUser.uid)) {
+                    found.push({ id: doc.id, ...data });
+                }
+            });
+            
+            if (found.length === 0) {
+                resultsEl.innerHTML = '<div style="opacity:0.5; padding: 10px 0; text-align:center;">Uživatel nenalezen.</div>';
+            } else {
+                resultsEl.innerHTML = '<div style="font-size:0.85rem; opacity:0.6; padding-left:5px;">Výsledky hledání:</div>' + found.map(u => `
+                    <div class="chat-row" style="padding:10px 0; border:none;" onclick="startDirectMessage('${u.id}', '${u.name}')">
+                        <div class="chat-row-avatar" style="background-image:url('${u.photo || 'https://i.pravatar.cc/100?img=1'}'); background-size:cover; border:1px solid var(--border-color);"></div>
+                        <div class="chat-row-info">
+                            <div class="chat-row-name">${u.name}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch(err) {
+            resultsEl.innerHTML = `<div style="color:red; padding: 10px 0;">Chyba databáze: ${err.message}</div>`;
+        }
+    }, 400); // 400ms prodleva, aby se neodesílal dotaz s každým úhozem do klávesnice
+}
+
+function startDirectMessage(targetUid, targetName) {
+    // Příprava UI pro budoucí vytvoření soukromé 1-on-1 kolekce
+    alert(`Zde se vytvoří soukromá konverzace s uživatelem ${targetName}. (Backend propojení připravíme v dalším kroku)`);
+    
+    // Reset vyhledávače
+    document.getElementById('user-search-input').value = '';
+    document.getElementById('user-search-results').style.display = 'none';
+    document.getElementById('chat-list-container').style.display = 'block';
+}
+
+
 function injectChatAndCommentsUI() {
     // Přidání 5. ikony (Zprávy) do spodního menu, pokud tam ještě není
     const navContainer = document.querySelector('nav') || document.querySelector('.bottom-nav');
@@ -736,56 +798,33 @@ function renderChatScreen() {
     
     screen.innerHTML = `
         <div class="chat-header-main">Zprávy</div>
-        <div class="chat-list">
-            <div class="chat-row" onclick="openChatConversation('Karel Novák')">
-                <div class="chat-row-avatar" style="background-image:url('https://i.pravatar.cc/100?img=33'); background-size:cover;"></div>
-                <div class="chat-row-info">
-                    <div class="chat-row-name">Karel Novák</div>
-                    <div class="chat-row-msg">Koukej na tuhle volbu na Homolce!</div>
-                </div>
-                <div class="chat-row-time">1h</div>
+        
+        <div style="padding: 0 20px 15px 20px;">
+            <div style="display:flex; gap:10px; background:var(--secondary-bg); padding:10px 15px; border-radius:20px; border:1px solid var(--border-color); align-items:center;">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="user-search-input" placeholder="Hledat uživatele..." style="border:none; background:transparent; outline:none; flex:1; color:var(--text-color); font-size:1rem;">
             </div>
-            <div class="chat-row" onclick="openChatConversation('Jana Dvořáková')">
-                <div class="chat-row-avatar" style="background-image:url('https://i.pravatar.cc/100?img=44'); background-size:cover;"></div>
-                <div class="chat-row-info">
-                    <div class="chat-row-name">Jana Dvořáková</div>
-                    <div class="chat-row-msg">Díky za tip, pomohlo to. 🔥</div>
+        </div>
+        
+        <div id="user-search-results" style="padding: 0 20px; display: none; flex-direction: column; gap:10px;"></div>
+
+        <div class="chat-list" id="chat-list-container">
+            <div class="chat-row" onclick="openChatConversation('Globální Diskuzní Klub')">
+                <div class="chat-row-avatar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#666" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
-                <div class="chat-row-time">Včera</div>
+                <div class="chat-row-info">
+                    <div class="chat-row-name">Globální Diskuzní Klub</div>
+                    <div class="chat-row-msg">Klikni a vstup do živého chatu!</div>
+                </div>
             </div>
         </div>
     `;
 
-    // Pokud neexistuje okno konverzace, vytvoříme ho
-    if (!document.getElementById('chat-conversation')) {
-        const conv = document.createElement('div');
-        conv.id = 'chat-conversation';
-        conv.innerHTML = `
-            <div class="conv-header">
-                <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
-                <div id="conv-name">Karel Novák</div>
-            </div>
-            <div class="conv-messages">
-                <div class="msg-bubble msg-incoming">Zdar! Jak jsi běžel tu trojku na Homolce? Já tam nechal aspoň minutu. 🤦‍♂️</div>
-                <div class="msg-bubble msg-outgoing">Ahoj, já šel úplně zleva po cestě, bylo to mnohem čistší. Koukni na to:</div>
-                
-                <!-- Nasimulovaná Rich Link kartička, která po kliknutí hodí uživatele přímo do feedu na danou mapu -->
-                <div class="rich-link-card" onclick="openSharedRoute('homolka')">
-                    <div class="rich-link-img" style="background-image: url('tiles/3/1/2.png')"></div>
-                    <div class="rich-link-info">
-                        <div class="rich-link-title">Homolka</div>
-                        <div class="rich-link-sub">3240 m vzdušně • 8 postupů</div>
-                    </div>
-                </div>
-            </div>
-            <div class="conv-input">
-                <input type="text" placeholder="Napsat zprávu...">
-                <button><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
-            </div>
-        `;
-        document.body.appendChild(conv);
-    }
+    // Posluchač pro vyhledávací pole (aktivuje hledání v databázi při psaní)
+    document.getElementById('user-search-input').addEventListener('input', debounceSearchUsers);
 }
+
 
 function openChatConversation(name) {
     document.getElementById('conv-name').innerText = name;
@@ -1096,6 +1135,14 @@ function renderSettings() {
                     <button class="settings-btn" style="width: 100%; text-align: left;" onclick="clearAppCache()">${t('clearCache')} (<span id="cache-size">0.0 MB</span>)</button>
                 </div>
             </div>
+
+            <!-- NOVÁ SEKCE NÁPOVĚDA -->
+            <div class="settings-section">
+                <div class="settings-title">Nápověda</div>
+                <div class="settings-row" style="border:none; padding-top:5px;">
+                    <button class="settings-btn" style="width: 100%; background: var(--secondary-bg); font-weight:600;" onclick="replayTutorial()">Znovu spustit tutoriál</button>
+                </div>
+            </div>
         </div>
     `;
 
@@ -1103,8 +1150,9 @@ function renderSettings() {
     const paceValue = document.getElementById('pace-value');
     paceSlider.addEventListener('input', (e) => { paceValue.innerText = formatPace(e.target.value); });
     paceSlider.addEventListener('change', (e) => { updateSettings('pace', parseInt(e.target.value)); });
-    updateCacheSize();
+    if(typeof updateCacheSize === 'function') updateCacheSize();
 }
+
 
 async function updateCacheSize() {
     const span = document.getElementById('cache-size');
