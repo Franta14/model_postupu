@@ -79,6 +79,47 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
+let currentCommentsUnsubscribe = null;
+let currentChatUnsubscribe = null;
+
+document.addEventListener('click', async (e) => {
+    const sendCommentBtn = e.target.closest('#send-comment-btn');
+    if (sendCommentBtn) {
+        if (!currentUser) { alert("Musíš být přihlášený!"); return; }
+        const input = document.getElementById('new-comment-input');
+        const text = input.value.trim();
+        if (!text) return;
+        const routeId = document.getElementById('comments-panel').getAttribute('data-current-route');
+        input.value = '';
+        await db.collection('comments').add({
+            routeId: routeId, text: text, authorUid: currentUser.uid,
+            authorName: currentUser.displayName, authorPhoto: currentUser.photoURL || 'https://i.pravatar.cc/100?img=1',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    const sendChatBtn = e.target.closest('#send-chat-btn');
+    if (sendChatBtn) {
+        if (!currentUser) { alert("Musíš být přihlášený!"); return; }
+        const input = document.getElementById('new-chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        await db.collection('global_chat').add({
+            text: text, authorUid: currentUser.uid, authorName: currentUser.displayName,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+});
+
+document.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') {
+        if(e.target.id === 'new-comment-input') document.getElementById('send-comment-btn').click();
+        if(e.target.id === 'new-chat-input') document.getElementById('send-chat-btn').click();
+    }
+});
+
+
 // ==========================================
 // 1. GLOBÁLNÍ DATA A NASTAVENÍ (STATE)
 // ==========================================
@@ -736,11 +777,56 @@ function renderChatScreen() {
 function openChatConversation(name) {
     document.getElementById('conv-name').innerText = name;
     document.getElementById('chat-conversation').classList.add('active');
+
+    if (!document.getElementById('new-chat-input')) {
+        document.querySelector('.conv-input').innerHTML = `
+            <input type="text" id="new-chat-input" placeholder="Napsat zprávu..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-color);">
+            <button id="send-chat-btn" style="background:var(--accent); color:white; border:none; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        `;
+    }
+
+    const msgsEl = document.querySelector('.conv-messages');
+    msgsEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Připojuji se...</div>';
+
+    if(currentChatUnsubscribe) currentChatUnsubscribe();
+    currentChatUnsubscribe = db.collection('global_chat')
+        .orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+            msgsEl.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const isMe = currentUser && data.authorUid === currentUser.uid;
+                const bubbleClass = isMe ? 'msg-outgoing' : 'msg-incoming';
+                
+                if (data.type === 'shared_route') {
+                    msgsEl.innerHTML += `
+                        <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
+                            ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 2px; opacity: 0.6; color:var(--text-color);">${data.authorName}</div>` : ''}
+                            <div class="rich-link-card" onclick="openSharedRoute('${data.routeId}')">
+                                <div class="rich-link-img" style="background-image: url('tiles/3/1/2.png')"></div>
+                                <div class="rich-link-info">
+                                    <div class="rich-link-title">${data.routeName}</div>
+                                    <div class="rich-link-sub">Klikni pro zobrazení mapy</div>
+                                </div>
+                            </div>
+                        </div>`;
+                } else {
+                    msgsEl.innerHTML += `
+                        <div class="msg-bubble ${bubbleClass}">
+                            ${!isMe ? `<div style="font-size: 0.7rem; margin-bottom: 3px; opacity: 0.6;">${data.authorName}</div>` : ''}
+                            ${data.text}
+                        </div>`;
+                }
+            });
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+        });
 }
 
 function closeChatConversation() {
     document.getElementById('chat-conversation').classList.remove('active');
+    if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
 }
+
 
 function openSharedRoute(mapId) {
     closeChatConversation();
@@ -748,14 +834,52 @@ function openSharedRoute(mapId) {
 }
 
 function openComments(index) {
+    const postup = postupyData[index];
+    const routeId = postup.map_id + "_" + postup.id;
+    
     document.getElementById('comments-overlay').classList.add('active');
-    document.getElementById('comments-panel').classList.add('active');
+    const panel = document.getElementById('comments-panel');
+    panel.classList.add('active');
+    panel.setAttribute('data-current-route', routeId);
+    
+    if (!document.getElementById('new-comment-input')) {
+        document.querySelector('.comments-input-area').innerHTML = `
+            <input type="text" id="new-comment-input" placeholder="Přidat komentář..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-color);">
+            <button id="send-comment-btn" style="background:var(--accent); color:white; border:none; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+        `;
+    }
+
+    const listEl = document.querySelector('.comments-list');
+    listEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Načítám komentáře...</div>';
+
+    if (currentCommentsUnsubscribe) currentCommentsUnsubscribe();
+    currentCommentsUnsubscribe = db.collection('comments')
+        .where('routeId', '==', routeId).orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+            listEl.innerHTML = '';
+            if(snapshot.empty) { listEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Zatím žádné komentáře. Buď první!</div>'; return; }
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}) : 'Teď';
+                listEl.innerHTML += `
+                    <div class="comment-item">
+                        <div class="comment-avatar" style="background-image:url('${data.authorPhoto}'); background-size:cover;"></div>
+                        <div class="comment-body">
+                            <div class="comment-author">${data.authorName} <span class="comment-time">${time}</span></div>
+                            <div class="comment-text">${data.text}</div>
+                        </div>
+                    </div>`;
+            });
+            listEl.scrollTop = listEl.scrollHeight;
+        });
 }
 
 function closeComments() {
     document.getElementById('comments-overlay').classList.remove('active');
     document.getElementById('comments-panel').classList.remove('active');
+    if (currentCommentsUnsubscribe) { currentCommentsUnsubscribe(); currentCommentsUnsubscribe = null; }
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
     try {
@@ -1557,8 +1681,16 @@ function toggleBookmark(index, btn) {
 }
 
 function sharePostup(index) {
-    if (navigator.share) navigator.share({ title: 'Zajímavý postup!', url: window.location.href }).catch(err => console.log(err));
-    else alert("Odkaz zkopírován do schránky.");
+    if (!currentUser) { alert("Pro sdílení se musíš přihlásit!"); return; }
+    const postup = postupyData[index];
+    if(confirm(`Chceš postup z mapy "${postup.map_name}" nasdílet do Globálního chatu?`)) {
+        db.collection('global_chat').add({
+            type: 'shared_route', routeId: postup.map_id, routeName: postup.map_name,
+            authorUid: currentUser.uid, authorName: currentUser.displayName,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Odesláno!");
+    }
 }
 
 function groupRoutesByMap(routesArray) {
