@@ -832,7 +832,6 @@ function openSharedRoute(mapId) {
     closeChatConversation();
     openFeed(mapId, false);
 }
-
 function openComments(index) {
     const postup = postupyData[index];
     const routeId = postup.map_id + "_" + postup.id;
@@ -853,13 +852,27 @@ function openComments(index) {
     listEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Načítám komentáře...</div>';
 
     if (currentCommentsUnsubscribe) currentCommentsUnsubscribe();
+    
+    // Změna: Odebráno .orderBy(), řazení probíhá lokálně
     currentCommentsUnsubscribe = db.collection('comments')
-        .where('routeId', '==', routeId).orderBy('timestamp', 'asc')
+        .where('routeId', '==', routeId)
         .onSnapshot(snapshot => {
             listEl.innerHTML = '';
-            if(snapshot.empty) { listEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Zatím žádné komentáře. Buď první!</div>'; return; }
-            snapshot.forEach(doc => {
-                const data = doc.data();
+            if(snapshot.empty) { 
+                listEl.innerHTML = '<div style="text-align:center; padding: 20px; opacity: 0.5;">Zatím žádné komentáře. Buď první!</div>'; 
+                return; 
+            }
+            
+            // Lokální seřazení podle času
+            let commentsArray = [];
+            snapshot.forEach(doc => commentsArray.push(doc.data()));
+            commentsArray.sort((a, b) => {
+                let timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
+                let timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
+                return timeA - timeB;
+            });
+
+            commentsArray.forEach(data => {
                 const time = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'}) : 'Teď';
                 listEl.innerHTML += `
                     <div class="comment-item">
@@ -871,6 +884,9 @@ function openComments(index) {
                     </div>`;
             });
             listEl.scrollTop = listEl.scrollHeight;
+        }, error => {
+            // Zachycení chyb pro snazší ladění
+            listEl.innerHTML = `<div style="text-align:center; padding: 20px; color: red;">Chyba DB: ${error.message}</div>`;
         });
 }
 
