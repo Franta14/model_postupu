@@ -365,6 +365,19 @@ applyTheme();
 // ==========================================
 // 4. MĚŘENÍ ČASU V APLIKACI A TUTORIAL
 // ==========================================
+function replayTutorial() {
+    localStorage.removeItem('tutorial_seen');
+    // Přepnutí na výchozí obrazovku "Objevuj", kde tutoriál začíná
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const exploreBtn = document.querySelector('.nav-btn[data-target="screen-explore"]');
+    if (exploreBtn) exploreBtn.classList.add('active');
+    document.getElementById('screen-explore').classList.add('active');
+    
+    showTutorial();
+}
+
+
 setInterval(() => {
     let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
     accMs += 5000;
@@ -374,9 +387,9 @@ setInterval(() => {
 }, 5000);
 
 function showTutorial() {
-    // Pro produkci odkomentuj, teď je zakomentováno pro testování:
-    // if (localStorage.getItem('tutorial_seen')) return;
-
+    // Přidáno: Pokud už uživatel tutoriál viděl, funkce se rovnou ukončí
+    if (localStorage.getItem('tutorial_seen') === 'true') return;
+    
     document.body.classList.add('tutorial-active');
 
     const overlay = document.createElement('div');
