@@ -1947,9 +1947,6 @@ function renderProfileSaved() {
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
                 franta14_
             </div>
-            <div style="display:flex; gap:16px; align-items:center;">
-                <svg onclick="document.querySelector('.nav-btn[data-target=screen-settings]').click()" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" style="cursor:pointer;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </div>
         </div>
 
         <div style="display:flex; padding: 16px 16px 12px; align-items:center;">
