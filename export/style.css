@@ -1,15 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg-color: #ffffff;
   --bg-secondary: #fafafa;
-  --text-primary: #262626;
-  --text-secondary: #8e8e8e;
+  --text-primary: #000000;
+  --text-secondary: #737373;
   --border-color: #dbdbdb;
   --accent: #0095f6;
   --accent-hover: #1877f2;
   --map-bg: #ffffff;
   --iof-purple: #b300ff;
+  --nav-bg: #ffffff;
+  --nav-border: rgba(0, 0, 0, 0.1);
+  --search-bg: #efefef;
+  --chat-bubble-incoming: #efefef;
+  --chat-bubble-outgoing: #0095f6;
+  --overlay-bg: rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -23,10 +29,12 @@ html, body {
   width: 100%;
   background-color: var(--bg-color);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 /* ==================================================== */
@@ -35,12 +43,11 @@ html, body {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 52px); /* minus bottom nav */
+  height: calc(100vh - 49px);
   position: relative;
   overflow: hidden;
 }
 
-/* Screen container */
 .app-screen {
   display: none;
   width: 100%;
@@ -50,19 +57,18 @@ html, body {
   left: 0;
   overflow-y: auto;
   background-color: var(--bg-color);
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.15s ease-out forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .app-screen.active {
   display: block;
 }
 
-/* Scroll screen spans full height — bottom nav sits on top */
 #screen-scroll {
   height: 100vh;
   overflow: hidden;
@@ -72,28 +78,41 @@ html, body {
   height: 100vh;
 }
 
-/* ── Bottom Navigation (Instagram-style Dark Glassmorphism) ── */
+/* ── Bottom Navigation (Instagram Clean Style) ── */
 #bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 52px;
-  background-color: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  height: 49px;
+  background-color: var(--nav-bg);
+  border-top: 1px solid var(--nav-border);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
   padding-bottom: env(safe-area-inset-bottom);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark nav when on reels/scroll screen */
+#bottom-nav.nav-dark {
+  background-color: rgba(0, 0, 0, 0.95);
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+#bottom-nav.nav-dark .nav-btn {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#bottom-nav.nav-dark .nav-btn.active {
+  color: #ffffff;
 }
 
 .nav-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -101,13 +120,15 @@ html, body {
   flex: 1;
   height: 100%;
   cursor: pointer;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition: color 0.15s ease, transform 0.1s ease;
   font-family: inherit;
   padding: 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-btn:active {
-  transform: scale(0.9);
+  transform: scale(0.88);
 }
 
 .nav-btn .nav-icon-svg {
@@ -116,18 +137,21 @@ html, body {
   stroke: currentColor;
   stroke-width: 1.5;
   fill: none;
-  margin-bottom: 2px;
   transition: stroke-width 0.15s ease;
 }
 
 .nav-btn.active {
-  color: #ffffff;
-}
-.nav-btn.active .nav-icon-svg {
-  stroke-width: 2.2;
+  color: var(--text-primary);
 }
 
-/* Hide text in nav for cleaner IG look */
+#bottom-nav.nav-dark .nav-btn.active {
+  color: #ffffff;
+}
+
+.nav-btn.active .nav-icon-svg {
+  stroke-width: 2;
+}
+
 .nav-btn span {
   display: none;
 }
@@ -135,15 +159,15 @@ html, body {
 /* Notification Badge */
 .nav-badge {
   position: absolute;
-  top: -4px;
-  right: -10px;
-  background-color: var(--accent);
+  top: 4px;
+  right: calc(50% - 18px);
+  background-color: #ff3040;
   color: white;
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   font-weight: 700;
   border-radius: 50%;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -156,7 +180,7 @@ html, body {
 /* ==================================================== */
 
 .explore-search-container {
-  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
   background: var(--bg-color);
   position: sticky;
   top: 0;
@@ -166,16 +190,17 @@ html, body {
 .explore-search-bar {
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
+  background: var(--search-bg);
   border-radius: 10px;
-  padding: 8px 12px;
+  padding: 7px 12px;
+  gap: 6px;
 }
 
 .search-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: var(--text-secondary);
-  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .explore-search-input {
@@ -183,36 +208,41 @@ html, body {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 0.95rem;
+  font-size: 14px;
   color: var(--text-primary);
   font-family: inherit;
+  font-weight: 400;
 }
+
 .explore-search-input::placeholder {
   color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .explore-stories {
   display: flex;
   overflow-x: auto;
-  padding: 0 16px 16px;
+  padding: 8px 16px 12px;
   gap: 16px;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
+
 .explore-stories::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .story-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .story-ring {
-  width: 64px;
-  height: 64px;
+  width: 62px;
+  height: 62px;
   border-radius: 50%;
   padding: 2px;
   background: var(--border-color);
@@ -230,13 +260,14 @@ html, body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid var(--bg-color);
+  border: 2.5px solid var(--bg-color);
   background-size: cover;
   background-position: center;
 }
 
 .story-item span {
-  font-size: 0.7rem;
+  font-size: 11px;
+  font-weight: 400;
   color: var(--text-primary);
   max-width: 70px;
   white-space: nowrap;
@@ -248,8 +279,8 @@ html, body {
 .explore-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: calc((100vw - 4px) / 3); /* creates perfect squares */
-  gap: 2px;
+  grid-auto-rows: calc((100vw - 2px) / 3);
+  gap: 1px;
   padding-bottom: 80px;
 }
 
@@ -281,21 +312,11 @@ html, body {
 }
 
 @keyframes slowMapMovement {
-  0% {
-    transform: scale(1.15) translate(0%, 0%);
-  }
-  25% {
-    transform: scale(1.22) translate(-4%, -3%);
-  }
-  50% {
-    transform: scale(1.18) translate(3%, -4%);
-  }
-  75% {
-    transform: scale(1.24) translate(-2%, 4%);
-  }
-  100% {
-    transform: scale(1.15) translate(0%, 0%);
-  }
+  0% { transform: scale(1.15) translate(0%, 0%); }
+  25% { transform: scale(1.22) translate(-4%, -3%); }
+  50% { transform: scale(1.18) translate(3%, -4%); }
+  75% { transform: scale(1.24) translate(-2%, 4%); }
+  100% { transform: scale(1.15) translate(0%, 0%); }
 }
 
 .grid-icon {
@@ -308,38 +329,39 @@ html, body {
 }
 
 /* ==================================================== */
-/* PROFILE SCREEN                                       */
+/* PROFILE SCREEN (IG Profile Style)                    */
 /* ==================================================== */
 
 .screen-header {
-  padding: 16px;
-  padding-top: max(16px, env(safe-area-inset-top));
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border-color);
 }
 
 .screen-header h2 {
-  font-size: 1.1rem;
+  font-size: 16px;
   font-weight: 600;
 }
 
 .screen-content {
-  padding: 20px 16px;
+  padding: 16px;
 }
 
 .profile-header-info {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .avatar-large {
   background: var(--bg-secondary);
-  width: 80px; height: 80px;
+  width: 77px;
+  height: 77px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--border-color);
   flex-shrink: 0;
   margin-right: 24px;
 }
@@ -361,22 +383,24 @@ html, body {
 }
 
 .stat-num {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
 .stat-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-top: 1px;
 }
 
 .profile-bio {
-  font-size: 0.85rem;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--text-primary);
   line-height: 1.4;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .profile-tabs {
@@ -390,7 +414,7 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12px 0;
+  padding: 10px 0;
   color: var(--text-secondary);
   border-top: 1px solid transparent;
   margin-top: -1px;
@@ -405,7 +429,7 @@ html, body {
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  gap: 1px;
   margin: 0 -16px;
 }
 
@@ -415,66 +439,126 @@ html, body {
 }
 
 /* ==================================================== */
-/* SETTINGS SCREEN (Instagram settings style)           */
+/* SETTINGS SCREEN (IG Settings with Icons)             */
 /* ==================================================== */
 
 .settings-group {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .settings-group h3 {
-  font-size: 0.75rem;
+  font-size: 13px;
   text-transform: uppercase;
   color: var(--text-secondary);
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   letter-spacing: 0.5px;
-  font-weight: 500;
+  font-weight: 600;
+  padding: 0 16px;
 }
 
 .setting-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border-color);
+  padding: 14px 16px;
+  border-bottom: 0.5px solid var(--border-color);
+  gap: 12px;
 }
 
 .setting-item label {
   font-weight: 400;
-  font-size: 0.88rem;
+  font-size: 16px;
+  color: var(--text-primary);
 }
 
 .setting-item .value {
-  font-size: 0.82rem;
+  font-size: 14px;
   color: var(--text-secondary);
 }
 
 .setting-item input[type="range"] {
   flex: 1;
-  margin: 0 14px;
+  margin: 0 12px;
   accent-color: var(--text-primary);
 }
 
 .setting-item select {
-  background: var(--bg-secondary);
+  background: var(--bg-color);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  padding: 7px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   outline: none;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 14px;
+}
+
+/* Settings row with icon (IG style) */
+.settings-row-ig {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.settings-row-ig:active {
+  background: var(--bg-secondary);
+}
+
+.settings-row-ig .settings-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  color: var(--text-primary);
+}
+
+.settings-row-ig .settings-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.settings-row-ig .settings-label {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.settings-row-ig .settings-value {
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-row-ig .settings-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.settings-section-divider {
+  height: 6px;
+  background: var(--bg-secondary);
+  margin: 4px 0;
 }
 
 .btn-secondary {
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  padding: 9px 14px;
+  padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 14px;
   transition: background 0.15s;
 }
 
@@ -486,7 +570,6 @@ html, body {
 /* REELS / MAP VIEWER                                   */
 /* ==================================================== */
 
-/* Foreground reels container (Scroll snapping) */
 #reels-container {
   position: absolute;
   top: 0;
@@ -499,11 +582,11 @@ html, body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 #reels-container::-webkit-scrollbar {
   display: none;
 }
 
-/* Individual reel slide — full screen, no bottom bar */
 .reel {
   width: 100vw;
   height: 100vh;
@@ -516,19 +599,17 @@ html, body {
   overflow: hidden;
 }
 
-/* Map clip — stops above bottom nav */
 .map-clip {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 52px); /* above bottom nav */
+  height: calc(100% - 49px);
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
 }
 
-/* Map inside map-clip */
 .map-container {
   position: absolute;
   width: 150vmax;
@@ -540,10 +621,9 @@ html, body {
   background-color: var(--map-bg);
 }
 
-/* UI overlay at bottom of each slide */
 .reel-ui {
   position: absolute;
-  bottom: 52px; /* above bottom nav */
+  bottom: 49px;
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
@@ -562,20 +642,20 @@ html, body {
 }
 
 .reel-subtitle {
-  font-size: 0.8rem;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-/* ── Primary Action Button (clean outline) ── */
+/* ── Primary Action Button ── */
 .btn-primary {
   background-color: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 7px 14px;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -598,7 +678,7 @@ html, body {
   fill: none;
 }
 
-/* ── Offline Sync Button (clean circle) ── */
+/* ── Offline Sync Button ── */
 .sync-btn {
   position: fixed;
   top: 14px;
@@ -617,10 +697,12 @@ html, body {
   z-index: 2000;
   transition: all 0.15s ease;
 }
+
 .sync-btn:active {
   transform: scale(0.95);
   background: var(--bg-secondary);
 }
+
 .sync-btn .sync-icon {
   width: 20px;
   height: 20px;
@@ -634,11 +716,12 @@ html, body {
   display: none;
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.95);
   z-index: 3000;
   justify-content: center;
   align-items: center;
 }
+
 .sync-progress-overlay.active {
   display: flex;
 }
@@ -647,25 +730,28 @@ html, body {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
   padding: 24px;
-  border-radius: 12px;
+  border-radius: 14px;
   text-align: center;
   width: 80%;
   max-width: 300px;
 }
+
 .sync-box h4 {
   margin: 0 0 16px 0;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
 }
+
 .progress-bar {
   width: 100%;
-  height: 4px;
+  height: 3px;
   background: var(--bg-secondary);
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 12px;
 }
+
 .progress-fill {
   width: 0%;
   height: 100%;
@@ -673,19 +759,20 @@ html, body {
   border-radius: 2px;
   transition: width 0.1s linear;
 }
+
 #sync-text {
-  font-size: 0.75rem;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
-/* ── Reel Action Buttons (Right side) ── */
+/* ── Reel Action Buttons (Right side IG style) ── */
 .reel-actions {
   position: absolute;
   right: 12px;
-  bottom: 130px; /* Moved up to clear the Volby button */
+  bottom: 120px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   z-index: 1000;
 }
 
@@ -697,15 +784,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 6px;
   border-radius: 50%;
   transition: transform 0.15s ease;
-  filter: drop-shadow(0 1px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 2px rgba(0,0,0,0.8));
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.7)) drop-shadow(0 0 2px rgba(0,0,0,0.6));
 }
 
 .action-btn svg {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   transition: color 0.15s ease, fill 0.15s ease;
 }
 
@@ -724,7 +811,7 @@ html, body {
   fill: #fff;
 }
 
-/* ── Like Animation (Big Heart) ── */
+/* ── Like Animation ── */
 .like-animation-container {
   position: absolute;
   top: 50%;
@@ -753,12 +840,11 @@ html, body {
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
 }
 
-/* Smooth interpolation for Leaflet tiles (no crisp-edges — prevents pixelation on long legs) */
 .leaflet-tile {
   image-rendering: auto;
 }
 
-/* ── Variants Panel (clean, Instagram settings style) ── */
+/* ── Variants Panel ── */
 .variants-panel {
   background: none;
   border: none;
@@ -767,7 +853,6 @@ html, body {
   max-width: 45vw;
   max-height: 40vh;
   overflow-y: auto;
-  
   position: fixed;
   transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   pointer-events: auto;
@@ -780,6 +865,7 @@ html, body {
   top: 10px; bottom: auto;
   transform: translateX(120%);
 }
+
 .variants-panel.pos-top-right.active {
   transform: translateX(0);
 }
@@ -789,6 +875,7 @@ html, body {
   top: 10px; bottom: auto;
   transform: translateX(-120%);
 }
+
 .variants-panel.pos-top-left.active {
   transform: translateX(0);
 }
@@ -798,6 +885,7 @@ html, body {
   bottom: 100px; top: auto;
   transform: translateX(120%);
 }
+
 .variants-panel.pos-bottom-right.active {
   transform: translateX(0);
 }
@@ -807,6 +895,7 @@ html, body {
   bottom: 100px; top: auto;
   transform: translateX(-120%);
 }
+
 .variants-panel.pos-bottom-left.active {
   transform: translateX(0);
 }
@@ -849,7 +938,6 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* shadow removed because of filter on parent */
 }
 
 .variants-panel.collapsed .panel-header {
@@ -857,7 +945,6 @@ html, body {
   margin: 0;
   padding: 0;
 }
-
 
 .variants-panel.collapsed .toggle-btn {
   transform: rotate(180deg);
@@ -867,13 +954,14 @@ html, body {
   display: none;
 }
 
-/* ── Variant item list (IG settings-style rows) ── */
+/* ── Variant item list ── */
 .variant-item {
   display: flex;
   align-items: flex-start;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 .variant-item:last-child {
   border-bottom: none;
 }
@@ -896,13 +984,13 @@ html, body {
 
 .variant-main {
   font-weight: 500;
-  font-size: 0.78rem;
+  font-size: 13px;
   color: #fff;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
 }
 
 .variant-sub {
-  font-size: 0.65rem;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.3;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.8));
@@ -917,13 +1005,13 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 0.95rem;
+  font-size: 15px;
   font-weight: 400;
   color: var(--text-secondary);
   transition: opacity 0.4s ease;
 }
 
-/* Gesture handling tweaks */
+/* Gesture handling */
 .leaflet-container:after {
   content: '';
   position: absolute;
@@ -935,23 +1023,19 @@ html, body {
   pointer-events: none;
 }
 
-/* Start triangle icon styling */
+/* Start triangle icon */
 .start-triangle-icon {
   background: transparent;
   border: none;
 }
+
 .start-triangle-icon svg {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-/* Allow smooth interpolation for map tiles when zoomed out */
-.leaflet-tile {
-  /* Removed crisp-edges to fix blurry/noisy rendering on long legs */
-}
-
-/* Kalibracni Nastroj */
+/* Calibration tool */
 #calibration-ui {
   display: none;
   position: fixed;
@@ -967,14 +1051,15 @@ html, body {
   z-index: 10000;
   text-align: center;
   pointer-events: none;
-  font-size: 0.8rem;
+  font-size: 12px;
 }
+
 #calibration-ui span {
   color: var(--iof-purple);
   font-weight: 600;
 }
 
-/* ── Leaflet controls override (match clean style) ── */
+/* ── Leaflet controls override ── */
 .leaflet-control-zoom a {
   background: var(--bg-color) !important;
   color: var(--text-primary) !important;
@@ -985,9 +1070,240 @@ html, body {
   line-height: 30px !important;
   font-size: 16px !important;
 }
+
 .leaflet-control-zoom {
   border: 1px solid var(--border-color) !important;
   border-radius: 8px !important;
   overflow: hidden;
   box-shadow: none !important;
+}
+
+/* ==================================================== */
+/* SHARE SHEET (Instagram-style bottom sheet)           */
+/* ==================================================== */
+
+#share-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#share-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#share-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-color);
+  border-radius: 16px 16px 0 0;
+  z-index: 10011;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#share-sheet.active {
+  transform: translateY(0);
+}
+
+.share-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  margin: 10px auto 6px;
+}
+
+.share-sheet-avatars {
+  display: flex;
+  gap: 16px;
+  padding: 12px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.share-sheet-avatars::-webkit-scrollbar {
+  display: none;
+}
+
+.share-avatar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.share-avatar-item .share-avatar-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-secondary);
+  border: 0.5px solid var(--border-color);
+}
+
+.share-avatar-item .share-avatar-name {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-primary);
+  max-width: 64px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.share-search-bar {
+  margin: 4px 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--search-bg);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.share-search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+.share-search-bar input::placeholder {
+  color: var(--text-secondary);
+}
+
+.share-search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.share-contact-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 20px;
+}
+
+.share-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.share-contact-row:active {
+  opacity: 0.7;
+}
+
+.share-contact-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-secondary);
+  flex-shrink: 0;
+}
+
+.share-contact-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.share-contact-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.share-contact-btn.sent {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* ==================================================== */
+/* PROFILE SAVED THUMBNAILS (Sharp preview)             */
+/* ==================================================== */
+
+.profile-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  width: 100%;
+}
+
+.profile-saved-item {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-secondary);
+}
+
+.profile-saved-item .saved-thumb {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.3s ease;
+}
+
+.profile-saved-item:active .saved-thumb {
+  transform: scale(1.03);
+}
+
+.profile-saved-item .saved-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  color: #fff;
+  padding: 20px 8px 6px;
+  box-sizing: border-box;
+}
+
+.profile-saved-item .saved-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.profile-saved-item .saved-count {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  margin-top: 1px;
 }

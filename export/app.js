@@ -207,24 +207,27 @@ function updateUITexts() {
 const style = document.createElement('style');
 style.innerHTML = `
 :root {
-    --bg-color: #ffffff; --text-color: #000000; --secondary-bg: #f2f2f6; --border-color: #e5e5ea;
-    --pill-bg: #e5e5ea; --pill-text: #000; --pill-active-bg: #000; --pill-active-text: #fff;
-    --accent: #b300ff; --nav-icon-color: #000000; --search-bg: #f2f2f6;
+    --bg-color: #ffffff; --text-color: #000000; --secondary-bg: #fafafa; --border-color: #dbdbdb;
+    --pill-bg: #efefef; --pill-text: #000; --pill-active-bg: #000; --pill-active-text: #fff;
+    --accent: #0095f6; --nav-icon-color: #000000; --search-bg: #efefef;
+    --nav-bg: #ffffff; --nav-border: rgba(0, 0, 0, 0.1);
 }
 :root[data-theme="dark"] {
-    --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e; --border-color: #2c2c2e;
-    --pill-bg: #2c2c2e; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
-    --nav-icon-color: #ffffff; --search-bg: #2c2c2e;
+    --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #121212; --border-color: #262626;
+    --pill-bg: #262626; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
+    --nav-icon-color: #ffffff; --search-bg: #262626;
+    --nav-bg: #000000; --nav-border: rgba(255, 255, 255, 0.1);
 }
 @media (prefers-color-scheme: dark) {
     :root[data-theme="system"] {
-        --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #1c1c1e; --border-color: #2c2c2e;
-        --pill-bg: #2c2c2e; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
-        --nav-icon-color: #ffffff; --search-bg: #2c2c2e;
+        --bg-color: #000000; --text-color: #ffffff; --secondary-bg: #121212; --border-color: #262626;
+        --pill-bg: #262626; --pill-text: #fff; --pill-active-bg: #fff; --pill-active-text: #000;
+        --nav-icon-color: #ffffff; --search-bg: #262626;
+        --nav-bg: #000000; --nav-border: rgba(255, 255, 255, 0.1);
     }
 }
 
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
@@ -235,36 +238,39 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 .leaflet-container { touch-action: pan-y pinch-zoom !important; }
 .leaflet-container.zoomed-in { touch-action: none !important; }
 
-/* SPODNÍ LIŠTA A IKONKY */
-div.bottom-nav, nav.bottom-nav, .bottom-nav, #bottom-nav { background: var(--bg-color) !important; border-top: 1px solid var(--border-color) !important; display: flex; justify-content: space-around; align-items: center; }
-.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; background: transparent; border: none; padding: 10px; cursor: pointer; flex: 1; text-align: center; }
+/* SPODNÍ LIŠTA – čistá, jednoduchá jako IG */
+#bottom-nav { 
+    background: var(--nav-bg) !important; 
+    border-top: 0.5px solid var(--nav-border) !important; 
+    display: flex; justify-content: space-around; align-items: center;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+#bottom-nav.nav-dark { 
+    background: rgba(0, 0, 0, 0.95) !important; 
+    border-top-color: rgba(255, 255, 255, 0.08) !important; 
+}
+#bottom-nav.nav-dark .nav-btn { color: rgba(255, 255, 255, 0.5) !important; }
+#bottom-nav.nav-dark .nav-btn.active { color: #ffffff !important; }
+.nav-btn { color: var(--nav-icon-color) !important; opacity: 0.4 !important; background: transparent; border: none; padding: 8px; cursor: pointer; flex: 1; text-align: center; -webkit-tap-highlight-color: transparent; }
 .nav-btn.active { color: var(--nav-icon-color) !important; opacity: 1 !important; }
-.nav-btn svg { stroke: var(--nav-icon-color); }
-.nav-btn.active svg { stroke: var(--nav-icon-color); }
 
 /* STORIES A HLEDÁNÍ */
 .story-item, .story-item span, .story-item div { color: var(--text-color) !important; }
-.search-bar, .search-container, div:has(> input[type="search"]) { background-color: var(--search-bg) !important; border-radius: 12px !important; border: none !important; }
-input[type="search"], input[type="text"] { background-color: transparent !important; color: var(--text-color) !important; border: none !important; outline: none !important; box-shadow: none !important; -webkit-appearance: none !important; padding: 8px !important; border-radius: 0 !important; }
-input::placeholder { color: #888 !important; }
 
 /* PILLS A NASTAVENÍ */
 .profile-pills-container::-webkit-scrollbar { display: none; }
 .profile-pills-container { -ms-overflow-style: none; scrollbar-width: none; }
-.ig-pill { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+.ig-pill { padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--pill-bg); color: var(--pill-text); font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap; font-family: inherit; }
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
-.settings-section { margin-bottom: 30px; box-sizing: border-box; width: 100%; }
-.settings-title { font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 15px; font-weight: 600; letter-spacing: 1px; padding-left: 20px;}
-.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-color); box-sizing: border-box; width: 100%; }
-.settings-row select, .settings-btn { background: var(--secondary-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; }
-input[type=range] { flex-grow: 1; margin: 0 20px; accent-color: var(--text-color); }
+.settings-section { margin-bottom: 0; box-sizing: border-box; width: 100%; }
+input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color); }
 #screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: 100dvh; padding-bottom: 80px; overflow-y: auto; display: none; }
 #screen-settings.active, #screen-chat.active { display: block; }
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
-#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; }
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.2rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* TUTORIAL OVERLAY */
@@ -283,7 +289,7 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 #tut-content { 
     position: absolute; left: 10%; width: 80%; color: white; text-align: center; 
     transition: all 0.3s ease-in-out; pointer-events: none; 
-    font-size: 1.15rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.3px;
+    font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: 0.2px;
     text-shadow: 0px 2px 5px rgba(0,0,0,0.95), 0px 4px 15px rgba(0,0,0,0.8); z-index: 10002;
 }
 
@@ -297,64 +303,68 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .tut-allow-interaction { pointer-events: auto !important; position: relative !important; z-index: 10006 !important; }
 
 /* --------------------------------- */
-/* NOVÁ SOCIÁLNÍ VRSTVA (Komentáře)  */
+/* KOMENTÁŘE                         */
 /* --------------------------------- */
-#comments-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+#comments-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 #comments-overlay.active { opacity: 1; pointer-events: auto; }
-
 #comments-panel { 
     position: fixed; bottom: 0; left: 0; right: 0; height: 65vh; 
-    background: var(--bg-color); z-index: 9999; border-radius: 20px 20px 0 0; 
-    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1); 
-    display: flex; flex-direction: column; box-shadow: 0 -5px 25px rgba(0,0,0,0.2);
+    background: var(--bg-color); z-index: 9999; border-radius: 14px 14px 0 0; 
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); 
+    display: flex; flex-direction: column;
 }
 #comments-panel.active { transform: translateY(0); }
-
-.comments-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1.1rem; }
-.comments-close { cursor: pointer; font-size: 1.5rem; line-height: 1; opacity: 0.6; padding: 0 5px; }
-.comments-list { flex: 1; overflow-y: auto; padding: 15px 20px; display: flex; flex-direction: column; gap: 15px; }
+.comments-header { display: flex; justify-content: center; align-items: center; padding: 14px 20px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 15px; position: relative; }
+.comments-header::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 36px; height: 4px; background: var(--border-color); border-radius: 2px; }
+.comments-close { cursor: pointer; font-size: 1.3rem; line-height: 1; opacity: 0.5; padding: 0 5px; position: absolute; right: 16px; }
+.comments-list { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 .comment-item { display: flex; gap: 12px; }
-.comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: #ccc; flex-shrink: 0; overflow: hidden; }
-.comment-body { display: flex; flex-direction: column; font-size: 0.9rem; }
-.comment-author { font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 5px; }
-.comment-time { font-size: 0.75rem; opacity: 0.5; font-weight: 400; }
-.comments-input-area { padding: 15px 20px 25px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; background: var(--bg-color); }
-.comments-input-area input { flex: 1; padding: 10px 15px !important; border-radius: 20px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; }
-.comments-input-area button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+.comment-avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; flex-shrink: 0; overflow: hidden; }
+.comment-body { display: flex; flex-direction: column; font-size: 14px; }
+.comment-author { font-weight: 600; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.comment-time { font-size: 12px; opacity: 0.4; font-weight: 400; }
+.comments-input-area { padding: 12px 16px 20px; border-top: 0.5px solid var(--border-color); display: flex; gap: 8px; background: var(--bg-color); }
+.comments-input-area input { flex: 1; padding: 9px 14px !important; border-radius: 20px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; font-size: 14px; font-family: inherit; }
+.comments-input-area button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
 
 /* --------------------------------- */
-/* NOVÁ SOCIÁLNÍ VRSTVA (Chat Zprávy)*/
+/* CHAT ZPRÁVY (IG Direct style)     */
 /* --------------------------------- */
-.chat-header-main { padding: 20px; font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid var(--border-color); }
+.chat-header-main { padding: 14px 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.chat-search-bar { margin: 0 16px 10px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 7px 12px; }
+.chat-search-bar svg { width: 16px; height: 16px; color: var(--text-secondary, #737373); flex-shrink: 0; }
+.chat-search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--text-color); }
+.chat-search-bar input::placeholder { color: var(--text-secondary, #737373); }
 .chat-list { display: flex; flex-direction: column; }
-.chat-row { display: flex; align-items: center; gap: 15px; padding: 15px 20px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+.chat-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; cursor: pointer; }
 .chat-row:active { background: var(--secondary-bg); }
-.chat-row-avatar { width: 50px; height: 50px; border-radius: 50%; background: #ddd; overflow: hidden; }
-.chat-row-info { flex: 1; display: flex; flex-direction: column; }
-.chat-row-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
-.chat-row-msg { font-size: 0.9rem; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-.chat-row-time { font-size: 0.8rem; opacity: 0.4; }
+.chat-row-avatar { width: 54px; height: 54px; border-radius: 50%; background: var(--secondary-bg); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.chat-row-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.chat-row-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; color: var(--text-color); }
+.chat-row-msg { font-size: 14px; color: var(--text-secondary, #737373); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
+.chat-row-time { font-size: 12px; color: var(--text-secondary, #737373); white-space: nowrap; }
+.chat-row-camera { width: 24px; height: 24px; color: var(--text-secondary, #737373); flex-shrink: 0; opacity: 0.5; }
 
 /* Aktivní Konverzace */
 #chat-conversation { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: var(--bg-color); z-index: 10005; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
 #chat-conversation.active { transform: translateX(0); }
-.conv-header { display: flex; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 1.1rem; gap: 15px; background: var(--bg-color); }
-.conv-back { cursor: pointer; opacity: 0.7; }
-.conv-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: var(--secondary-bg); }
-.msg-bubble { max-width: 75%; padding: 10px 15px; border-radius: 18px; font-size: 0.95rem; line-height: 1.4; }
-.msg-incoming { background: var(--bg-color); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+.conv-header { display: flex; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 16px; gap: 12px; background: var(--bg-color); }
+.conv-back { cursor: pointer; opacity: 0.7; display: flex; }
+.conv-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-color); }
+.msg-bubble { max-width: 70%; padding: 10px 14px; border-radius: 22px; font-size: 15px; line-height: 1.35; }
+.msg-incoming { background: var(--secondary-bg); color: var(--text-color); align-self: flex-start; border-bottom-left-radius: 4px; }
 .msg-outgoing { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
 
-/* Rich Link (Nasdílená mapa v chatu) */
-.rich-link-card { width: 220px; border-radius: 16px; overflow: hidden; background: var(--bg-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer; border: 1px solid var(--border-color); margin-top: 5px; align-self: flex-start;}
-.rich-link-img { width: 100%; height: 120px; background-size: cover; background-position: center; position: relative; }
-.rich-link-info { padding: 12px; display: flex; flex-direction: column; gap: 4px; }
-.rich-link-title { font-weight: 700; font-size: 0.95rem; color: var(--text-color); }
-.rich-link-sub { font-size: 0.8rem; opacity: 0.6; color: var(--text-color); }
+/* Rich Link – obdélníkový tvar jako na IG */
+.rich-link-card { width: 240px; border-radius: 16px; overflow: hidden; background: var(--bg-color); cursor: pointer; border: 1px solid var(--border-color); margin-top: 4px; align-self: flex-start;}
+.rich-link-img { width: 100%; height: 140px; background-size: cover; background-position: center; position: relative; }
+.rich-link-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.rich-link-title { font-weight: 600; font-size: 14px; color: var(--text-color); }
+.rich-link-sub { font-size: 12px; color: var(--text-secondary, #737373); }
 
-.conv-input { padding: 15px 20px 25px 20px; background: var(--bg-color); display: flex; gap: 10px; border-top: 1px solid var(--border-color); }
-.conv-input input { flex: 1; padding: 10px 15px !important; border-radius: 20px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; }
-.conv-input button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; }
+.conv-input { padding: 10px 16px 20px; background: var(--bg-color); display: flex; gap: 8px; border-top: 0.5px solid var(--border-color); align-items: center; }
+.conv-input input { flex: 1; padding: 9px 14px !important; border-radius: 22px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; font-size: 14px; font-family: inherit; color: var(--text-color); }
+.conv-input button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 `;
 document.head.appendChild(style);
 
@@ -791,25 +801,25 @@ function renderChatScreen() {
     let screen = document.getElementById('screen-chat');
     if (!screen) return;
     
+    let userName = currentUser ? currentUser.displayName || 'franta14_' : 'franta14_';
+    
     screen.innerHTML = `
-        <div class="chat-header-main">Zprávy</div>
+        <div class="chat-header-main">${userName}</div>
         
-        <!-- VYHLEDÁVAČ -->
-        <div style="padding: 0 20px 15px 20px;">
-            <div style="display:flex; gap:10px; background:var(--secondary-bg); padding:10px 15px; border-radius:20px; border:1px solid var(--border-color); align-items:center;">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="user-search-input" placeholder="Hledat uživatele..." style="border:none; background:transparent; outline:none; flex:1; color:var(--text-color); font-size:1rem;">
-            </div>
+        <!-- KOMPAKTNÍ VYHLEDÁVAČ (IG style) -->
+        <div class="chat-search-bar">
+            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21" stroke-linecap="round"></line></svg>
+            <input type="text" id="user-search-input" placeholder="Hledat">
         </div>
         
         <!-- KONTEJNER PRO VÝSLEDKY -->
-        <div id="user-search-results" style="padding: 0 20px; display: none; flex-direction: column; gap:10px;"></div>
+        <div id="user-search-results" style="padding: 0 16px; display: none; flex-direction: column; gap:4px;"></div>
 
         <!-- SEZNAM AKTIVNÍCH CHATŮ -->
         <div class="chat-list" id="chat-list-container">
             <div class="chat-row" onclick="openChatConversation('Globální Diskuzní Klub')">
                 <div class="chat-row-avatar">
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#666" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#999" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
                 <div class="chat-row-info">
                     <div class="chat-row-name">Globální Diskuzní Klub</div>
@@ -821,13 +831,13 @@ function renderChatScreen() {
         <!-- SAMOTNÉ OKNO KONVERZACE -->
         <div id="chat-conversation">
             <div class="conv-header">
-                <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
+                <div class="conv-back" onclick="closeChatConversation()"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div>
                 <div id="conv-name">Chat</div>
             </div>
             <div class="conv-messages" id="conv-messages-box"></div>
             <div class="conv-input">
-                <input type="text" id="new-chat-input" placeholder="Napsat zprávu..." style="flex:1; padding:10px; border-radius:20px; border:1px solid var(--border-color); background:var(--secondary-bg); color:var(--text-color);">
-                <button id="send-chat-btn" style="background:var(--accent); color:white; border:none; border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
+                <input type="text" id="new-chat-input" placeholder="Napsat zprávu...">
+                <button id="send-chat-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>
             </div>
         </div>
     `;
@@ -999,6 +1009,14 @@ document.addEventListener("DOMContentLoaded", () => {
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
+            // Bottom nav ztmavení na reels feedu (jako IG)
+            const bottomNav = document.getElementById('bottom-nav');
+            if (targetId === 'screen-scroll') {
+                bottomNav.classList.add('nav-dark');
+            } else {
+                bottomNav.classList.remove('nav-dark');
+            }
+
             screens.forEach(screen => {
                 if (screen.id === targetId) {
                     screen.classList.add('active');
@@ -1104,53 +1122,66 @@ function renderSettings() {
     }
     
     screen.innerHTML = `
-        <div style="padding: 20px 0; padding-bottom: 100px; box-sizing: border-box; width: 100%;">
-            <h1 style="font-size: 1.5rem; margin: 10px 20px 30px 20px; font-weight: 700;">${t('settings')}</h1>
+        <div style="padding: 0; padding-bottom: 100px; box-sizing: border-box; width: 100%;">
+            <div style="padding: 14px 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; border-bottom: 0.5px solid var(--border-color);">${t('settings')}</div>
             
             <div class="settings-section">
-                <div class="settings-title">${t('runner')}</div>
-                <div class="settings-row">
-                    <span style="white-space:nowrap;">${t('paceOnRoad')}</span>
-                    <input type="range" id="pace-slider" min="180" max="480" step="5" value="${userSettings.pace}">
-                    <span id="pace-value" style="white-space:nowrap; font-weight: 600;">${formatPace(userSettings.pace)}</span>
+                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('runner')}</div>
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span style="flex-shrink:0; font-size:16px;">${t('paceOnRoad')}</span>
+                    <input type="range" id="pace-slider" min="180" max="480" step="5" value="${userSettings.pace}" style="flex:1; margin: 0 8px;">
+                    <span id="pace-value" style="white-space:nowrap; font-weight: 600; font-size: 14px; color: var(--text-secondary, #737373);">${formatPace(userSettings.pace)}</span>
                 </div>
             </div>
 
+            <div style="height: 6px; background: var(--secondary-bg);"></div>
+
             <div class="settings-section">
-                <div class="settings-title">${t('application')}</div>
-                <div class="settings-row">
-                    <span>${t('language')}</span>
-                    <select id="lang-select" onchange="updateSettings('language', this.value)">
+                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('application')}</div>
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; border-bottom: 0.5px solid var(--border-color);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <span style="flex:1; font-size:16px;">${t('language')}</span>
+                    <select id="lang-select" onchange="updateSettings('language', this.value)" style="background:var(--secondary-bg); color:var(--text-color); border:1px solid var(--border-color); padding:6px 10px; border-radius:8px; font-size:14px; outline:none; font-family:inherit;">
                         <option value="cs" ${userSettings.language === 'cs' ? 'selected' : ''}>Čeština</option>
                         <option value="en" ${userSettings.language === 'en' ? 'selected' : ''}>English</option>
                     </select>
                 </div>
-                <div class="settings-row">
-                    <span>${t('theme')}</span>
-                    <select id="theme-select" onchange="updateSettings('theme', this.value)">
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; border-bottom: 0.5px solid var(--border-color);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                    <span style="flex:1; font-size:16px;">${t('theme')}</span>
+                    <select id="theme-select" onchange="updateSettings('theme', this.value)" style="background:var(--secondary-bg); color:var(--text-color); border:1px solid var(--border-color); padding:6px 10px; border-radius:8px; font-size:14px; outline:none; font-family:inherit;">
                         <option value="system" ${userSettings.theme === 'system' ? 'selected' : ''}>${t('theme_system')}</option>
                         <option value="light" ${userSettings.theme === 'light' ? 'selected' : ''}>${t('theme_light')}</option>
                         <option value="dark" ${userSettings.theme === 'dark' ? 'selected' : ''}>${t('theme_dark')}</option>
                     </select>
                 </div>
-                <div class="settings-row">
-                    <span>${t('offlineMaps')}</span>
-                    <button class="settings-btn" id="offline-sync-btn" onclick="startOfflineSync()">${t('download')}</button>
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span style="flex:1; font-size:16px;">${t('offlineMaps')}</span>
+                    <button id="offline-sync-btn" onclick="startOfflineSync()" style="background:var(--accent); color:white; border:none; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;">${t('download')}</button>
                 </div>
             </div>
 
+            <div style="height: 6px; background: var(--secondary-bg);"></div>
+
             <div class="settings-section">
-                <div class="settings-title">${t('maps')}</div>
-                <div class="settings-row" style="border:none;">
-                    <button class="settings-btn" style="width: 100%; text-align: left;" onclick="clearAppCache()">${t('clearCache')} (<span id="cache-size">0.0 MB</span>)</button>
+                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('maps')}</div>
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <button onclick="clearAppCache()" style="flex:1; text-align:left; background:none; border:none; font-size:16px; color:var(--text-color); cursor:pointer; font-family:inherit; padding:0;">${t('clearCache')} (<span id="cache-size">0.0 MB</span>)</button>
                 </div>
             </div>
 
-            <!-- NOVÁ SEKCE NÁPOVĚDA -->
+            <div style="height: 6px; background: var(--secondary-bg);"></div>
+
+            <!-- NÁPOVĚDA -->
             <div class="settings-section">
-                <div class="settings-title">Nápověda</div>
-                <div class="settings-row" style="border:none; padding-top:5px;">
-                    <button class="settings-btn" style="width: 100%; background: var(--secondary-bg); font-weight:600;" onclick="replayTutorial()">Znovu spustit tutoriál</button>
+                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">Nápověda</div>
+                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; cursor:pointer;" onclick="replayTutorial()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span style="flex:1; font-size:16px;">Znovu spustit tutoriál</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </div>
         </div>
@@ -1770,14 +1801,87 @@ function toggleBookmark(index, btn) {
 function sharePostup(index) {
     if (!currentUser) { alert("Pro sdílení se musíš přihlásit!"); return; }
     const postup = postupyData[index];
-    if(confirm(`Chceš postup z mapy "${postup.map_name}" nasdílet do Globálního chatu?`)) {
+    
+    // Vytvoření IG-style share sheet overlay
+    let overlay = document.getElementById('share-overlay');
+    let sheet = document.getElementById('share-sheet');
+    
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'share-overlay';
+        overlay.onclick = closeShareSheet;
+        document.body.appendChild(overlay);
+    }
+    
+    if (!sheet) {
+        sheet = document.createElement('div');
+        sheet.id = 'share-sheet';
+        document.body.appendChild(sheet);
+    }
+    
+    // Dummy avatary kontaktů
+    const contacts = [
+        { name: 'Globální Chat', img: '', isGroup: true },
+        { name: 'Tomas', img: 'https://i.pravatar.cc/100?img=11' },
+        { name: 'Klara', img: 'https://i.pravatar.cc/100?img=5' },
+        { name: 'Ondřej', img: 'https://i.pravatar.cc/100?img=12' },
+        { name: 'Martin', img: 'https://i.pravatar.cc/100?img=15' },
+        { name: 'Jana', img: 'https://i.pravatar.cc/100?img=9' },
+    ];
+    
+    sheet.innerHTML = `
+        <div class="share-sheet-handle"></div>
+        <div class="share-sheet-avatars">
+            ${contacts.map(c => `
+                <div class="share-avatar-item" onclick="sendShareToChat(${index}, '${c.name}', ${c.isGroup || false})">
+                    <div class="share-avatar-circle" style="${c.img ? 'background-image:url(' + c.img + ')' : 'display:flex; align-items:center; justify-content:center;'}">
+                        ${!c.img ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#999" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>' : ''}
+                    </div>
+                    <div class="share-avatar-name">${c.name}</div>
+                </div>
+            `).join('')}
+        </div>
+        <div class="share-search-bar">
+            <svg class="share-search-icon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke-linecap="round"/></svg>
+            <input type="text" placeholder="Hledat">
+        </div>
+        <div class="share-contact-list">
+            ${contacts.map(c => `
+                <div class="share-contact-row">
+                    <div class="share-contact-avatar" style="${c.img ? 'background-image:url(' + c.img + ')' : 'display:flex; align-items:center; justify-content:center; background:var(--secondary-bg);'}">
+                        ${!c.img ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#999" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>' : ''}
+                    </div>
+                    <div class="share-contact-name">${c.name}</div>
+                    <button class="share-contact-btn" onclick="sendShareToChat(${index}, '${c.name}', ${c.isGroup || false}); this.innerText='Odesláno'; this.classList.add('sent');">Odeslat</button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    // Animace
+    requestAnimationFrame(() => {
+        overlay.classList.add('active');
+        sheet.classList.add('active');
+    });
+}
+
+function closeShareSheet() {
+    const overlay = document.getElementById('share-overlay');
+    const sheet = document.getElementById('share-sheet');
+    if (overlay) overlay.classList.remove('active');
+    if (sheet) sheet.classList.remove('active');
+}
+
+function sendShareToChat(index, targetName, isGroup) {
+    const postup = postupyData[index];
+    if (isGroup) {
         db.collection('global_chat').add({
             type: 'shared_route', routeId: postup.map_id, routeName: postup.map_name,
             authorUid: currentUser.uid, authorName: currentUser.displayName,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Odesláno!");
     }
+    setTimeout(closeShareSheet, 600);
 }
 
 function groupRoutesByMap(routesArray) {
@@ -1838,36 +1942,39 @@ function renderProfileSaved() {
     document.body.appendChild(fileInput);
 
     profileContent.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 15px 20px 5px 20px; color: inherit;">
-            <div style="font-size: 1.4rem; font-weight: 700; display:flex; align-items:center; gap: 5px;">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px 8px; color: inherit; border-bottom: 0.5px solid var(--border-color);">
+            <div style="font-size: 20px; font-weight: 700; display:flex; align-items:center; gap: 4px; letter-spacing: -0.3px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
                 franta14_
+            </div>
+            <div style="display:flex; gap:16px; align-items:center;">
+                <svg onclick="document.querySelector('.nav-btn[data-target=screen-settings]').click()" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" style="cursor:pointer;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
             </div>
         </div>
 
-        <div style="display:flex; padding: 15px 20px; align-items:center;">
-            <div onclick="document.getElementById('profile-pic-upload').click()" style="width: 80px; height: 80px; border-radius: 50%; background: var(--secondary-bg); overflow:hidden; flex-shrink: 0; border: 1px solid var(--border-color); display:flex; align-items:center; justify-content:center; cursor: pointer;">
+        <div style="display:flex; padding: 16px 16px 12px; align-items:center;">
+            <div onclick="document.getElementById('profile-pic-upload').click()" style="width: 77px; height: 77px; border-radius: 50%; background: var(--secondary-bg); overflow:hidden; flex-shrink: 0; border: 0.5px solid var(--border-color); display:flex; align-items:center; justify-content:center; cursor: pointer;">
                 ${avatarContent}
             </div>
             <div style="display:flex; flex-grow: 1; justify-content: space-evenly; text-align:center;">
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${videnoCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">${t('analyzed')}</div>
+                    <div style="font-weight:700; font-size:16px; color: inherit;">${videnoCislo}</div>
+                    <div style="font-size:13px; color: inherit;">${t('analyzed')}</div>
                 </div>
                 <div>
-                    <div style="font-weight:700; font-size:1.1rem; color: inherit;">${ulozenaCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">${t('saved')}</div>
+                    <div style="font-weight:700; font-size:16px; color: inherit;">${ulozenaCislo}</div>
+                    <div style="font-size:13px; color: inherit;">${t('saved')}</div>
                 </div>
                 <div>
-                    <div id="stat-hours" style="font-weight:700; font-size:1.1rem; color: inherit;">${hodinCislo}</div>
-                    <div style="font-size:0.8rem; opacity: 0.7;">${t('hours')}</div>
+                    <div id="stat-hours" style="font-weight:700; font-size:16px; color: inherit;">${hodinCislo}</div>
+                    <div style="font-size:13px; color: inherit;">${t('hours')}</div>
                 </div>
             </div>
         </div>
         
-        <div style="padding: 0 20px 15px 20px; font-size: 0.95rem; color: inherit;">
-            <div style="font-weight: 700; margin-bottom:3px;">František Čtrnáct</div>
-            <div style="opacity: 0.8;">${t('bioDesc')}</div>
+        <div style="padding: 0 16px 12px; font-size: 14px; color: inherit;">
+            <div style="font-weight: 600; margin-bottom:2px;">František Čtrnáct</div>
+            <div style="color: var(--text-secondary, #737373); font-weight: 400; line-height: 1.4;">${t('bioDesc')}</div>
         </div>
         <div id="profile-dynamic-content"></div>
     `;
