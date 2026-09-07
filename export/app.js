@@ -849,6 +849,7 @@ function renderChatScreen() {
 function openChatConversation(name) {
     document.getElementById('conv-name').innerText = name;
     document.getElementById('chat-conversation').classList.add('active');
+    document.getElementById('bottom-nav').style.display = 'none';
 
     if (!document.getElementById('new-chat-input')) {
         document.querySelector('.conv-input').innerHTML = `
@@ -874,11 +875,12 @@ function openChatConversation(name) {
                     msgsEl.innerHTML += `
                         <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
                             ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 2px; opacity: 0.6; color:var(--text-color);">${data.authorName}</div>` : ''}
-                            <div class="rich-link-card" onclick="openSharedRoute('${data.routeId}')">
-                                <div class="rich-link-img" style="background-image: url('tiles/3/1/2.png')"></div>
-                                <div class="rich-link-info">
-                                    <div class="rich-link-title">${data.routeName}</div>
-                                    <div class="rich-link-sub">Klikni pro zobrazení mapy</div>
+                            <div class="ig-reel-card" onclick="openSharedRoute('${data.routeId}')" style="width: 200px; aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; position: relative; background: #222; margin-top: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor:pointer;">
+                                <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image: url('tiles/3/1/2.png'); background-size: cover; background-position: center;"></div>
+                                <div style="position:absolute; bottom:0; left:0; width:100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); pointer-events:none;"></div>
+                                <div style="position:absolute; bottom: 15px; left: 15px; color: white; pointer-events:none;">
+                                    <div style="font-weight: 700; font-size: 15px;">${data.routeName}</div>
+                                    <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Klikni pro zobrazení</div>
                                 </div>
                             </div>
                         </div>`;
@@ -896,6 +898,7 @@ function openChatConversation(name) {
 
 function closeChatConversation() {
     document.getElementById('chat-conversation').classList.remove('active');
+    document.getElementById('bottom-nav').style.display = '';
     if (currentChatUnsubscribe) { currentChatUnsubscribe(); currentChatUnsubscribe = null; }
 }
 
@@ -2024,8 +2027,8 @@ function renderProfileSaved() {
     const groups = groupRoutesByMap(displayData);
     
     groups.forEach((group) => {
-        let fileName = group.thumbRoute.file.replace('.json', '.png').replace('.geojson', '.png');
-        const thumbUrl = 'postupy/' + fileName;
+        // Fallback to a static sharp map tile since dynamic PNGs are not present
+        const thumbUrl = 'tiles/3/1/2.png';
         
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
