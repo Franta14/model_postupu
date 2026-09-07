@@ -270,8 +270,34 @@ input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
-#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 90px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%); color: #fff; font-size: 1.2rem; font-weight: 600; cursor: pointer; }
+body.saved-mode-active .map-clip { height: 100% !important; }
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
+
+/* IG SETTINGS STYLES */
+.ig-settings-content { padding: 0; display: flex; flex-direction: column; }
+.ig-settings-search { margin: 12px 16px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 8px 12px; }
+.ig-settings-search svg { width: 16px; height: 16px; color: var(--text-secondary); flex-shrink: 0; }
+.ig-settings-search input { flex: 1; border: none; background: transparent; outline: none; font-size: 15px; font-family: inherit; color: var(--text-color); }
+.ig-settings-search input::placeholder { color: var(--text-secondary); }
+.ig-settings-section-title { padding: 16px 16px 8px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+.ig-setting-row { display: flex; align-items: center; padding: 14px 16px; cursor: pointer; gap: 14px; background: var(--bg-color); transition: background 0.2s; }
+.ig-setting-row:active { background: var(--secondary-bg); }
+.ig-setting-icon { width: 24px; height: 24px; flex-shrink: 0; color: var(--text-color); }
+.ig-setting-text { flex: 1; display: flex; flex-direction: column; }
+.ig-setting-label { font-size: 15px; font-weight: 400; color: var(--text-color); }
+.ig-setting-val { font-size: 15px; color: var(--text-secondary); }
+.ig-setting-chevron { width: 20px; height: 20px; color: var(--text-secondary); opacity: 0.5; }
+.ig-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.5); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.ig-modal-overlay.active { opacity: 1; pointer-events: auto; }
+.ig-modal-content { background: var(--bg-color); border-radius: 16px; width: 85%; max-width: 340px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.ig-modal-overlay.active .ig-modal-content { transform: scale(1); }
+.ig-modal-header { padding: 16px; text-align: center; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 16px; }
+.ig-modal-body { padding: 20px; }
+.ig-modal-footer { display: flex; border-top: 0.5px solid var(--border-color); }
+.ig-modal-btn { flex: 1; padding: 14px; background: transparent; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.ig-modal-cancel { border-right: 0.5px solid var(--border-color); color: var(--text-color); }
+.ig-modal-confirm { color: var(--accent); }
 
 /* TUTORIAL OVERLAY */
 #interactive-tutorial { 
@@ -399,6 +425,11 @@ setInterval(() => {
 function showTutorial() {
     // Přidáno: Pokud už uživatel tutoriál viděl, funkce se rovnou ukončí
     if (localStorage.getItem('tutorial_seen') === 'true') return;
+    // Skip tutorial via URL parameter (e.g. ?notutorial) — useful for automated testing
+    if (new URLSearchParams(window.location.search).has('notutorial')) {
+        localStorage.setItem('tutorial_seen', 'true');
+        return;
+    }
     
     document.body.classList.add('tutorial-active');
 
@@ -1125,76 +1156,100 @@ function renderSettings() {
     }
     
     screen.innerHTML = `
-        <div style="padding: 0; padding-bottom: 100px; box-sizing: border-box; width: 100%;">
-            <div style="padding: 14px 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; border-bottom: 0.5px solid var(--border-color);">${t('settings')}</div>
+        <div class="screen-header"><h2>${t('settings')} a aktivita</h2></div>
+        <div class="screen-content ig-settings-content">
+            <div class="ig-settings-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" placeholder="${t('searchRoutes')}">
+            </div>
             
-            <div class="settings-section">
-                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('runner')}</div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span style="flex-shrink:0; font-size:16px;">${t('paceOnRoad')}</span>
-                    <input type="range" id="pace-slider" min="180" max="480" step="5" value="${userSettings.pace}" style="flex:1; margin: 0 8px;">
-                    <span id="pace-value" style="white-space:nowrap; font-weight: 600; font-size: 14px; color: var(--text-secondary, #737373);">${formatPace(userSettings.pace)}</span>
+            <div class="ig-settings-section-title">${t('runner')}</div>
+            <div class="ig-setting-row" onclick="openPaceModal()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                <div class="ig-setting-text">
+                    <div class="ig-setting-label">${t('paceOnRoad')}</div>
                 </div>
+                <div class="ig-setting-val" id="setting-pace-val">${formatPace(userSettings.pace)}</div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
 
-            <div style="height: 6px; background: var(--secondary-bg);"></div>
-
-            <div class="settings-section">
-                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('application')}</div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; border-bottom: 0.5px solid var(--border-color);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span style="flex:1; font-size:16px;">${t('language')}</span>
-                    <select id="lang-select" onchange="updateSettings('language', this.value)" style="background:var(--secondary-bg); color:var(--text-color); border:1px solid var(--border-color); padding:6px 10px; border-radius:8px; font-size:14px; outline:none; font-family:inherit;">
-                        <option value="cs" ${userSettings.language === 'cs' ? 'selected' : ''}>Čeština</option>
-                        <option value="en" ${userSettings.language === 'en' ? 'selected' : ''}>English</option>
-                    </select>
-                </div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; border-bottom: 0.5px solid var(--border-color);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-                    <span style="flex:1; font-size:16px;">${t('theme')}</span>
-                    <select id="theme-select" onchange="updateSettings('theme', this.value)" style="background:var(--secondary-bg); color:var(--text-color); border:1px solid var(--border-color); padding:6px 10px; border-radius:8px; font-size:14px; outline:none; font-family:inherit;">
-                        <option value="system" ${userSettings.theme === 'system' ? 'selected' : ''}>${t('theme_system')}</option>
-                        <option value="light" ${userSettings.theme === 'light' ? 'selected' : ''}>${t('theme_light')}</option>
-                        <option value="dark" ${userSettings.theme === 'dark' ? 'selected' : ''}>${t('theme_dark')}</option>
-                    </select>
-                </div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span style="flex:1; font-size:16px;">${t('offlineMaps')}</span>
-                    <button id="offline-sync-btn" onclick="startOfflineSync()" style="background:var(--accent); color:white; border:none; padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;">${t('download')}</button>
-                </div>
+            <div class="ig-settings-section-title">${t('application')}</div>
+            <div class="ig-setting-row" onclick="toggleLanguage()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
+                <div class="ig-setting-text"><div class="ig-setting-label">${t('language')}</div></div>
+                <div class="ig-setting-val" id="setting-lang-val">${userSettings.language === 'cs' ? 'Čeština' : 'English'}</div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+            </div>
+            <div class="ig-setting-row" onclick="toggleTheme()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
+                <div class="ig-setting-text"><div class="ig-setting-label">${t('theme')}</div></div>
+                <div class="ig-setting-val" id="setting-theme-val">${t('theme_' + userSettings.theme)}</div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+            </div>
+            <div class="ig-setting-row" onclick="startOfflineSync()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+                <div class="ig-setting-text"><div class="ig-setting-label">${t('offlineMaps')}</div></div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
 
-            <div style="height: 6px; background: var(--secondary-bg);"></div>
-
-            <div class="settings-section">
-                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">${t('maps')}</div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    <button onclick="clearAppCache()" style="flex:1; text-align:left; background:none; border:none; font-size:16px; color:var(--text-color); cursor:pointer; font-family:inherit; padding:0;">${t('clearCache')} (<span id="cache-size">0.0 MB</span>)</button>
-                </div>
+            <div class="ig-settings-section-title">${t('maps')}</div>
+            <div class="ig-setting-row" onclick="clearAppCache()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+                <div class="ig-setting-text"><div class="ig-setting-label">${t('clearCache')}</div></div>
+                <div class="ig-setting-val" id="cache-size">0 MB</div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
-
-            <div style="height: 6px; background: var(--secondary-bg);"></div>
-
-            <!-- NÁPOVĚDA -->
-            <div class="settings-section">
-                <div style="padding: 16px 16px 6px; font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary, #737373); letter-spacing: 0.5px;">Nápověda</div>
-                <div style="display:flex; align-items:center; padding: 12px 16px; gap: 14px; cursor:pointer;" onclick="replayTutorial()">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <span style="flex:1; font-size:16px;">Znovu spustit tutoriál</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.3;"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
+            
+            <div class="ig-settings-section-title">Nápověda</div>
+            <div class="ig-setting-row" onclick="replayTutorial()">
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <div class="ig-setting-text"><div class="ig-setting-label">Znovu spustit tutoriál</div></div>
+                <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
         </div>
     `;
 
-    const paceSlider = document.getElementById('pace-slider');
-    const paceValue = document.getElementById('pace-value');
-    paceSlider.addEventListener('input', (e) => { paceValue.innerText = formatPace(e.target.value); });
-    paceSlider.addEventListener('change', (e) => { updateSettings('pace', parseInt(e.target.value)); });
     if(typeof updateCacheSize === 'function') updateCacheSize();
+}
+
+function toggleLanguage() {
+    let newLang = userSettings.language === 'cs' ? 'en' : 'cs';
+    updateSettings('language', newLang);
+}
+
+function toggleTheme() {
+    let themes = ['system', 'light', 'dark'];
+    let idx = themes.indexOf(userSettings.theme);
+    let newTheme = themes[(idx + 1) % themes.length];
+    updateSettings('theme', newTheme);
+}
+
+function openPaceModal() {
+    const modal = document.getElementById('pace-modal-overlay');
+    if (modal) {
+        let m = Math.floor(userSettings.pace / 60);
+        let s = userSettings.pace % 60;
+        document.getElementById('pace-min').value = m;
+        document.getElementById('pace-sec').value = s;
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    }
+}
+
+function closePaceModal(e) {
+    const modal = document.getElementById('pace-modal-overlay');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+}
+
+function savePaceModal() {
+    let m = parseInt(document.getElementById('pace-min').value) || 3;
+    let s = parseInt(document.getElementById('pace-sec').value) || 0;
+    let totalSecs = m * 60 + s;
+    updateSettings('pace', totalSecs);
+    closePaceModal();
 }
 
 
@@ -2026,10 +2081,7 @@ function renderProfileSaved() {
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
     const groups = groupRoutesByMap(displayData);
     
-    groups.forEach((group) => {
-        // Fallback to a static sharp map tile since dynamic PNGs are not present
-        const thumbUrl = 'tiles/3/1/2.png';
-        
+    groups.forEach((group, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
@@ -2039,16 +2091,23 @@ function renderProfileSaved() {
         el.style.cursor = 'pointer';
         
         const countText = getRoutesCountText(group.routes.length);
+        const mapId = 'profile-thumb-' + idx + '-' + Date.now();
         
         el.innerHTML = `
-            <div style="width:100%; height:100%; background-image: url('${thumbUrl}'); background-size: cover; background-position: center;"></div>
-            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box;">
+            <div id="${mapId}" class="grid-img" style="width: 100%; height: 100%;"></div>
+            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
             </div>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index: 999;"></div> <!-- overlay to catch clicks and prevent map interaction -->
         `;
         el.addEventListener('click', () => openFeed(group.map_id, true));
         gridContainer.appendChild(el);
+        
+        // Asynchronously render the map
+        setTimeout(() => {
+            renderThumbMap(document.getElementById(mapId), group.thumbRoute);
+        }, 50 * idx);
     });
     dynamicContent.appendChild(gridContainer);
 }
@@ -2175,11 +2234,7 @@ function renderExploreGrid() {
     const groups = groupRoutesByMap(displayData);
     const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
-    groups.forEach((group) => {
-        let hash = 0;
-        for(let i=0; i<group.map_id.length; i++) hash += group.map_id.charCodeAt(i);
-        const thumbUrl = localMapThumbs[hash % localMapThumbs.length];
-        
+    groups.forEach((group, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
         el.style.aspectRatio = '1 / 1';
@@ -2188,15 +2243,77 @@ function renderExploreGrid() {
         el.style.position = 'relative';
         
         const countText = getRoutesCountText(group.routes.length);
+        const mapId = 'explore-thumb-' + idx + '-' + Date.now();
         
         el.innerHTML = `
-            <div class="grid-img" style="background-image: url('${thumbUrl}'); background-size: cover; background-position: center; width: 100%; height: 100%;"></div>
-            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box;">
+            <div id="${mapId}" class="grid-img" style="width: 100%; height: 100%;"></div>
+            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
             </div>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index: 999;"></div>
         `;
         el.addEventListener('click', () => openFeed(group.map_id, false));
         container.appendChild(el);
+        
+        // Asynchronously render the map
+        setTimeout(() => {
+            renderThumbMap(document.getElementById(mapId), group.thumbRoute);
+        }, 50 * idx);
     });
+}
+
+// ==========================================
+// THUMBNAIL MAP RENDERING
+// ==========================================
+function renderThumbMap(containerEl, postup) {
+    if (!containerEl || !postup) return;
+    if (!geojsonCache[postup.file]) {
+        fetch('postupy/' + postup.file + '?v=' + Date.now())
+            .then(res => res.json())
+            .then(geojson => {
+                geojsonCache[postup.file] = geojson;
+                initThumbMap(containerEl, geojson);
+            }).catch(e => console.warn("Thumb map load error:", e));
+    } else {
+        initThumbMap(containerEl, geojsonCache[postup.file]);
+    }
+}
+
+function initThumbMap(containerEl, geojson) {
+    let map = L.map(containerEl, { 
+        zoomControl: false, attributionControl: false, 
+        dragging: false, scrollWheelZoom: false, doubleClickZoom: false, 
+        touchZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0.1 
+    });
+    
+    let allLngs = [], allLats = [];
+    geojson.features.forEach(f => {
+        if (f.geometry.type === 'Point') {
+            allLngs.push(f.geometry.coordinates[0]); allLats.push(f.geometry.coordinates[1]);
+        } else if (f.geometry.type === 'LineString') {
+            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
+        }
+    });
+
+    if (allLngs.length > 0) {
+        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
+        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+        
+        L.tileLayer('tiles/{z}/{x}/{y}.png', {
+            tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5, noWrap: true, tms: false
+        }).addTo(map);
+        
+        L.geoJSON(geojson, {
+            filter: function(f) { return !(f.properties && ['start', 'end', 'spojnice', 'variant'].includes(f.properties.type)); }
+        }).addTo(map);
+        
+        // Draw the route simply
+        L.geoJSON(geojson, {
+            filter: function(f) { return f.properties && f.properties.type === 'variant'; },
+            style: function(f) { return { color: f.properties.color || '#b300ff', weight: 4, opacity: 0.9 }; }
+        }).addTo(map);
+        
+        map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [15, 15] });
+    }
 }

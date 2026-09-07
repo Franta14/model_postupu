@@ -136,36 +136,75 @@
         </div>
 
         <div id="screen-settings" class="app-screen">
-            <div class="screen-header"><h2>Nastavení</h2></div>
-            <div class="screen-content">
-                <div class="settings-group">
-                    <h3>Běžec</h3>
-                    <div class="setting-item">
-                        <label>Tempo na cestě</label>
-                        <input type="range" min="3" max="5" step="0.1" value="3.6">
-                        <span class="value">3:40 min/km</span>
+            <div class="screen-header"><h2>Nastavení a aktivita</h2></div>
+            <div class="screen-content ig-settings-content">
+                <div class="ig-settings-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Hledat">
+                </div>
+                
+                <div class="ig-settings-section-title">Běžec</div>
+                <div class="ig-setting-row" onclick="openPaceModal()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                    <div class="ig-setting-text">
+                        <div class="ig-setting-label">Tempo na cestě</div>
+                    </div>
+                    <div class="ig-setting-val" id="setting-pace-val">3:40 /km</div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+
+                <div class="ig-settings-section-title">Aplikace</div>
+                <div class="ig-setting-row" onclick="toggleLanguage()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
+                    <div class="ig-setting-text"><div class="ig-setting-label">Jazyk</div></div>
+                    <div class="ig-setting-val" id="setting-lang-val">Čeština</div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+                <div class="ig-setting-row" onclick="toggleTheme()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
+                    <div class="ig-setting-text"><div class="ig-setting-label">Vzhled</div></div>
+                    <div class="ig-setting-val" id="setting-theme-val">Systémový</div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+                <div class="ig-setting-row" onclick="startOfflineSync()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></div>
+                    <div class="ig-setting-text"><div class="ig-setting-label">Uložit mapy offline</div></div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+
+                <div class="ig-settings-section-title">Mapy</div>
+                <div class="ig-setting-row" onclick="clearAppCache()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+                    <div class="ig-setting-text"><div class="ig-setting-label">Vymazat cache</div></div>
+                    <div class="ig-setting-val" id="cache-size">0 MB</div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+                
+                <div class="ig-settings-section-title">Nápověda</div>
+                <div class="ig-setting-row" onclick="replayTutorial()">
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                    <div class="ig-setting-text"><div class="ig-setting-label">Znovu spustit tutoriál</div></div>
+                    <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pace-modal-overlay" class="ig-modal-overlay" style="display:none;" onclick="closePaceModal(event)">
+            <div class="ig-modal-content" onclick="event.stopPropagation()">
+                <div class="ig-modal-header">
+                    <h3>Tempo na cestě</h3>
+                </div>
+                <div class="ig-modal-body">
+                    <p style="text-align:center; color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">Zadej průměrné tempo na rovině pro přepočet časů.</p>
+                    <div style="display:flex; justify-content:center; align-items:center; gap: 10px; font-size: 24px; font-weight: 600;">
+                        <input type="number" id="pace-min" min="2" max="10" value="3" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 24px; font-weight: 600; background: var(--secondary-bg); color: var(--text-color);">
+                        <span>:</span>
+                        <input type="number" id="pace-sec" min="0" max="59" value="40" style="width: 60px; text-align: center; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-size: 24px; font-weight: 600; background: var(--secondary-bg); color: var(--text-color);">
                     </div>
                 </div>
-                <div class="settings-group">
-                    <h3>Aplikace</h3>
-                    <div class="setting-item">
-                        <label>Jazyk</label>
-                        <select><option>Čeština</option><option>English</option></select>
-                    </div>
-                    <div class="setting-item">
-                        <label>Vzhled</label>
-                        <select id="theme-select"><option>Systémový</option><option>Tmavý</option><option>Světlý</option></select>
-                    </div>
-                    <div class="setting-item">
-                        <label>Uložit mapy offline</label>
-                        <button class="btn-primary" onclick="startOfflineSync()" style="font-size: 0.8rem; padding: 6px 12px;">Stáhnout</button>
-                    </div>
-                </div>
-                <div class="settings-group">
-                    <h3>Mapy</h3>
-                    <div class="setting-item">
-                        <button class="btn-secondary" onclick="alert('Cache vymazána')">Vymazat cache (0 MB)</button>
-                    </div>
+                <div class="ig-modal-footer">
+                    <button class="ig-modal-btn ig-modal-cancel" onclick="closePaceModal()">Zrušit</button>
+                    <button class="ig-modal-btn ig-modal-confirm" onclick="savePaceModal()">Uložit</button>
                 </div>
             </div>
         </div>
