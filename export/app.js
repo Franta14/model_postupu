@@ -2106,7 +2106,7 @@ function renderProfileSaved() {
         
         // Asynchronously render the map
         setTimeout(() => {
-            renderThumbMap(document.getElementById(mapId), group.thumbRoute);
+            renderThumbMap(document.getElementById(mapId), group.thumbRoute, 'profile');
         }, 50 * idx);
     });
     dynamicContent.appendChild(gridContainer);
@@ -2258,7 +2258,7 @@ function renderExploreGrid() {
         
         // Asynchronously render the map
         setTimeout(() => {
-            renderThumbMap(document.getElementById(mapId), group.thumbRoute);
+            renderThumbMap(document.getElementById(mapId), group.thumbRoute, 'explore');
         }, 50 * idx);
     });
 }
@@ -2266,21 +2266,21 @@ function renderExploreGrid() {
 // ==========================================
 // THUMBNAIL MAP RENDERING
 // ==========================================
-function renderThumbMap(containerEl, postup) {
+function renderThumbMap(containerEl, postup, mode) {
     if (!containerEl || !postup) return;
     if (!geojsonCache[postup.file]) {
         fetch('postupy/' + postup.file + '?v=' + Date.now())
             .then(res => res.json())
             .then(geojson => {
                 geojsonCache[postup.file] = geojson;
-                initThumbMap(containerEl, geojson);
+                initThumbMap(containerEl, geojson, mode);
             }).catch(e => console.warn("Thumb map load error:", e));
     } else {
-        initThumbMap(containerEl, geojsonCache[postup.file]);
+        initThumbMap(containerEl, geojsonCache[postup.file], mode);
     }
 }
 
-function initThumbMap(containerEl, geojson) {
+function initThumbMap(containerEl, geojson, mode) {
     let map = L.map(containerEl, { 
         zoomControl: false, attributionControl: false, 
         dragging: false, scrollWheelZoom: false, doubleClickZoom: false, 
@@ -2304,16 +2304,49 @@ function initThumbMap(containerEl, geojson) {
             tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5, noWrap: true, tms: false
         }).addTo(map);
         
-        L.geoJSON(geojson, {
-            filter: function(f) { return !(f.properties && ['start', 'end', 'spojnice', 'variant'].includes(f.properties.type)); }
-        }).addTo(map);
+        // V profile módu přidáme kolečka (start, end, control) a spojnice. Bez variant!
+        if (mode === 'profile') {
+            L.geoJSON(geojson, {
+                // Vyfiltrujeme jen body a spojnice, chceme vynechat varianty
+                filter: function(f) { return !(f.properties && ['variant'].includes(f.properties.type)); },
+                pointToLayer: function(feature, latlng) {
+                    if (feature.properties.type === 'start') {
+                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
+                    }
+                    if (feature.properties.type === 'end') {
+                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
+                    }
+                    if (feature.properties.type === 'control') {
+                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
+                    }
+                    return L.marker(latlng);
+                },
+                style: function(f) {
+                    // Spojnice - tenká přerušovaná čára
+                    if (f.properties.type === 'spojnice') {
+                        return { color: '#b300ff', weight: 2, opacity: 0.8, dashArray: '4,4' };
+                    }
+                    return {};
+                }
+            }).addTo(map);
+        }
         
-        // Draw the route simply
-        L.geoJSON(geojson, {
-            filter: function(f) { return f.properties && f.properties.type === 'variant'; },
-            style: function(f) { return { color: f.properties.color || '#b300ff', weight: 4, opacity: 0.9 }; }
-        }).addTo(map);
+        // Zajištění, že se mapa správně vykreslí (předejde šedým pruhům) přes ResizeObserver
+        const ro = new ResizeObserver(() => {
+            map.invalidateSize();
+            if (mode === 'explore') {
+                map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [-10, -10] });
+            } else if (mode === 'profile') {
+                map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [10, 10] });
+            }
+        });
+        ro.observe(containerEl);
         
-        map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [15, 15] });
+        // Prvotní call pro jistotu
+        if (mode === 'explore') {
+            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [-10, -10] });
+        } else if (mode === 'profile') {
+            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [10, 10] });
+        }
     }
 }
