@@ -279,7 +279,7 @@ html, body {
 .explore-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: calc((100vw - 2px) / 3);
+  grid-auto-rows: calc((100vw - 2px) / 3 * 5 / 4);
   gap: 1px;
   padding-bottom: 80px;
 }
@@ -317,6 +317,19 @@ html, body {
   50% { transform: scale(1.18) translate(3%, -4%); }
   75% { transform: scale(1.24) translate(-2%, 4%); }
   100% { transform: scale(1.15) translate(0%, 0%); }
+}
+
+.animated-map-drift {
+  animation: mapDrift 25s ease-in-out infinite alternate;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+@keyframes mapDrift {
+  0% { transform: scale(1.1) translate(0%, 0%); }
+  33% { transform: scale(1.15) translate(4%, 3%); }
+  66% { transform: scale(1.15) translate(-3%, -4%); }
+  100% { transform: scale(1.1) translate(0%, 0%); }
 }
 
 .grid-icon {
@@ -434,7 +447,7 @@ html, body {
 }
 
 .profile-grid .grid-item {
-  aspect-ratio: 1/1;
+  aspect-ratio: 4/5;
   background-color: var(--bg-secondary);
 }
 
@@ -1265,7 +1278,7 @@ html, body {
 }
 
 .profile-saved-item {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 5;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -1308,7 +1321,7 @@ html, body {
   margin-top: 1px;
 }
 
-/* Zprávy - IG Chat UI Overlay */
+/* Zprï¿½vy - IG Chat UI Overlay */
 #chat-conversation {
     position: fixed !important;
     top: 0;

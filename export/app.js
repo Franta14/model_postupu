@@ -2085,29 +2085,26 @@ function renderProfileSaved() {
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
-        el.style.aspectRatio = '1 / 1';
+        el.style.aspectRatio = '4 / 5';
         el.style.background = 'var(--secondary-bg)';
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
         
-        const countText = getRoutesCountText(group.routes.length);
-        const mapId = 'profile-thumb-' + idx + '-' + Date.now();
+        const thumbRoute = group.thumbRoute;
+        let thumbSrc = '';
+        if (thumbRoute.thumb) {
+            thumbSrc = thumbRoute.thumb;
+        } else if (thumbRoute.file) {
+            thumbSrc = 'thumbs/' + thumbRoute.file.replace('.geojson', '.jpg');
+        } else {
+            thumbSrc = 'thumbs/map_' + group.map_id + '.jpg'; // fallback
+        }
         
         el.innerHTML = `
-            <div id="${mapId}" class="grid-img" style="width: 100%; height: 100%;"></div>
-            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
-                <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
-                <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
-            </div>
-            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index: 999;"></div> <!-- overlay to catch clicks and prevent map interaction -->
+            <img src="${thumbSrc}" alt="${group.map_name}" class="animated-map-drift" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
         `;
         el.addEventListener('click', () => openFeed(group.map_id, true));
         gridContainer.appendChild(el);
-        
-        // Asynchronously render the map
-        setTimeout(() => {
-            renderThumbMap(document.getElementById(mapId), group.thumbRoute, 'profile');
-        }, 50 * idx);
     });
     dynamicContent.appendChild(gridContainer);
 }
@@ -2232,121 +2229,26 @@ function renderExploreGrid() {
     if (selectedTerrains.size > 0) displayData = postupyData.filter(map => selectedTerrains.has(map.terrain));
     
     const groups = groupRoutesByMap(displayData);
-    const localMapThumbs = ["tiles/3/1/2.png", "tiles/3/2/2.png", "tiles/3/1/3.png", "tiles/3/2/3.png"];
     
     groups.forEach((group, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item'; 
-        el.style.aspectRatio = '1 / 1';
+        el.style.aspectRatio = '4 / 5';
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
         el.style.position = 'relative';
         
         const countText = getRoutesCountText(group.routes.length);
-        const mapId = 'explore-thumb-' + idx + '-' + Date.now();
+        const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
         el.innerHTML = `
-            <div id="${mapId}" class="grid-img" style="width: 100%; height: 100%;"></div>
+            <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
             </div>
-            <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index: 999;"></div>
         `;
         el.addEventListener('click', () => openFeed(group.map_id, false));
         container.appendChild(el);
-        
-        // Asynchronously render the map
-        setTimeout(() => {
-            renderThumbMap(document.getElementById(mapId), group.thumbRoute, 'explore');
-        }, 50 * idx);
     });
-}
-
-// ==========================================
-// THUMBNAIL MAP RENDERING
-// ==========================================
-function renderThumbMap(containerEl, postup, mode) {
-    if (!containerEl || !postup) return;
-    if (!geojsonCache[postup.file]) {
-        fetch('postupy/' + postup.file + '?v=' + Date.now())
-            .then(res => res.json())
-            .then(geojson => {
-                geojsonCache[postup.file] = geojson;
-                initThumbMap(containerEl, geojson, mode);
-            }).catch(e => console.warn("Thumb map load error:", e));
-    } else {
-        initThumbMap(containerEl, geojsonCache[postup.file], mode);
-    }
-}
-
-function initThumbMap(containerEl, geojson, mode) {
-    let map = L.map(containerEl, { 
-        zoomControl: false, attributionControl: false, 
-        dragging: false, scrollWheelZoom: false, doubleClickZoom: false, 
-        touchZoom: false, boxZoom: false, keyboard: false, zoomSnap: 0.1 
-    });
-    
-    let allLngs = [], allLats = [];
-    geojson.features.forEach(f => {
-        if (f.geometry.type === 'Point') {
-            allLngs.push(f.geometry.coordinates[0]); allLats.push(f.geometry.coordinates[1]);
-        } else if (f.geometry.type === 'LineString') {
-            f.geometry.coordinates.forEach(c => { allLngs.push(c[0]); allLats.push(c[1]); });
-        }
-    });
-
-    if (allLngs.length > 0) {
-        let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-        let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
-        
-        L.tileLayer('tiles/{z}/{x}/{y}.png', {
-            tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5, noWrap: true, tms: false
-        }).addTo(map);
-        
-        // V profile módu přidáme kolečka (start, end, control) a spojnice. Bez variant!
-        if (mode === 'profile') {
-            L.geoJSON(geojson, {
-                // Vyfiltrujeme jen body a spojnice, chceme vynechat varianty
-                filter: function(f) { return !(f.properties && ['variant'].includes(f.properties.type)); },
-                pointToLayer: function(feature, latlng) {
-                    if (feature.properties.type === 'start') {
-                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
-                    }
-                    if (feature.properties.type === 'end') {
-                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
-                    }
-                    if (feature.properties.type === 'control') {
-                        return L.circleMarker(latlng, { radius: 5, color: '#b300ff', weight: 2, fill: false });
-                    }
-                    return L.marker(latlng);
-                },
-                style: function(f) {
-                    // Spojnice - tenká přerušovaná čára
-                    if (f.properties.type === 'spojnice') {
-                        return { color: '#b300ff', weight: 2, opacity: 0.8, dashArray: '4,4' };
-                    }
-                    return {};
-                }
-            }).addTo(map);
-        }
-        
-        // Zajištění, že se mapa správně vykreslí (předejde šedým pruhům) přes ResizeObserver
-        const ro = new ResizeObserver(() => {
-            map.invalidateSize();
-            if (mode === 'explore') {
-                map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [-10, -10] });
-            } else if (mode === 'profile') {
-                map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [10, 10] });
-            }
-        });
-        ro.observe(containerEl);
-        
-        // Prvotní call pro jistotu
-        if (mode === 'explore') {
-            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [-10, -10] });
-        } else if (mode === 'profile') {
-            map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { animate: false, padding: [10, 10] });
-        }
-    }
 }
