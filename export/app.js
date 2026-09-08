@@ -2138,13 +2138,14 @@ function renderProfileSaved() {
             let isGoingDown = pts.start[1] < pts.end[1];
             let isGoingRight = pts.start[0] < pts.end[0];
             
-            let stY = pts.start[1] + (isGoingDown ? cfgY : -cfgY);
-            let enY = pts.end[1] + (isGoingDown ? -cfgY : cfgY);
+            const VW_PCT = 100 / 3.5; // 28.57 u 350% kontejneru
+            let osX = isGoingRight ? cfgX : (VW_PCT - cfgX);
+            let oeX = isGoingRight ? (VW_PCT - cfgX) : cfgX;
             
-            let stX = pts.start[0] + (isGoingRight ? cfgX : -cfgX);
-            let enX = pts.end[0] + (isGoingRight ? -cfgX : cfgX);
+            let osY = isGoingDown ? cfgY : (VW_PCT - cfgY);
+            let oeY = isGoingDown ? (VW_PCT - cfgY) : cfgY;
             
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${stX.toFixed(2)}%; --start-y: ${stY.toFixed(2)}%; --end-x: ${enX.toFixed(2)}%; --end-y: ${enY.toFixed(2)}%;"`;
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%; --os-x: ${osX.toFixed(2)}%; --os-y: ${osY.toFixed(2)}%; --oe-x: ${oeX.toFixed(2)}%; --oe-y: ${oeY.toFixed(2)}%;"`;
             animClass = 'animated-route-follow';
         } else {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;"`;
