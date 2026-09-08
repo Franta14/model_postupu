@@ -2111,14 +2111,16 @@ function renderProfileSaved() {
         let animClass = 'animated-map-drift';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
-            metaStyle = `style="--start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%; width: 100%; height: 100%; object-fit: cover; display: block;"`;
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%;"`;
             animClass = 'animated-route-follow';
         } else {
-            metaStyle = `style="width: 100%; height: 100%; object-fit: cover; display: block;"`;
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;"`;
         }
         
         el.innerHTML = `
-            <img src="${thumbSrc}" alt="${group.map_name}" class="${animClass}" ${metaStyle} loading="lazy">
+            <div class="${animClass}" ${metaStyle}>
+                <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            </div>
         `;
         el.addEventListener('click', () => openFeed(group.map_id, true));
         gridContainer.appendChild(el);
@@ -2259,7 +2261,9 @@ function renderExploreGrid() {
         const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
         el.innerHTML = `
-            <img src="${thumbSrc}" alt="${group.map_name}" class="animated-map-drift" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;">
+                <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            </div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
