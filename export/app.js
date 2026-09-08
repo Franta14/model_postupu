@@ -2130,7 +2130,10 @@ function renderProfileSaved() {
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
             
-            let zoom = 8.0; // Jednotné přiblížení pro všechny postupy
+            // Jednotné přiblížení pro všechny postupy (normalizované podle výřezu)
+            let baseZoom = 13.0; 
+            let cropScale = pts.crop_scale || 0.6;
+            let zoom = baseZoom * cropScale;
             
             let dx = pts.end[0] - pts.start[0];
             let dy = pts.end[1] - pts.start[1];
@@ -2149,24 +2152,25 @@ function renderProfileSaved() {
             animClass = 'animated-route-follow';
             let maskId = 'mask-' + basename + '-' + idx;
             
+            // Kolečka jednoduchá a tenčí (stroke-width 3, r=12)
             let svgOverlay = `
             <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
                 <defs>
                     <mask id="${maskId}">
                         <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" fill="black" />
-                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" fill="black" />
+                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="13" fill="black" />
+                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="13" fill="black" />
                     </mask>
                 </defs>
-                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="4" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
-                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="none" />
-                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="none" />
+                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="3" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
+                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="12" stroke="#b300ff" stroke-width="3" fill="none" />
+                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="12" stroke="#b300ff" stroke-width="3" fill="none" />
             </svg>`;
             
             el.innerHTML = `
                 <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; --ts-x: ${shiftSx.toFixed(3)}%; --ts-y: ${shiftSy.toFixed(3)}%; --te-x: ${shiftEx.toFixed(3)}%; --te-y: ${shiftEy.toFixed(3)}%;">
                     <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom*100}%; height: auto; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${pts.start[1].toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${pts.end[1].toFixed(3)}%;">
-                        <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
+                        <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
                         ${svgOverlay}
                     </div>
                 </div>
@@ -2175,7 +2179,7 @@ function renderProfileSaved() {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;"`;
             el.innerHTML = `
                 <div class="${animClass}" ${metaStyle}>
-                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>
             `;
         }

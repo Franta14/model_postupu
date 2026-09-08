@@ -176,12 +176,9 @@ def generate_thumbnails():
         
         cropped = img.crop(crop_box)
         
-        # --- Kresleni postupu (spojnice a kolecka) ---
-        overlay = Image.new("RGBA", cropped.size, (255, 255, 255, 0))
-        draw = ImageDraw.Draw(overlay)
-        line_w = max(2, int(cropped.width * 0.003))
-        radius = max(5, int(cropped.width * 0.012))
-        color = (179, 0, 255, 200)  # OCAD fialova, polopruhledna
+        # --- Kresleni postupu (spojnice a kolecka) BYLO ODSTRANĚNO ---
+        # Nyní kreslíme trasu plně dynamicky na frontendu pomocí SVG,
+        # takže do JPEG se už trasa "nevypéká".
         
         def pt(c):
             col = c[0] * scale - config.MAP_OFFSET_X
@@ -189,7 +186,6 @@ def generate_thumbnails():
             return (col - crop_box[0], row - crop_box[1])
             
         features = per_postup_features[basename]
-        # 1. Kresleni spojnice (vzdusna cara mezi startem a cilem)
         start_c = None
         end_c = None
         for f in features:
@@ -204,38 +200,16 @@ def generate_thumbnails():
         if start_c and end_c:
             x1, y1 = pt(start_c)
             x2, y2 = pt(end_c)
-            dist = math.hypot(x2 - x1, y2 - y1)
-            # Utneme čáru těsně u okraje kružnice
-            cut = radius + line_w + 2
-            if dist > 2 * cut:
-                nx = (x2 - x1) / dist
-                ny = (y2 - y1) / dist
-                nx1 = x1 + nx * cut
-                ny1 = y1 + ny * cut
-                nx2 = x2 - nx * cut
-                ny2 = y2 - ny * cut
-                draw.line([nx1, ny1, nx2, ny2], fill=color, width=line_w)
-                
             route_meta[basename] = {
                 "start": [(x1 / cropped.width) * 100, (y1 / cropped.height) * 100],
-                "end": [(x2 / cropped.width) * 100, (y2 / cropped.height) * 100]
+                "end": [(x2 / cropped.width) * 100, (y2 / cropped.height) * 100],
+                "crop_scale": cropped.width / img_w  # Pro frontend normalizaci zoomu
             }
                     
-        # 2. Kresleni start, cil, kontrol
-        for f in features:
-            geom = f.get("geometry", {})
-            props = f.get("properties", {})
-            if geom.get("type") == "Point" and props.get("type") in ["start", "end", "control"]:
-                x, y = pt(geom.get("coordinates", []))
-                draw.ellipse([x - radius, y - radius, x + radius, y + radius], outline=color, width=line_w)
-                if props.get("type") == "end":
-                    inner = max(2, radius - line_w - 4)
-                    draw.ellipse([x - inner, y - inner, x + inner, y + inner], outline=color, width=max(2, line_w//2))
-                    
-        composite = Image.alpha_composite(cropped.convert("RGBA"), overlay).convert("RGB")
+        # Nepoužíváme composite, pouze původní crop
         # ---------------------------------------------
         
-        thumb = composite.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
+        thumb = cropped.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
         
         thumb_path = os.path.join(thumbs_dir, f"{basename}.jpg")
         thumb.save(thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
