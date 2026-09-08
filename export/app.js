@@ -2134,18 +2134,14 @@ function renderProfileSaved() {
             let cfgX = window.ANIMATION_CONFIG.routeOffsetX || 0;
             let cfgY = window.ANIMATION_CONFIG.routeOffsetY || 0;
             
-            // Detekce směru (abychom věděli z jaké strany zkracujeme prostor)
-            let isGoingDown = pts.start[1] < pts.end[1];
-            let isGoingRight = pts.start[0] < pts.end[0];
+            // Nekomplikované absolutní vycentrování s plným výpočtem v JS
+            const CENTER = (100 / 3.5) / 2; // 14.2857% z 350% kontejneru
+            let tsX = -pts.start[0] + CENTER + cfgX;
+            let tsY = -pts.start[1] + CENTER + cfgY;
+            let teX = -pts.end[0] + CENTER + cfgX;
+            let teY = -pts.end[1] + CENTER + cfgY;
             
-            const VW_PCT = 100 / 3.5; // 28.57 u 350% kontejneru
-            let osX = isGoingRight ? cfgX : (VW_PCT - cfgX);
-            let oeX = isGoingRight ? (VW_PCT - cfgX) : cfgX;
-            
-            let osY = isGoingDown ? cfgY : (VW_PCT - cfgY);
-            let oeY = isGoingDown ? (VW_PCT - cfgY) : cfgY;
-            
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%; --os-x: ${osX.toFixed(2)}%; --os-y: ${osY.toFixed(2)}%; --oe-x: ${oeX.toFixed(2)}%; --oe-y: ${oeY.toFixed(2)}%;"`;
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --ts-x: ${tsX.toFixed(2)}%; --ts-y: ${tsY.toFixed(2)}%; --te-x: ${teX.toFixed(2)}%; --te-y: ${teY.toFixed(2)}%;"`;
             animClass = 'animated-route-follow';
         } else {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;"`;

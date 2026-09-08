@@ -348,8 +348,8 @@ html, body {
 }
 
 @keyframes routeFollow {
-  0% { transform: translate3d(calc(-1 * var(--start-x, 50%) + var(--os-x, 14.28%)), calc(-1 * var(--start-y, 50%) + var(--os-y, 14.28%)), 0); }
-  100% { transform: translate3d(calc(-1 * var(--end-x, 50%) + var(--oe-x, 14.28%)), calc(-1 * var(--end-y, 50%) + var(--oe-y, 14.28%)), 0); }
+  0% { transform: translate3d(var(--ts-x, 0%), var(--ts-y, 0%), 0); }
+  100% { transform: translate3d(var(--te-x, 0%), var(--te-y, 0%), 0); }
 }
 
 .grid-icon {
