@@ -2130,52 +2130,45 @@ function renderProfileSaved() {
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
             
-            let zoom = 8.0; // Výrazně přiblížené
+            let zoom = 8.0; // Jednotné přiblížení pro všechny postupy
             
             let dx = pts.end[0] - pts.start[0];
             let dy = pts.end[1] - pts.start[1];
             let maxDiff = Math.max(Math.abs(dx), Math.abs(dy));
             
-            let pad = 15; // padding od kraje v procentech obrazovky
-            let t_margin = (50 - pad) / (zoom * maxDiff);
-            
-            // Ošetření pro velmi krátké postupy, aby se animace nepřeklopila
-            if (t_margin > 0.4) {
-                t_margin = 0.4;
-            }
-            if (isNaN(t_margin) || !isFinite(t_margin)) {
-                t_margin = 0;
+            let shiftSx = 0, shiftSy = 0, shiftEx = 0, shiftEy = 0;
+            if (maxDiff > 0) {
+                // Posun o 35% směrem ke kraji (tzn. 15% padding)
+                let t = 35 / maxDiff;
+                shiftEx = t * dx;
+                shiftEy = t * dy;
+                shiftSx = -shiftEx;
+                shiftSy = -shiftEy;
             }
 
-            // Výpočet pozic kamery
-            let cStartX = pts.start[0] + t_margin * dx;
-            let cStartY = pts.start[1] + t_margin * dy;
-            let cEndX = pts.end[0] - t_margin * dx;
-            let cEndY = pts.end[1] - t_margin * dy;
-            
-            const CENTER = 100 / (2 * zoom); 
-            
-            // Transformace pro CSS (posun o střed)
-            let tsX = CENTER - cStartX;
-            let tsY = CENTER - cStartY;
-            let teX = CENTER - cEndX;
-            let teY = CENTER - cEndY;
-            
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: ${zoom*100}%; height: ${zoom*100}%; --ts-x: ${tsX.toFixed(3)}%; --ts-y: ${tsY.toFixed(3)}%; --te-x: ${teX.toFixed(3)}%; --te-y: ${teY.toFixed(3)}%;"`;
             animClass = 'animated-route-follow';
+            let maskId = 'mask-' + basename + '-' + idx;
             
-            // Pevná velikost čar a koleček bez ohledu na délku postupu
             let svgOverlay = `
             <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
-                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="4" stroke-opacity="0.8" stroke-linecap="round" />
-                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="rgba(255,255,255,0.75)" />
-                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="rgba(255,255,255,0.75)" />
+                <defs>
+                    <mask id="${maskId}">
+                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" fill="black" />
+                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" fill="black" />
+                    </mask>
+                </defs>
+                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="4" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
+                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="none" />
+                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="none" />
             </svg>`;
             
             el.innerHTML = `
-                <div class="${animClass}" ${metaStyle}>
-                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
-                    ${svgOverlay}
+                <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; --ts-x: ${shiftSx.toFixed(3)}%; --ts-y: ${shiftSy.toFixed(3)}%; --te-x: ${shiftEx.toFixed(3)}%; --te-y: ${shiftEy.toFixed(3)}%;">
+                    <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom*100}%; height: auto; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${pts.start[1].toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${pts.end[1].toFixed(3)}%;">
+                        <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
+                        ${svgOverlay}
+                    </div>
                 </div>
             `;
         } else {
