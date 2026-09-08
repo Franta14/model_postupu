@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrollienteering Ladička</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #1a1a1a; color: white; display: flex; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+        .sidebar { width: 350px; background: #222; padding: 20px; overflow-y: auto; border-right: 1px solid #333; }
+        .main { flex-grow: 1; padding: 20px; display: flex; justify-content: center; align-items: center; background: #111; position: relative; }
+        
+        .preview-box { width: 300px; aspect-ratio: 4/5; border: 4px solid #fff; border-radius: 12px; overflow: hidden; position: relative; background: #333; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        
+        .control-group { margin-bottom: 25px; background: #2a2a2a; padding: 15px; border-radius: 8px; }
+        h3 { margin-top: 0; margin-bottom: 15px; font-size: 16px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        label { display: block; margin-bottom: 10px; font-size: 14px; }
+        input[type=range] { width: 100%; margin: 8px 0; }
+        .val { font-weight: bold; color: #4CAF50; float: right; }
+        
+        button { background: #4CAF50; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 8px; }
+        button:hover { background: #45a049; }
+        
+        textarea { width: 100%; height: 150px; background: #111; color: #0f0; border: 1px solid #333; border-radius: 4px; padding: 10px; font-family: monospace; font-size: 12px; resize: none; box-sizing: border-box; }
+        
+        /* Obal pro testovani homolky */
+        #explore-tuner { display: none; width: 100%; height: 100%; position: relative; flex-direction: column; align-items: center; justify-content: center; }
+        .map-canvas { position: relative; max-width: 90%; max-height: 80%; background: #333; border: 2px solid #555; }
+        .map-canvas img { display: block; width: 100%; height: 100%; object-fit: contain; }
+        .viewport-box { position: absolute; border: 2px solid red; background: rgba(255,0,0,0.2); box-shadow: 0 0 0 9999px rgba(0,0,0,0.5); width: 20%; height: 20%; transition: all 0.1s; pointer-events: none;}
+        .viewport-box.mid { border-color: yellow; background: rgba(255,255,0,0.1); box-shadow: none; z-index: 10;}
+        .viewport-box.end { border-color: lime; background: rgba(0,255,0,0.1); box-shadow: none; z-index: 10;}
+        
+        .tabs { display: flex; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; background: #333; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { background: #222; border-bottom: 2px solid #4CAF50; color: #4CAF50; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('routes')">Postupy</div>
+        <div class="tab" onclick="switchTab('explore')">Mapy (Explore)</div>
+    </div>
+    
+    <div id="tab-routes">
+        <div class="control-group">
+            <h3>Posun (Zkrácení okraje)</h3>
+            <label>Osa X (horizontální zarážka)
+                <span class="val" id="ox-val">0 %</span>
+                <input type="range" id="ox" min="-50" max="50" value="0">
+            </label>
+            <label>Osa Y (vertikální zarážka)
+                <span class="val" id="oy-val">15 %</span>
+                <input type="range" id="oy" min="-50" max="50" value="15">
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <h3>Testovací postup</h3>
+            <div id="route-name" style="margin-bottom: 10px; font-weight: bold; color: #ddd; font-size: 14px;">-</div>
+            <button onclick="nextRoute()">Zkusit další postup &raquo;</button>
+            <button onclick="restartAnim()" style="background: #555;">Znovu přehrát tuto animaci</button>
+        </div>
+    </div>
+    
+    <div id="tab-explore" style="display: none;">
+        <div class="control-group">
+            <h3>Startovní záběr (Červený)</h3>
+            <label>X: <input type="range" class="map-slider" id="ex-sx" min="-80" max="0" value="-30"></label>
+            <label>Y: <input type="range" class="map-slider" id="ex-sy" min="-80" max="0" value="-25"></label>
+        </div>
+        <div class="control-group">
+            <h3>Půlka animace (Žlutý)</h3>
+            <label>X: <input type="range" class="map-slider" id="ex-mx" min="-80" max="0" value="-45"></label>
+            <label>Y: <input type="range" class="map-slider" id="ex-my" min="-80" max="0" value="-35"></label>
+        </div>
+        <div class="control-group">
+            <h3>Konečný záběr (Zelený)</h3>
+            <label>X: <input type="range" class="map-slider" id="ex-ex" min="-80" max="0" value="-25"></label>
+            <label>Y: <input type="range" class="map-slider" id="ex-ey" min="-80" max="0" value="-50"></label>
+        </div>
+    </div>
+    
+    <div class="control-group">
+        <h3>Výsledek pro app.js</h3>
+        <textarea id="output-code" readonly></textarea>
+    </div>
+</div>
+
+<div class="main">
+    <!-- Preview pro POSTUPY -->
+    <div class="preview-box" id="preview-routes">
+        <div id="route-anim-container" style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;">
+            <img id="route-img" src="" style="width: 100%; height: 100%; object-fit: cover;" alt="map">
+        </div>
+    </div>
+    
+    <!-- Preview pro MAPY -->
+    <div id="explore-tuner">
+        <div class="map-canvas">
+            <img src="thumbs/map_homolka.jpg" alt="Mapa Homolka">
+            <div id="box-start" class="viewport-box" style="left: 30%; top: 25%;"></div>
+            <div id="box-mid" class="viewport-box mid" style="left: 45%; top: 35%;"></div>
+            <div id="box-end" class="viewport-box end" style="left: 25%; top: 50%;"></div>
+        </div>
+        <p style="margin-top: 15px; color: #888;">Zobrazuje ořez pro 500% zvětšenou dlaždici.</p>
+    </div>
+</div>
+
+<!-- Načtení dat jako v produkci -->
+<script src="postupy_data.js"></script>
+<script>
+    let thumbsMeta = null;
+    let currentRouteBasename = null;
+    let allRouteBasenames = [];
+    let currentRouteIndex = 0;
+
+    // Elementy
+    const oxSlider = document.getElementById('ox');
+    const oySlider = document.getElementById('oy');
+    const oxVal = document.getElementById('ox-val');
+    const oyVal = document.getElementById('oy-val');
+    const routeAnimContainer = document.getElementById('route-anim-container');
+    const routeImg = document.getElementById('route-img');
+    const routeNameEl = document.getElementById('route-name');
+    const outputCode = document.getElementById('output-code');
+    
+    const exSliders = document.querySelectorAll('.map-slider');
+    
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (tab === 'routes') {
+            document.getElementById('tab-routes').style.display = 'block';
+            document.getElementById('tab-explore').style.display = 'none';
+            document.getElementById('preview-routes').style.display = 'block';
+            document.getElementById('explore-tuner').style.display = 'none';
+        } else {
+            document.getElementById('tab-routes').style.display = 'none';
+            document.getElementById('tab-explore').style.display = 'block';
+            document.getElementById('preview-routes').style.display = 'none';
+            document.getElementById('explore-tuner').style.display = 'flex';
+        }
+        updateCode();
+    }
+
+    // Načtení z meta jsonu
+    fetch('thumbs/thumbs_meta.json')
+        .then(res => res.json())
+        .then(data => {
+            thumbsMeta = data;
+            allRouteBasenames = Object.keys(data.routes);
+            if (allRouteBasenames.length > 0) {
+                loadRoute(0);
+            }
+        });
+        
+    function nextRoute() {
+        currentRouteIndex = (currentRouteIndex + 1) % allRouteBasenames.length;
+        loadRoute(currentRouteIndex);
+    }
+    
+    function restartAnim() {
+        // Magie pro restart CSS animace
+        routeAnimContainer.classList.remove('animated-route-follow');
+        void routeAnimContainer.offsetWidth; // trigger reflow
+        routeAnimContainer.classList.add('animated-route-follow');
+    }
+
+    function loadRoute(index) {
+        currentRouteBasename = allRouteBasenames[index];
+        routeNameEl.innerText = currentRouteBasename;
+        routeImg.src = 'thumbs/' + currentRouteBasename + '.jpg';
+        updateRouteStyle();
+    }
+    
+    function updateRouteStyle() {
+        if (!currentRouteBasename || !thumbsMeta) return;
+        
+        let pts = thumbsMeta.routes[currentRouteBasename];
+        let cfgX = parseInt(oxSlider.value);
+        let cfgY = parseInt(oySlider.value);
+        
+        oxVal.innerText = cfgX + " %";
+        oyVal.innerText = cfgY + " %";
+        
+        // Logika app.js
+        let isGoingDown = pts.start[1] < pts.end[1];
+        let isGoingRight = pts.start[0] < pts.end[0];
+        
+        let stY = pts.start[1] + (isGoingDown ? cfgY : -cfgY);
+        let enY = pts.end[1] + (isGoingDown ? -cfgY : cfgY);
+        
+        let stX = pts.start[0] + (isGoingRight ? cfgX : -cfgX);
+        let enX = pts.end[0] + (isGoingRight ? -cfgX : cfgX);
+        
+        routeAnimContainer.style = `position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${stX.toFixed(2)}%; --start-y: ${stY.toFixed(2)}%; --end-x: ${enX.toFixed(2)}%; --end-y: ${enY.toFixed(2)}%;`;
+        restartAnim();
+        updateCode();
+    }
+    
+    function updateExploreStyle() {
+        const sx = Math.abs(document.getElementById('ex-sx').value);
+        const sy = Math.abs(document.getElementById('ex-sy').value);
+        const mx = Math.abs(document.getElementById('ex-mx').value);
+        const my = Math.abs(document.getElementById('ex-my').value);
+        const ex = Math.abs(document.getElementById('ex-ex').value);
+        const ey = Math.abs(document.getElementById('ex-ey').value);
+        
+        document.getElementById('box-start').style.left = sx + '%';
+        document.getElementById('box-start').style.top = sy + '%';
+        document.getElementById('box-mid').style.left = mx + '%';
+        document.getElementById('box-mid').style.top = my + '%';
+        document.getElementById('box-end').style.left = ex + '%';
+        document.getElementById('box-end').style.top = ey + '%';
+        updateCode();
+    }
+
+    function updateCode() {
+        outputCode.value = `window.ANIMATION_CONFIG = {
+    routeOffsetX: ${oxSlider.value},
+    routeOffsetY: ${oySlider.value},
+    
+    exploreMaps: {
+        'homolka': { 
+            startX: ${document.getElementById('ex-sx').value}, 
+            startY: ${document.getElementById('ex-sy').value}, 
+            midX: ${document.getElementById('ex-mx').value}, 
+            midY: ${document.getElementById('ex-my').value}, 
+            endX: ${document.getElementById('ex-ex').value}, 
+            endY: ${document.getElementById('ex-ey').value} 
+        }
+    }
+};`;
+    }
+    
+    oxSlider.addEventListener('input', updateRouteStyle);
+    oySlider.addEventListener('input', updateRouteStyle);
+    exSliders.forEach(s => s.addEventListener('input', updateExploreStyle));
+
+</script>
+
+</body>
+</html>
