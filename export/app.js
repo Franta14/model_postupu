@@ -2083,9 +2083,8 @@ function renderProfileSaved() {
     gridContainer.style.width = '100%';
     
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
-    const groups = groupRoutesByMap(displayData);
     
-    groups.forEach((group, idx) => {
+    displayData.forEach((route, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
         el.style.position = 'relative';
@@ -2094,7 +2093,7 @@ function renderProfileSaved() {
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
         
-        const thumbRoute = group.thumbRoute;
+        const thumbRoute = route;
         let thumbSrc = '';
         let basename = '';
         if (thumbRoute.thumb) {
@@ -2104,7 +2103,7 @@ function renderProfileSaved() {
             basename = thumbRoute.file.replace('.geojson', '');
             thumbSrc = 'thumbs/' + basename + '.jpg';
         } else {
-            thumbSrc = 'thumbs/map_' + group.map_id + '.jpg'; // fallback
+            thumbSrc = 'thumbs/map_' + route.map_id + '.jpg'; // fallback
         }
         
         let metaStyle = '';
@@ -2119,10 +2118,10 @@ function renderProfileSaved() {
         
         el.innerHTML = `
             <div class="${animClass}" ${metaStyle}>
-                <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             </div>
         `;
-        el.addEventListener('click', () => openFeed(group.map_id, true));
+        el.addEventListener('click', () => openFeed(route.map_id, true));
         gridContainer.appendChild(el);
     });
     dynamicContent.appendChild(gridContainer);
