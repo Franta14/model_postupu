@@ -2261,7 +2261,7 @@ function renderExploreGrid() {
         const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
         el.innerHTML = `
-            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;">
+            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 500%; height: 500%;">
                 <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             </div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">

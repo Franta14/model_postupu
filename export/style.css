@@ -331,10 +331,10 @@ html, body {
 }
 
 @keyframes mapDrift {
-  0% { transform: translate3d(-10%, -10%, 0); }
-  33% { transform: translate3d(-30%, -40%, 0); }
-  66% { transform: translate3d(-50%, -20%, 0); }
-  100% { transform: translate3d(-20%, -50%, 0); }
+  0% { transform: translate3d(-35%, -35%, 0); }
+  33% { transform: translate3d(-45%, -40%, 0); }
+  66% { transform: translate3d(-40%, -50%, 0); }
+  100% { transform: translate3d(-45%, -35%, 0); }
 }
 
 .animated-route-follow {
@@ -349,8 +349,8 @@ html, body {
 }
 
 @keyframes routeFollow {
-  0% { transform: translate3d(calc(-1 * var(--start-x, 50%) + 14.28%), calc(-1 * var(--start-y, 50%) + 14.28%), 0); }
-  100% { transform: translate3d(calc(-1 * var(--end-x, 50%) + 14.28%), calc(-1 * var(--end-y, 50%) + 14.28%), 0); }
+  0% { transform: translate3d(clamp(-71.4%, calc(-1 * var(--start-x, 50%) + 14.28%), 0%), clamp(-71.4%, calc(-1 * var(--start-y, 50%) + 14.28%), 0%), 0); }
+  100% { transform: translate3d(clamp(-71.4%, calc(-1 * var(--end-x, 50%) + 14.28%), 0%), clamp(-71.4%, calc(-1 * var(--end-y, 50%) + 14.28%), 0%), 0); }
 }
 
 .grid-icon {

@@ -21,8 +21,8 @@ THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1250
 # JPEG kvalita (85 = dobrý kompromis ostrost vs. velikost)
 JPEG_QUALITY = 85
 
-# Padding kolem bounding boxu (v pixelech originální mapy)
-BBOX_PADDING_RATIO = 0.05  # Velmi těsný ořez pro co největší detail
+# Padding pro vyříznutí mapy kolem postupu (zajišťuje dostatek "masa" pro zoom bez přejetí mimo mapu)
+BBOX_PADDING_RATIO = 0.35  # Velmi těsný ořez pro co největší detail
 
 # Maximální šířka výřezu originální mapy pro zaručení vysokého detailu i u dlouhých postupů
 MAX_CROP_WIDTH = 1600
