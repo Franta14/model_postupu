@@ -94,28 +94,6 @@ def crop_to_aspect(bbox, img_width, img_height, aspect_ratio=TARGET_ASPECT, padd
         min_col -= diff / 2
         max_col += diff / 2
     
-    # Zarovnáme do hranic obrázku
-    min_col = max(0, min_col)
-    min_row = max(0, min_row)
-    max_col = min(img_width, max_col)
-    max_row = min(img_height, max_row)
-    
-    # Po zarovnání možná potřebujeme znovu opravit poměr stran
-    width = max_col - min_col
-    height = max_row - min_row
-    current_aspect = width / height if height > 0 else 1
-    
-    if current_aspect > aspect_ratio:
-        new_width = height * aspect_ratio
-        diff = width - new_width
-        min_col += diff / 2
-        max_col -= diff / 2
-    elif current_aspect < aspect_ratio:
-        new_height = width / aspect_ratio
-        diff = height - new_height
-        min_row += diff / 2
-        max_row -= diff / 2
-        
     width = max_col - min_col
     height = max_row - min_row
 
