@@ -1092,12 +1092,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let selectedTerrains = new Set();
 
+let thumbsMeta = null;
+
 function loadData() {
-    fetch('postupy/postupy_index.json?v=' + Date.now())
-        .then(res => res.json())
-        .then(data => {
-            postupyData = data;
-            postupyData.forEach((map, index) => {
+    Promise.all([
+        fetch('postupy/postupy_index.json?v=' + Date.now()).then(res => res.json()),
+        fetch('thumbs/thumbs_meta.json?v=' + Date.now()).then(res => res.json()).catch(() => null)
+    ]).then(([data, metaData]) => {
+        postupyData = data;
+        thumbsMeta = metaData;
+        postupyData.forEach((map, index) => {
                 map.terrain = 'cesky-les';
                 map.map_id = 'homolka';    
                 map.map_name = 'Homolka';  
@@ -2092,16 +2096,29 @@ function renderProfileSaved() {
         
         const thumbRoute = group.thumbRoute;
         let thumbSrc = '';
+        let basename = '';
         if (thumbRoute.thumb) {
             thumbSrc = thumbRoute.thumb;
+            basename = thumbSrc.split('/').pop().replace('.jpg', '');
         } else if (thumbRoute.file) {
-            thumbSrc = 'thumbs/' + thumbRoute.file.replace('.geojson', '.jpg');
+            basename = thumbRoute.file.replace('.geojson', '');
+            thumbSrc = 'thumbs/' + basename + '.jpg';
         } else {
             thumbSrc = 'thumbs/map_' + group.map_id + '.jpg'; // fallback
         }
         
+        let metaStyle = '';
+        let animClass = 'animated-map-drift';
+        if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
+            let pts = thumbsMeta.routes[basename];
+            metaStyle = `style="--start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%; width: 100%; height: 100%; object-fit: cover; display: block;"`;
+            animClass = 'animated-route-follow';
+        } else {
+            metaStyle = `style="width: 100%; height: 100%; object-fit: cover; display: block;"`;
+        }
+        
         el.innerHTML = `
-            <img src="${thumbSrc}" alt="${group.map_name}" class="animated-map-drift" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            <img src="${thumbSrc}" alt="${group.map_name}" class="${animClass}" ${metaStyle} loading="lazy">
         `;
         el.addEventListener('click', () => openFeed(group.map_id, true));
         gridContainer.appendChild(el);
@@ -2242,7 +2259,7 @@ function renderExploreGrid() {
         const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
         el.innerHTML = `
-            <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            <img src="${thumbSrc}" alt="${group.map_name}" class="animated-map-drift" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
                 <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>

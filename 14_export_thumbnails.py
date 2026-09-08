@@ -15,9 +15,9 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (šířka v px, výška se dopočítá z poměru)
-THUMB_WIDTH = 400
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 500
+# Velikost výstupního thumbnailu (zvýšena pro masivní zoom a detailní panning ve frontendu)
+THUMB_WIDTH = 1000
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1250
 # JPEG kvalita (85 = dobrý kompromis ostrost vs. velikost)
 JPEG_QUALITY = 85
 
@@ -187,6 +187,7 @@ def generate_thumbnails():
     
     # 2) Thumbnail per postup (individuální bounding box)
     print(f"\n  📐 Generuji individuální thumbnaily pro {len(per_postup_pixels)} postupů...")
+    route_meta = {}
     for basename, pixels in per_postup_pixels.items():
         if len(pixels) < 2:
             print(f"    ⚠ {basename}: příliš málo souřadnic, přeskakuji")
@@ -226,7 +227,8 @@ def generate_thumbnails():
             x1, y1 = pt(start_c)
             x2, y2 = pt(end_c)
             dist = math.hypot(x2 - x1, y2 - y1)
-            cut = radius + (line_w / 2.0)
+            # Utneme čáru těsně u okraje kružnice
+            cut = radius + line_w + 2
             if dist > 2 * cut:
                 nx = (x2 - x1) / dist
                 ny = (y2 - y1) / dist
@@ -235,6 +237,11 @@ def generate_thumbnails():
                 nx2 = x2 - nx * cut
                 ny2 = y2 - ny * cut
                 draw.line([nx1, ny1, nx2, ny2], fill=color, width=line_w)
+                
+            route_meta[basename] = {
+                "start": [(x1 / cropped.width) * 100, (y1 / cropped.height) * 100],
+                "end": [(x2 / cropped.width) * 100, (y2 / cropped.height) * 100]
+            }
                     
         # 2. Kresleni start, cil, kontrol
         for f in features:
@@ -266,11 +273,12 @@ def generate_thumbnails():
         geojson_name = entry["file"].replace(".geojson", "")
         entry["thumb"] = f"thumbs/{geojson_name}.jpg"
     
-    # Přidáme mapový thumbnail info
+    # Přidáme mapové thumbnail info a metadata tras pro animace
     thumbs_meta = {
         "maps": {
-            "homolka": f"thumbs/map_homolka.jpg"
-        }
+            "homolka": "thumbs/map_homolka.jpg"
+        },
+        "routes": route_meta
     }
     
     thumbs_meta_path = os.path.join("export", "thumbs", "thumbs_meta.json")
