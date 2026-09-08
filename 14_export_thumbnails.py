@@ -16,7 +16,7 @@ Image.MAX_IMAGE_PIXELS = None
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
 # Velikost výstupního thumbnailu (zvýšena pro masivní zoom a detailní panning ve frontendu)
-THUMB_WIDTH = 1000
+THUMB_WIDTH = 2500
 THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1250
 # JPEG kvalita (85 = dobrý kompromis ostrost vs. velikost)
 JPEG_QUALITY = 85

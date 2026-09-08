@@ -323,23 +323,35 @@ html, body {
   animation: mapDrift 60s ease-in-out infinite alternate;
   transform-origin: center center;
   will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
 }
 
 @keyframes mapDrift {
-  0% { transform: scale(3.5) translate(0%, 0%); }
-  33% { transform: scale(3.5) translate(4%, 3%); }
-  66% { transform: scale(3.5) translate(-3%, -4%); }
-  100% { transform: scale(3.5) translate(0%, 0%); }
+  0% { transform: scale(3.5) translate3d(0%, 0%, 0); }
+  33% { transform: scale(3.5) translate3d(4%, 3%, 0); }
+  66% { transform: scale(3.5) translate3d(-3%, -4%, 0); }
+  100% { transform: scale(3.5) translate3d(0%, 0%, 0); }
 }
 
 .animated-route-follow {
   animation: routeFollow 40s ease-in-out infinite alternate;
   will-change: transform, transform-origin;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-perspective: 1000px;
+  perspective: 1000px;
 }
 
 @keyframes routeFollow {
-  0% { transform: scale(3.5); transform-origin: var(--start-x, center) var(--start-y, center); }
-  100% { transform: scale(3.5); transform-origin: var(--end-x, center) var(--end-y, center); }
+  0% { transform: scale(3.5) translateZ(0); transform-origin: var(--start-x, center) var(--start-y, center); }
+  100% { transform: scale(3.5) translateZ(0); transform-origin: var(--end-x, center) var(--end-y, center); }
 }
 
 .grid-icon {
