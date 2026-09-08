@@ -331,10 +331,9 @@ html, body {
 }
 
 @keyframes mapDrift {
-  0% { transform: translate3d(-35%, -35%, 0); }
-  33% { transform: translate3d(-45%, -40%, 0); }
-  66% { transform: translate3d(-40%, -50%, 0); }
-  100% { transform: translate3d(-45%, -35%, 0); }
+  0% { transform: translate3d(var(--drift-start-x, -35%), var(--drift-start-y, -35%), 0); }
+  50% { transform: translate3d(var(--drift-mid-x, -45%), var(--drift-mid-y, -40%), 0); }
+  100% { transform: translate3d(var(--drift-end-x, -40%), var(--drift-end-y, -50%), 0); }
 }
 
 .animated-route-follow {

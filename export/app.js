@@ -1,4 +1,23 @@
 // ==========================================
+// KONFIGURACE ANIMACÍ (Upravte si libovolně!)
+// ==========================================
+window.ANIMATION_CONFIG = {
+    // POSUV KAMERY U POSTUPŮ (v procentech, např. 5, 10, -5).
+    // Posouvá kameru podélně ve směru osy. Kladné číslo (např. 15) u osy Y znamená,
+    // že kamera ukrojí zbytečné místo ZA kolečkem a obrazovka začne "více vepředu"
+    // ve směru běhu postupu. Aplikuje se na všechny postupy chytře podle jejich směru.
+    routeOffsetX: 0,
+    routeOffsetY: 15,
+    
+    // POSUV KAMERY NA ÚVODNÍ STRÁNCE (Explore grid)
+    // Přesné koordináty posunu (zleva-doprava a shora-dolů) v záporných procentech
+    exploreMaps: {
+        'homolka': { startX: -30, startY: -25, midX: -45, midY: -35, endX: -25, endY: -50 }
+        // jakoukoliv další mapu sem můžete stejným způsobem připsat
+    }
+};
+
+// ==========================================
 // 0. FIREBASE INICIALIZACE A PŘIHLÁŠENÍ
 // ==========================================
 const firebaseConfig = {
@@ -2110,7 +2129,22 @@ function renderProfileSaved() {
         let animClass = 'animated-map-drift';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${pts.start[0].toFixed(2)}%; --start-y: ${pts.start[1].toFixed(2)}%; --end-x: ${pts.end[0].toFixed(2)}%; --end-y: ${pts.end[1].toFixed(2)}%;"`;
+            
+            // Aplikace uživatelského nastavení posunu vůči kolečku
+            let cfgX = window.ANIMATION_CONFIG.routeOffsetX || 0;
+            let cfgY = window.ANIMATION_CONFIG.routeOffsetY || 0;
+            
+            // Detekce směru (abychom věděli z jaké strany zkracujeme prostor)
+            let isGoingDown = pts.start[1] < pts.end[1];
+            let isGoingRight = pts.start[0] < pts.end[0];
+            
+            let stY = pts.start[1] + (isGoingDown ? cfgY : -cfgY);
+            let enY = pts.end[1] + (isGoingDown ? -cfgY : cfgY);
+            
+            let stX = pts.start[0] + (isGoingRight ? cfgX : -cfgX);
+            let enX = pts.end[0] + (isGoingRight ? -cfgX : cfgX);
+            
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --start-x: ${stX.toFixed(2)}%; --start-y: ${stY.toFixed(2)}%; --end-x: ${enX.toFixed(2)}%; --end-y: ${enY.toFixed(2)}%;"`;
             animClass = 'animated-route-follow';
         } else {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;"`;
@@ -2259,8 +2293,14 @@ function renderExploreGrid() {
         const countText = getRoutesCountText(group.routes.length);
         const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
+        let driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%;"`;
+        if (window.ANIMATION_CONFIG && window.ANIMATION_CONFIG.exploreMaps && window.ANIMATION_CONFIG.exploreMaps[group.map_id]) {
+            const b = window.ANIMATION_CONFIG.exploreMaps[group.map_id];
+            driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%; --drift-start-x: ${b.startX}%; --drift-start-y: ${b.startY}%; --drift-mid-x: ${b.midX}%; --drift-mid-y: ${b.midY}%; --drift-end-x: ${b.endX}%; --drift-end-y: ${b.endY}%;"`;
+        }
+        
         el.innerHTML = `
-            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 500%; height: 500%;">
+            <div class="animated-map-drift" ${driftStyle}>
                 <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             </div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
