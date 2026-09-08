@@ -201,8 +201,8 @@ def generate_thumbnails():
         # --- Kresleni postupu (spojnice a kolecka) ---
         overlay = Image.new("RGBA", cropped.size, (255, 255, 255, 0))
         draw = ImageDraw.Draw(overlay)
-        line_w = max(4, int(cropped.width * 0.008))
-        radius = max(10, int(cropped.width * 0.03))
+        line_w = max(2, int(cropped.width * 0.003))
+        radius = max(5, int(cropped.width * 0.012))
         color = (179, 0, 255, 200)  # OCAD fialova, polopruhledna
         
         def pt(c):

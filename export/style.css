@@ -320,7 +320,7 @@ html, body {
 }
 
 .animated-map-drift {
-  animation: mapDrift 25s ease-in-out infinite alternate;
+  animation: mapDrift 60s ease-in-out infinite alternate;
   transform-origin: center center;
   will-change: transform;
 }
@@ -333,7 +333,7 @@ html, body {
 }
 
 .animated-route-follow {
-  animation: routeFollow 12s ease-in-out infinite alternate;
+  animation: routeFollow 40s ease-in-out infinite alternate;
   will-change: transform, transform-origin;
 }
 
