@@ -2130,28 +2130,62 @@ function renderProfileSaved() {
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
             
-            // Aplikace uživatelského nastavení posunu vůči kolečku
-            let cfgX = window.ANIMATION_CONFIG.routeOffsetX || 0;
-            let cfgY = window.ANIMATION_CONFIG.routeOffsetY || 0;
+            let zoom = 8.0; // Výrazně přiblížené
             
-            // Nekomplikované absolutní vycentrování s plným výpočtem v JS
-            const CENTER = (100 / 3.5) / 2; // 14.2857% z 350% kontejneru
-            let tsX = -pts.start[0] + CENTER + cfgX;
-            let tsY = -pts.start[1] + CENTER + cfgY;
-            let teX = -pts.end[0] + CENTER + cfgX;
-            let teY = -pts.end[1] + CENTER + cfgY;
+            let dx = pts.end[0] - pts.start[0];
+            let dy = pts.end[1] - pts.start[1];
+            let maxDiff = Math.max(Math.abs(dx), Math.abs(dy));
             
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%; --ts-x: ${tsX.toFixed(2)}%; --ts-y: ${tsY.toFixed(2)}%; --te-x: ${teX.toFixed(2)}%; --te-y: ${teY.toFixed(2)}%;"`;
+            let pad = 15; // padding od kraje v procentech obrazovky
+            let t_margin = (50 - pad) / (zoom * maxDiff);
+            
+            // Ošetření pro velmi krátké postupy, aby se animace nepřeklopila
+            if (t_margin > 0.4) {
+                t_margin = 0.4;
+            }
+            if (isNaN(t_margin) || !isFinite(t_margin)) {
+                t_margin = 0;
+            }
+
+            // Výpočet pozic kamery
+            let cStartX = pts.start[0] + t_margin * dx;
+            let cStartY = pts.start[1] + t_margin * dy;
+            let cEndX = pts.end[0] - t_margin * dx;
+            let cEndY = pts.end[1] - t_margin * dy;
+            
+            const CENTER = 100 / (2 * zoom); 
+            
+            // Transformace pro CSS (posun o střed)
+            let tsX = CENTER - cStartX;
+            let tsY = CENTER - cStartY;
+            let teX = CENTER - cEndX;
+            let teY = CENTER - cEndY;
+            
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: ${zoom*100}%; height: ${zoom*100}%; --ts-x: ${tsX.toFixed(3)}%; --ts-y: ${tsY.toFixed(3)}%; --te-x: ${teX.toFixed(3)}%; --te-y: ${teY.toFixed(3)}%;"`;
             animClass = 'animated-route-follow';
+            
+            // Pevná velikost čar a koleček bez ohledu na délku postupu
+            let svgOverlay = `
+            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
+                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="4" stroke-opacity="0.8" stroke-linecap="round" />
+                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="rgba(255,255,255,0.75)" />
+                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="14" stroke="#b300ff" stroke-width="4" fill="rgba(255,255,255,0.75)" />
+            </svg>`;
+            
+            el.innerHTML = `
+                <div class="${animClass}" ${metaStyle}>
+                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                    ${svgOverlay}
+                </div>
+            `;
         } else {
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 350%; height: 350%;"`;
+            metaStyle = `style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;"`;
+            el.innerHTML = `
+                <div class="${animClass}" ${metaStyle}>
+                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                </div>
+            `;
         }
-        
-        el.innerHTML = `
-            <div class="${animClass}" ${metaStyle}>
-                <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
-            </div>
-        `;
         el.addEventListener('click', () => openFeed(route.map_id, true));
         gridContainer.appendChild(el);
     });
