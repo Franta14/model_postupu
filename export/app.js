@@ -2140,7 +2140,7 @@ function renderProfileSaved() {
             let maxDiff = Math.max(Math.abs(dx), Math.abs(dy));
             
             let distance = Math.hypot(dx, dy);
-            let animDur = Math.max(8, distance * 0.8); // Konstantní rychlost posunu, 0.8s na každý 1% bod délky
+            let animDur = Math.max(12, distance * 1.2); // Zpomaleno o 50% navíc: 1.2s na každý 1% bod délky
             
             animClass = 'animated-route-follow';
             let maskId = 'mask-' + basename + '-' + idx;
