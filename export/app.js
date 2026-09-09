@@ -40,7 +40,7 @@ let currentUser = null;
 // Dynamické vytvoření přihlašovací obrazovky (Overlay)
 const loginOverlay = document.createElement('div');
 loginOverlay.id = 'login-overlay';
-loginOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: #000; z-index: 30000; display: flex; justify-content: center; align-items: center; color: white; transition: opacity 0.5s;';
+loginOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: var(--app-vh, 100dvh); background: #000; z-index: 30000; display: flex; justify-content: center; align-items: center; color: white; transition: opacity 0.5s;';
 loginOverlay.innerHTML = `
     <div style="text-align: center; padding: 20px;">
         <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 10px;">Scrollienteering</h1>
@@ -249,9 +249,11 @@ style.innerHTML = `
 html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
-#screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
-#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
-.reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
+/* --app-vh je reálná výška z window.visualViewport (JS), spolehlivější než
+   100vh/100dvh v běžné (ne-PWA) kartě iOS Safari s mizejícím toolbarem */
+#screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: var(--app-vh) !important; overflow: hidden; }
+#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: var(--app-vh) !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
+.reel { height: var(--app-vh) !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
 
 /* DŮLEŽITÉ: Touch akce povoluje scrollování a pinch zoom v mapě */
 .leaflet-container { touch-action: pan-y pinch-zoom !important; }
@@ -283,14 +285,14 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
 .settings-section { margin-bottom: 0; box-sizing: border-box; width: 100%; }
 input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color); }
-#screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: 100dvh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; display: none; }
+#screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: var(--app-vh); padding-bottom: calc(80px + var(--safe-bottom)); overflow-y: auto; display: none; }
 #screen-settings.active, #screen-chat.active { display: block; }
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 body.saved-mode-active .map-clip { height: 100% !important; }
-#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: calc(70px + env(safe-area-inset-top, 0px)); box-sizing: content-box; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: calc(70px + var(--safe-top)); box-sizing: content-box; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* IG SETTINGS STYLES */
@@ -307,7 +309,7 @@ body.saved-mode-active #saved-mode-header { display: flex; }
 .ig-setting-label { font-size: 15px; font-weight: 400; color: var(--text-color); }
 .ig-setting-val { font-size: 15px; color: var(--text-secondary); }
 .ig-setting-chevron { width: 20px; height: 20px; color: var(--text-secondary); opacity: 0.5; }
-.ig-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.5); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.ig-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: var(--app-vh); background: rgba(0,0,0,0.5); z-index: 20000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .ig-modal-overlay.active { opacity: 1; pointer-events: auto; }
 .ig-modal-content { background: var(--bg-color); border-radius: 16px; width: 85%; max-width: 340px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1); }
 .ig-modal-overlay.active .ig-modal-content { transform: scale(1); }
@@ -375,7 +377,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 /* --------------------------------- */
 /* CHAT ZPRÁVY (IG Direct style)     */
 /* --------------------------------- */
-.chat-header-main { padding: 14px 16px 10px; padding-top: max(14px, env(safe-area-inset-top, 0px)); font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.chat-header-main { padding: 14px 16px 10px; padding-top: max(14px, var(--safe-top)); font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
 .chat-search-bar { margin: 0 16px 10px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 7px 12px; }
 .chat-search-bar svg { width: 16px; height: 16px; color: var(--text-secondary, #737373); flex-shrink: 0; }
 .chat-search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--text-color); }
@@ -391,7 +393,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .chat-row-camera { width: 24px; height: 24px; color: var(--text-secondary, #737373); flex-shrink: 0; opacity: 0.5; }
 
 /* Aktivní Konverzace */
-#chat-conversation { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: var(--bg-color); z-index: 10005; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+#chat-conversation { position: fixed; top: 0; left: 0; width: 100%; height: var(--app-vh); background: var(--bg-color); z-index: 10005; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
 #chat-conversation.active { transform: translateX(0); }
 .conv-header { display: flex; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 16px; gap: 12px; background: var(--bg-color); }
 .conv-back { cursor: pointer; opacity: 0.7; display: flex; }
@@ -414,35 +416,47 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 document.head.appendChild(style);
 
 // ==========================================
-// 3b. DYNAMICKÝ VIEWPORT PRO FULLSCREEN MAPU (iOS Safari fix)
+// 3b. SPOLEHLIVÉ MĚŘENÍ SAFE-AREA A VÝŠKY VIEWPORTU (iOS Safari fix)
 // ==========================================
-// `viewport-fit=cover` je nutný pouze pro fullscreen mapu uloženého postupu
-// (aby mapa vyplnila displej i "pod" notch/status bar). Na běžných obrazovkách
-// (Profil, Nastavení, Chat, Explore) tento flag v iOS Safari rozbíjí layout
-// (fixní hlavičky/nav bar), proto ho tam držíme VYPNUTÝ.
+// `viewport-fit=cover` je natvrdo zapnutý v index.html (JS mutace meta tagu
+// se v běžné - ne PWA - kartě iOS Safari ukázala jako nespolehlivá: env()
+// hodnoty se po změně nepřepočítaly, což způsobovalo bílé pruhy).
 //
-// Pozor: samotná změna `content` atributu existujícího <meta> tagu iOS Safari
-// nemusí spolehlivě přepočítat (env() safe-area hodnoty se nepřegenerují).
-// Proto element vždy fyzicky nahrazujeme novým uzlem.
-const VIEWPORT_COVER = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
-const VIEWPORT_DEFAULT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-const THEME_COLOR_SAVED_MODE = "#000000"; // fullscreen mapa má černé pozadí/nav
-const THEME_COLOR_DEFAULT = "#ffffff";
-
-function setFullscreenMapViewport(enabled) {
-    const oldMeta = document.getElementById('viewport-meta');
-    if (oldMeta) {
-        const newMeta = document.createElement('meta');
-        newMeta.name = 'viewport';
-        newMeta.id = 'viewport-meta';
-        newMeta.content = enabled ? VIEWPORT_COVER : VIEWPORT_DEFAULT;
-        oldMeta.replaceWith(newMeta);
+// Živé env(safe-area-inset-*) počítané přímo v CSS je v běžné kartě Safari
+// rovněž nespolehlivé (zdokumentované WebKit chyby). Řešení: vytvoříme skrytý
+// "sensor" element s paddingem env(...), přečteme jeho SKUTEČNĚ VYKRESLENOU
+// hodnotu přes getComputedStyle (to je spolehlivé, čte se hotový výsledek)
+// a uložíme do CSS proměnných --safe-top / --safe-bottom, které používá
+// všechen layout. K tomu window.visualViewport pro spolehlivou reálnou výšku
+// viditelné plochy (řeší mizející/objevující se Safari toolbar, který
+// 100vh/100dvh samy o sobě nezohledňují ve všech verzích iOS).
+function measureSafeAreaAndViewport() {
+    let sensor = document.getElementById('safe-area-sensor');
+    if (!sensor) {
+        sensor = document.createElement('div');
+        sensor.id = 'safe-area-sensor';
+        sensor.style.cssText = 'position: fixed; top: 0; left: 0; width: 0; height: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); pointer-events: none; visibility: hidden; z-index: -1;';
+        document.body.appendChild(sensor);
     }
 
-    const themeMeta = document.getElementById('theme-color-meta');
-    if (themeMeta) {
-        themeMeta.setAttribute('content', enabled ? THEME_COLOR_SAVED_MODE : THEME_COLOR_DEFAULT);
-    }
+    const computed = getComputedStyle(sensor);
+    const safeTop = parseFloat(computed.paddingTop) || 0;
+    const safeBottom = parseFloat(computed.paddingBottom) || 0;
+
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+
+    const root = document.documentElement.style;
+    root.setProperty('--safe-top', safeTop + 'px');
+    root.setProperty('--safe-bottom', safeBottom + 'px');
+    root.setProperty('--app-vh', vh + 'px');
+}
+
+measureSafeAreaAndViewport();
+window.addEventListener('resize', measureSafeAreaAndViewport);
+window.addEventListener('orientationchange', () => setTimeout(measureSafeAreaAndViewport, 100));
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', measureSafeAreaAndViewport);
+    window.visualViewport.addEventListener('scroll', measureSafeAreaAndViewport);
 }
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
@@ -2225,14 +2239,12 @@ function openFeed(map_id, isSavedMode) {
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
-        setFullscreenMapViewport(true);
         const header = document.getElementById('saved-mode-header');
         if (header) {
             header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${groupName}</span>`;
         }
     } else {
         document.body.classList.remove('saved-mode-active');
-        setFullscreenMapViewport(false);
     }
 
     document.querySelectorAll('.reel').forEach(reel => {
@@ -2282,7 +2294,6 @@ function openFeed(map_id, isSavedMode) {
 
 function closeSavedFeed() {
     document.body.classList.remove('saved-mode-active');
-    setFullscreenMapViewport(false);
     updateExploreBadge(document.getElementById('nav-badge'));
 
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
