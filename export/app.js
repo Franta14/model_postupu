@@ -287,8 +287,6 @@ input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color
 #screen-settings.active, #screen-chat.active { display: block; }
 
 /* IG-LIKE SAVED MODE */
-body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
-body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 body.saved-mode-active .map-clip { height: 100% !important; }
 #saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
@@ -2221,7 +2219,9 @@ function openFeed(map_id, isSavedMode) {
 
     if (firstVisibleIndex === -1) return;
 
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
     if (isSavedMode) {
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
         if (profileNavBtn) profileNavBtn.classList.add('active');
@@ -2229,6 +2229,7 @@ function openFeed(map_id, isSavedMode) {
         const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
         if (scrollNavBtn) scrollNavBtn.classList.add('active');
     }
+    
     document.getElementById('bottom-nav').classList.add('nav-dark');
     document.getElementById('screen-scroll').classList.add('active');
 
