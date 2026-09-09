@@ -459,6 +459,20 @@ if (window.visualViewport) {
     window.visualViewport.addEventListener('scroll', measureSafeAreaAndViewport);
 }
 
+// ------------------------------------------------------------------
+// PŘÍPRAVA NA BUDOUCÍ NATIVNÍ APPKU (Capacitor - App Store / Google Play)
+// ------------------------------------------------------------------
+// V nativním WKWebView/Android WebView (Capacitor) je theme-color meta tag
+// bez efektu - barvu status baru je nutné nastavit přes @capacitor/status-bar
+// plugin (StatusBar.setBackgroundColor / setStyle / setOverlaysWebView).
+// isNativeApp() zjišťuje, zda web běží zabalený v Capacitoru, aby bylo možné
+// na stejném místě (přechod do/z saved-mode, nav-dark) později doplnit volání
+// nativního pluginu bez zásahu do zbytku kódu. Dnes (čistý web) vždy false.
+function isNativeApp() {
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+window.isNativeApp = isNativeApp;
+
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
 
