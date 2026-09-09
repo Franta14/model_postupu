@@ -660,7 +660,7 @@ html, body {
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
-  background: linear-gradient(to top, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+  background: transparent;
   display: flex;
   flex-direction: column;
   z-index: 2;

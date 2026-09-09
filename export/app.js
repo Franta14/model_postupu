@@ -1097,7 +1097,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let smh = document.createElement('div');
     smh.id = 'saved-mode-header';
-    smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${t('saved')}</span>`;
+    smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
     smh.onclick = closeSavedFeed;
     document.body.appendChild(smh);
 
@@ -2196,7 +2196,7 @@ function openFeed(map_id, isSavedMode) {
         document.body.classList.add('saved-mode-active');
         const header = document.getElementById('saved-mode-header');
         if (header) {
-            header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${groupName}</span>`;
+            header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
         }
     } else {
         document.body.classList.remove('saved-mode-active');
@@ -2221,12 +2221,15 @@ function openFeed(map_id, isSavedMode) {
 
     if (firstVisibleIndex === -1) return;
 
-    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
-    const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
-    if (scrollNavBtn) {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        scrollNavBtn.classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (isSavedMode) {
+        const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
+        if (profileNavBtn) profileNavBtn.classList.add('active');
+    } else {
+        const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
+        if (scrollNavBtn) scrollNavBtn.classList.add('active');
     }
+    document.getElementById('bottom-nav').classList.add('nav-dark');
     document.getElementById('screen-scroll').classList.add('active');
 
     const reelsContainer = document.getElementById('reels-container');
@@ -2253,6 +2256,11 @@ function closeSavedFeed() {
 
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-profile').classList.add('active');
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
+    if (profileNavBtn) profileNavBtn.classList.add('active');
+    document.getElementById('bottom-nav').classList.remove('nav-dark');
 }
 
 let appState = { selectedTerrains: ['*'] };
