@@ -42,17 +42,10 @@ html, body {
 /* ==================================================== */
 
 #app-content {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100%; height: auto;
+  width: 100%;
+  height: calc(100vh - 49px);
+  position: relative;
   overflow: hidden;
-  padding-top: 45px; /* Pevná ochrana pro notch a wifi/čas */
-  padding-bottom: 83px; /* Pevná ochrana pro navbar a domovský proužek */
-}
-
-body.saved-mode-active #app-content {
-  padding-top: 0px;
-  padding-bottom: 0px;
 }
 
 .app-screen {
@@ -77,12 +70,12 @@ body.saved-mode-active #app-content {
 }
 
 #screen-scroll {
-  height: var(--app-vh);
+  height: 100vh;
   overflow: hidden;
 }
 
 #screen-scroll #reels-container {
-  height: var(--app-vh);
+  height: 100vh;
 }
 
 /* ── Bottom Navigation (Instagram Clean Style) ── */
@@ -92,14 +85,13 @@ body.saved-mode-active #app-content {
   left: 0;
   width: 100%;
   height: 49px;
-  box-sizing: content-box;
   background-color: var(--bg-color);
   border-top: 0.5px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
-  padding-bottom: 34px; /* Fixní prostor pro home-bar na telefonech */
+  padding-bottom: env(safe-area-inset-bottom);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -188,7 +180,7 @@ body.saved-mode-active #app-content {
 /* ==================================================== */
 
 .explore-search-container {
-  padding: max(8px, var(--safe-top)) 16px 8px;
+  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
   background: var(--bg-color);
   position: sticky;
   top: 0;
@@ -375,7 +367,7 @@ body.saved-mode-active #app-content {
 
 .screen-header {
   padding: 12px 16px;
-  padding-top: max(12px, var(--safe-top));
+  padding-top: max(12px, env(safe-area-inset-top));
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -616,7 +608,7 @@ body.saved-mode-active #app-content {
   top: 0;
   left: 0;
   width: 100vw;
-  height: var(--app-vh);
+  height: 100vh;
   z-index: 10;
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
@@ -630,7 +622,7 @@ body.saved-mode-active #app-content {
 
 .reel {
   width: 100vw;
-  height: var(--app-vh);
+  height: 100vh;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   position: relative;
@@ -638,11 +630,6 @@ body.saved-mode-active #app-content {
   flex-direction: column;
   justify-content: flex-end;
   overflow: hidden;
-  /* Mapa (map-bg) vyplní i notch/toolbar plochu, protože leží pod .reel-ui
-     a app-content nemá žádný horní padding zde - viewport-fit=cover ji táhne
-     doslova od 0,0. Pozadí .reel samotné je zde jako pojistka proti bílému
-     probleskávání při rychlém scrollu mezi jednotlivými reely. */
-  background-color: var(--map-bg);
 }
 
 .map-clip {
@@ -650,9 +637,7 @@ body.saved-mode-active #app-content {
   top: 0;
   left: 0;
   width: 100%;
-  /* Mimo saved-mode necháváme nad mapou prostor pro spodní nav (49px + reálný
-     home-indicator safe-bottom); v saved-mode toto přepíše pravidlo níže na 100%. */
-  height: calc(100% - var(--nav-height) - var(--safe-bottom));
+  height: calc(100% - 49px);
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -671,7 +656,7 @@ body.saved-mode-active #app-content {
 
 .reel-ui {
   position: absolute;
-  bottom: calc(var(--nav-height) + var(--safe-bottom));
+  bottom: 49px;
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
@@ -680,12 +665,6 @@ body.saved-mode-active #app-content {
   flex-direction: column;
   z-index: 2;
   pointer-events: none;
-}
-
-/* V saved-mode (fullscreen bez spodního nav baru) posuneme UI ovládací prvky
-   až k reálné dolní hraně obrazovky (jen safe-bottom, bez nav-height) */
-body.saved-mode-active .reel-ui {
-  bottom: var(--safe-bottom);
 }
 
 .reel-header {
@@ -769,7 +748,7 @@ body.saved-mode-active .reel-ui {
 .sync-progress-overlay {
   display: none;
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: var(--app-vh);
+  top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(255, 255, 255, 0.95);
   z-index: 3000;
   justify-content: center;
@@ -823,17 +802,11 @@ body.saved-mode-active .reel-ui {
 .reel-actions {
   position: absolute;
   right: 12px;
-  bottom: calc(120px + var(--safe-bottom));
+  bottom: 120px;
   display: flex;
   flex-direction: column;
   gap: 18px;
   z-index: 1000;
-}
-
-/* V saved-mode chybí spodní nav bar (49px), tlačítka posuneme níž, aby
-   nevisela zbytečně vysoko nad prázdným prostorem */
-body.saved-mode-active .reel-actions {
-  bottom: calc(120px - var(--nav-height) + var(--safe-bottom));
 }
 
 .action-btn {
@@ -1368,13 +1341,13 @@ body.saved-mode-active .reel-actions {
   margin-top: 1px;
 }
 
-/* Zpravy - IG Chat UI Overlay */
+/* Zpr�vy - IG Chat UI Overlay */
 #chat-conversation {
     position: fixed !important;
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--app-vh) !important;
+    height: 100dvh !important;
     z-index: 10000 !important;
 }
 
