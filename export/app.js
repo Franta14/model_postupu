@@ -2139,37 +2139,33 @@ function renderProfileSaved() {
             let dy = pts.end[1] - pts.start[1];
             let maxDiff = Math.max(Math.abs(dx), Math.abs(dy));
             
-            let shiftSx = 0, shiftSy = 0, shiftEx = 0, shiftEy = 0;
-            if (maxDiff > 0) {
-                // Posun o 35% směrem ke kraji (tzn. 15% padding)
-                let t = 35 / maxDiff;
-                shiftEx = t * dx;
-                shiftEy = t * dy;
-                shiftSx = -shiftEx;
-                shiftSy = -shiftEy;
-            }
-
+            let distance = Math.hypot(dx, dy);
+            let animDur = Math.max(8, distance * 0.8); // Konstantní rychlost posunu, 0.8s na každý 1% bod délky
+            
             animClass = 'animated-route-follow';
             let maskId = 'mask-' + basename + '-' + idx;
             
-            // Kolečka jednoduchá a tenčí (stroke-width 3, r=12)
+            // Už žádný drift, kolečko bude PERFEKTNĚ po celou dobu uprostřed.
+            let yCorr = 0.0;
+            
+            // Kolečka zmenšena o cca 17% a tloušťka o cca 8% (r=10, stroke-width=2.8)
             let svgOverlay = `
             <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
                 <defs>
                     <mask id="${maskId}">
                         <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="13" fill="black" />
-                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="13" fill="black" />
+                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="11" fill="black" />
+                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="11" fill="black" />
                     </mask>
                 </defs>
-                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="3" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
-                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="12" stroke="#b300ff" stroke-width="3" fill="none" />
-                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="12" stroke="#b300ff" stroke-width="3" fill="none" />
+                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.8" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
+                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
+                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
             </svg>`;
             
             el.innerHTML = `
-                <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; --ts-x: ${shiftSx.toFixed(3)}%; --ts-y: ${shiftSy.toFixed(3)}%; --te-x: ${shiftEx.toFixed(3)}%; --te-y: ${shiftEy.toFixed(3)}%;">
-                    <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom*100}%; height: auto; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${pts.start[1].toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${pts.end[1].toFixed(3)}%;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
+                    <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom*100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
                         <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
                         ${svgOverlay}
                     </div>
