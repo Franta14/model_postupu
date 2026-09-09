@@ -1349,6 +1349,14 @@ function buildReels() {
                     <div class="reel-subtitle">${postup.dist_m ? postup.dist_m.toFixed(0) : ''} ${t('aerial')}</div>
                     <button class="btn-primary" onclick="toggleVariants(${index})"><svg class="btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>${t('options')}</button>
                 </div>
+                <div class="ig-comment-bar">
+                    <div class="share-avatar-circle" style="width: 32px; height: 32px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; margin-right: 4px;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#999" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    </div>
+                    <div class="ig-comment-input-wrapper">
+                        <input type="text" class="ig-comment-input" placeholder="Přidat komentář..." onclick="document.querySelector('.nav-btn[data-target=\\'screen-chat\\']').click()" readonly>
+                    </div>
+                </div>
             </div>
         `;
         container.appendChild(reel);
@@ -2148,19 +2156,18 @@ function renderProfileSaved() {
             // Už žádný drift, kolečko bude PERFEKTNĚ po celou dobu uprostřed.
             let yCorr = 0.0;
             
-            // Kolečka zmenšena o cca 17% a tloušťka o cca 8% (r=10, stroke-width=2.8)
             let svgOverlay = `
-            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
                 <defs>
                     <mask id="${maskId}">
-                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="11" fill="black" />
-                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="11" fill="black" />
+                        <rect x="0" y="0" width="100" height="100" fill="white" />
+                        <circle cx="${pts.start[0]}" cy="${pts.start[1]}" r="2" fill="black" />
+                        <circle cx="${pts.end[0]}" cy="${pts.end[1]}" r="2" fill="black" />
                     </mask>
                 </defs>
-                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.8" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
-                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
-                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
+                <line x1="${pts.start[0]}" y1="${pts.start[1]}" x2="${pts.end[0]}" y2="${pts.end[1]}" stroke="#b300ff" stroke-width="2.8" vector-effect="non-scaling-stroke" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
+                <circle cx="${pts.start[0]}" cy="${pts.start[1]}" r="1.8" stroke="#b300ff" stroke-width="2.8" vector-effect="non-scaling-stroke" fill="none" />
+                <circle cx="${pts.end[0]}" cy="${pts.end[1]}" r="1.8" stroke="#b300ff" stroke-width="2.8" vector-effect="non-scaling-stroke" fill="none" />
             </svg>`;
             
             el.innerHTML = `
