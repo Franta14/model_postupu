@@ -283,14 +283,14 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 .ig-pill.active { background: var(--pill-active-bg); color: var(--pill-active-text); border-color: var(--pill-active-bg); }
 .settings-section { margin-bottom: 0; box-sizing: border-box; width: 100%; }
 input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color); }
-#screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: 100dvh; padding-bottom: 80px; overflow-y: auto; display: none; }
+#screen-settings, #screen-chat { box-sizing: border-box; overflow-x: hidden; width: 100%; height: 100dvh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; display: none; }
 #screen-settings.active, #screen-chat.active { display: block; }
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active #bottom-nav, body.saved-mode-active .bottom-nav, body.saved-mode-active nav { display: none !important; height: 0 !important; opacity: 0 !important; pointer-events: none !important; }
 body.saved-mode-active #screen-scroll { padding-bottom: 0 !important; }
 body.saved-mode-active .map-clip { height: 100% !important; }
-#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: calc(70px + env(safe-area-inset-top, 0px)); box-sizing: content-box; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* IG SETTINGS STYLES */
@@ -375,7 +375,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 /* --------------------------------- */
 /* CHAT ZPRÁVY (IG Direct style)     */
 /* --------------------------------- */
-.chat-header-main { padding: 14px 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.chat-header-main { padding: 14px 16px 10px; padding-top: max(14px, env(safe-area-inset-top, 0px)); font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
 .chat-search-bar { margin: 0 16px 10px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 7px 12px; }
 .chat-search-bar svg { width: 16px; height: 16px; color: var(--text-secondary, #737373); flex-shrink: 0; }
 .chat-search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--text-color); }
@@ -413,6 +413,37 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 `;
 document.head.appendChild(style);
 
+// ==========================================
+// 3b. DYNAMICKÝ VIEWPORT PRO FULLSCREEN MAPU (iOS Safari fix)
+// ==========================================
+// `viewport-fit=cover` je nutný pouze pro fullscreen mapu uloženého postupu
+// (aby mapa vyplnila displej i "pod" notch/status bar). Na běžných obrazovkách
+// (Profil, Nastavení, Chat, Explore) tento flag v iOS Safari rozbíjí layout
+// (fixní hlavičky/nav bar), proto ho tam držíme VYPNUTÝ.
+//
+// Pozor: samotná změna `content` atributu existujícího <meta> tagu iOS Safari
+// nemusí spolehlivě přepočítat (env() safe-area hodnoty se nepřegenerují).
+// Proto element vždy fyzicky nahrazujeme novým uzlem.
+const VIEWPORT_COVER = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
+const VIEWPORT_DEFAULT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+const THEME_COLOR_SAVED_MODE = "#000000"; // fullscreen mapa má černé pozadí/nav
+const THEME_COLOR_DEFAULT = "#ffffff";
+
+function setFullscreenMapViewport(enabled) {
+    const oldMeta = document.getElementById('viewport-meta');
+    if (oldMeta) {
+        const newMeta = document.createElement('meta');
+        newMeta.name = 'viewport';
+        newMeta.id = 'viewport-meta';
+        newMeta.content = enabled ? VIEWPORT_COVER : VIEWPORT_DEFAULT;
+        oldMeta.replaceWith(newMeta);
+    }
+
+    const themeMeta = document.getElementById('theme-color-meta');
+    if (themeMeta) {
+        themeMeta.setAttribute('content', enabled ? THEME_COLOR_SAVED_MODE : THEME_COLOR_DEFAULT);
+    }
+}
 
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
@@ -2194,12 +2225,14 @@ function openFeed(map_id, isSavedMode) {
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
+        setFullscreenMapViewport(true);
         const header = document.getElementById('saved-mode-header');
         if (header) {
             header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${groupName}</span>`;
         }
     } else {
         document.body.classList.remove('saved-mode-active');
+        setFullscreenMapViewport(false);
     }
 
     document.querySelectorAll('.reel').forEach(reel => {
@@ -2249,6 +2282,7 @@ function openFeed(map_id, isSavedMode) {
 
 function closeSavedFeed() {
     document.body.classList.remove('saved-mode-active');
+    setFullscreenMapViewport(false);
     updateExploreBadge(document.getElementById('nav-badge'));
 
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));

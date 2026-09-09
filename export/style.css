@@ -43,7 +43,9 @@ html, body {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 49px);
+  /* Fallback pro iOS 15.0–15.3 (nezná dvh) — řádek níže ho v novějších verzích přepíše */
+  height: calc(100vh - 49px - env(safe-area-inset-bottom, 0px));
+  height: calc(100dvh - 49px - env(safe-area-inset-bottom, 0px));
   position: relative;
   overflow: hidden;
 }
@@ -84,6 +86,8 @@ html, body {
   bottom: 0;
   left: 0;
   width: 100%;
+  /* content-box: safe-area padding se PŘIDÁVÁ k 49px, nikdy je nekrátí (jinak se flex ikony zmenší/deformují) */
+  box-sizing: content-box;
   height: 49px;
   background-color: var(--bg-color);
   border-top: 0.5px solid var(--border-color);
@@ -91,7 +95,7 @@ html, body {
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
