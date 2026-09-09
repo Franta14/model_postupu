@@ -16,13 +16,6 @@
   --chat-bubble-incoming: #efefef;
   --chat-bubble-outgoing: #0095f6;
   --overlay-bg: rgba(0, 0, 0, 0.5);
-
-  /* Fallbacky, než JS (app.js) doměří skutečné hodnoty přes getComputedStyle
-     a window.visualViewport (spolehlivější než živý env() v běžné kartě Safari) */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --app-vh: 100vh;
-  --nav-height: 49px;
 }
 
 * {
@@ -49,12 +42,17 @@ html, body {
 /* ==================================================== */
 
 #app-content {
-  width: 100%;
-  /* --app-vh je reálná výška z window.visualViewport.height (JS), spolehlivější
-     než 100vh/100dvh, které v běžné kartě Safari nezohledňují mizející toolbar */
-  height: calc(var(--app-vh) - var(--nav-height) - var(--safe-bottom));
-  position: relative;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: auto;
   overflow: hidden;
+  padding-top: 45px; /* Pevná ochrana pro notch a wifi/čas */
+  padding-bottom: 83px; /* Pevná ochrana pro navbar a domovský proužek */
+}
+
+body.saved-mode-active #app-content {
+  padding-top: 0px;
+  padding-bottom: 0px;
 }
 
 .app-screen {
@@ -93,16 +91,15 @@ html, body {
   bottom: 0;
   left: 0;
   width: 100%;
-  /* content-box: safe-area padding se PŘIDÁVÁ k 49px, nikdy je nekrátí (jinak se flex ikony zmenší/deformují) */
+  height: 49px;
   box-sizing: content-box;
-  height: var(--nav-height);
   background-color: var(--bg-color);
   border-top: 0.5px solid var(--border-color);
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 9999;
-  padding-bottom: var(--safe-bottom);
+  padding-bottom: 34px; /* Fixní prostor pro home-bar na telefonech */
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 

@@ -473,6 +473,20 @@ function isNativeApp() {
 }
 window.isNativeApp = isNativeApp;
 
+function toggleImmersiveMode(active) {
+    if (isNativeApp()) return; // Native app handles status bar via Capacitor plugin
+
+    const vp = document.getElementById('viewport-meta');
+    const tc = document.getElementById('theme-color-meta');
+    if (active) {
+        if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+        if (tc) tc.setAttribute('content', '#000000');
+    } else {
+        if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        if (tc) tc.setAttribute('content', '#ffffff');
+    }
+}
+
 function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
 applyTheme();
 
@@ -1125,8 +1139,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const bottomNav = document.getElementById('bottom-nav');
             if (targetId === 'screen-scroll') {
                 bottomNav.classList.add('nav-dark');
+                toggleImmersiveMode(true);
             } else {
                 bottomNav.classList.remove('nav-dark');
+                toggleImmersiveMode(false);
             }
 
             screens.forEach(screen => {
@@ -2253,12 +2269,14 @@ function openFeed(map_id, isSavedMode) {
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
+        toggleImmersiveMode(true);
         const header = document.getElementById('saved-mode-header');
         if (header) {
             header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg> <span id="saved-mode-title">${groupName}</span>`;
         }
     } else {
         document.body.classList.remove('saved-mode-active');
+        toggleImmersiveMode(true); // Protože feed je pořád mapa, chceme immersive mode i pro ne-saved feed!
     }
 
     document.querySelectorAll('.reel').forEach(reel => {
@@ -2309,6 +2327,7 @@ function openFeed(map_id, isSavedMode) {
 function closeSavedFeed() {
     document.body.classList.remove('saved-mode-active');
     updateExploreBadge(document.getElementById('nav-badge'));
+    toggleImmersiveMode(false);
 
     document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-profile').classList.add('active');
