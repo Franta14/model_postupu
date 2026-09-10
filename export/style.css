@@ -875,7 +875,8 @@ html, body {
 
 .leaflet-tile {
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: high-quality;
+  image-rendering: crisp-edges;
+  filter: contrast(1.08) saturate(1.04);
 }
 
 /* ── Variants Panel ── */

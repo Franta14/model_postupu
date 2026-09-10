@@ -49,9 +49,22 @@ loginOverlay.innerHTML = `
             <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
             Přihlásit se přes Google
         </button>
+        <div style="margin-top: 15px;">
+            <button id="guest-login-btn" style="background: transparent; color: #888; border: 1px solid rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; cursor: pointer;">Pokračovat bez přihlášení</button>
+        </div>
     </div>
 `;
 document.body.appendChild(loginOverlay);
+
+const bypassGuestLogin = () => {
+    currentUser = { uid: 'guest', displayName: 'franta14_', photoURL: '' };
+    loginOverlay.style.opacity = '0';
+    setTimeout(() => loginOverlay.style.display = 'none', 500);
+    if (typeof renderProfileSaved === "function") renderProfileSaved();
+};
+
+const guestBtn = document.getElementById('guest-login-btn');
+if (guestBtn) guestBtn.addEventListener('click', bypassGuestLogin);
 
 // Návrat k Popup metodě (Nyní bude fungovat, protože doména je autorizovaná)
 document.getElementById('google-login-btn').addEventListener('click', () => {
@@ -465,9 +478,30 @@ function showTutorial() {
     const navBlocker = document.createElement('div');
     navBlocker.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; height:80px; z-index:10001; display:none; pointer-events: auto;';
     
+    const skipBtn = document.createElement('button');
+    skipBtn.id = 'tut-skip-btn';
+    skipBtn.className = 'tut-allow-interaction';
+    skipBtn.innerText = 'Přeskočit';
+    skipBtn.style.cssText = 'position:fixed; top:16px; right:16px; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.3); color:#fff; font-size:13px; font-weight:600; padding:6px 14px; border-radius:20px; z-index:10005; cursor:pointer; pointer-events:auto;';
+    const closeTutorial = () => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.remove();
+            navBlocker.remove();
+            skipBtn.remove();
+            document.body.classList.remove('tutorial-active');
+        }, 300);
+        localStorage.setItem('tutorial_seen', 'true');
+    };
+    skipBtn.onclick = closeTutorial;
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('tutorial-active')) closeTutorial();
+    }, { once: true });
+    
     overlay.appendChild(hole);
     overlay.appendChild(hotspot);
     overlay.appendChild(content);
+    overlay.appendChild(skipBtn);
     document.body.appendChild(overlay);
     document.body.appendChild(navBlocker);
 
@@ -1734,20 +1768,13 @@ const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
     Math.round = function(val) { 
-        return (typeof val === 'number') ? Math.max(3, Math.ceil(val)) : oldRound(val); 
+        if (val === zoom && typeof val === 'number') {
+            // Vybíráme ostřejší úroveň dlaždic (ceil z desetinného zoomu, min. 3)
+            return Math.min(6, Math.max(3, Math.ceil(val)));
+        }
+        return oldRound(val);
     };
     try { return originalSetView.call(this, center, zoom, noPrune, noUpdate); } 
-    finally { Math.round = oldRound; }
-};
-
-const originalUpdate = L.GridLayer.prototype._update;
-L.GridLayer.prototype._update = function (center) {
-    if (!this._map) return;
-    let oldRound = Math.round;
-    Math.round = function(val) { 
-        return (typeof val === 'number') ? Math.max(3, Math.ceil(val)) : oldRound(val); 
-    };
-    try { return originalUpdate.call(this, center); } 
     finally { Math.round = oldRound; }
 };
 
@@ -1758,6 +1785,8 @@ function initMapForReel(index) {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
         tap: false,
+        scrollWheelZoom: 'center',
+        touchZoom: 'center',
         maxBoundsViscosity: 1.0,
         dragging: false, // Výchozí stav: posouvání zakázáno
         bounceAtZoomLimits: false // Zakáže "gumové" oddalování pod povolený minZoom
@@ -1768,26 +1797,65 @@ function initMapForReel(index) {
     
     let mc = map.getContainer();
     
+    // Intuitivní plynulé přiblížení / oddálení dvojklikem (nebo dvojklepnutím)
     let lastClickTime = 0;
     map.on('click', function(e) {
         let currentTime = Date.now();
-        if (currentTime - lastClickTime < 400) {
+        if (currentTime - lastClickTime < 350) {
             let currentZoom = map.getZoom();
             let minZoom = map.getMinZoom();
-            if (currentZoom > minZoom + 0.05) {
-                // Přidáno animate: true pro zaručeně plynulé oddálení dvojklikem
-                if (map.originalMidX !== undefined && map.originalMidY !== undefined) map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom, { animate: true, duration: 0.3 });
-                else map.setZoom(minZoom, { animate: true, duration: 0.3 });
+            if (currentZoom > minZoom + 0.1) {
+                // Již přiblíženo -> plynule oddálit zpět na výchozí celkový pohled
+                if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
+                    map.setView([map.originalMidY, map.originalMidX], map.originalZoom || minZoom, { animate: true, duration: 0.25 });
+                } else {
+                    map.setZoom(minZoom, { animate: true, duration: 0.25 });
+                }
             } else {
-                let btn = document.querySelector(`.reel[data-index="${index}"] .like-btn`);
-                if (btn && !btn.classList.contains('liked')) toggleLike(index, btn);
-                else triggerLikeAnimation(index);
+                // Oddáleno -> plynule přiblížit (+1.3 zoom) do středu pro detailní čtení mapy
+                let targetZoom = Math.min(map.getMaxZoom() || 8, currentZoom + 1.3);
+                if (map.originalMidX !== undefined && map.originalMidY !== undefined) {
+                    map.setView([map.originalMidY, map.originalMidX], targetZoom, { animate: true, duration: 0.25 });
+                } else {
+                    map.setZoom(targetZoom, { animate: true, duration: 0.25 });
+                }
             }
             lastClickTime = 0; 
         } else {
             lastClickTime = currentTime;
         }
     });
+
+    // Přizpůsobení posunu (pan / drag) pro zrotovaný kontejner mapy
+    if (map.dragging && map.dragging._draggable) {
+        let origDraggableOnMove = map.dragging._draggable._onMove;
+        map.dragging._draggable._onMove = function(e) {
+            let bearing = map._targetBearing || 0;
+            if (!bearing) return origDraggableOnMove.call(this, e);
+            if (e.touches && e.touches.length > 1) { this._moved = true; return; }
+            let first = (e.touches && e.touches.length === 1 ? e.touches[0] : e);
+            let screenOffset = new L.Point(first.clientX, first.clientY).subtract(this._startPoint);
+            if (!screenOffset.x && !screenOffset.y) return;
+            if (Math.abs(screenOffset.x) + Math.abs(screenOffset.y) < this.options.clickTolerance) return;
+            
+            // Rotace vektoru posunu o úhel otočení mapy, aby prst/myš posouvala mapu ve správném směru obrazovky
+            let rad = -bearing * Math.PI / 180;
+            let rotX = screenOffset.x * Math.cos(rad) - screenOffset.y * Math.sin(rad);
+            let rotY = screenOffset.x * Math.sin(rad) + screenOffset.y * Math.cos(rad);
+            let rotatedOffset = new L.Point(rotX, rotY);
+            
+            L.DomEvent.stop(e);
+            if (!this._moved) {
+                this.fire('dragstart');
+                this._moved = true;
+            }
+            this._moving = true;
+            this._newPos = this._startPos.add(rotatedOffset);
+            L.DomUtil.setPosition(this._element, this._newPos);
+            this.fire('predrag');
+            this.fire('drag', e);
+        };
+    }
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
@@ -1890,6 +1958,7 @@ function renderMapData(index, geojsonOriginal) {
                 
                 const mContainer = document.getElementById(`map-${index}`);
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
+                map._targetBearing = targetBearing;
                 
                 let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
                 let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
@@ -1927,7 +1996,7 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            let targetPixelsY = h * 0.82; 
+            let targetPixelsY = h * 0.84; 
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
             
