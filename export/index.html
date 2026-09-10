@@ -14,7 +14,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
-    <link rel="stylesheet" href="style.css?v=36"/>
+    <link rel="stylesheet" href="style.css?v=38"/>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -46,9 +46,9 @@
             </div>
             
             <div class="explore-stories">
-                <div class="story-item" data-terrain="cesky-les">
+                <div class="story-item" data-terrain="cesko">
                     <div class="story-ring"><div class="story-img" style="background-image: url('tiles/3/1/2.png');"></div></div>
-                    <span>Český les</span>
+                    <span>Česko</span>
                 </div>
                 <div class="story-item" data-terrain="skandinavie">
                     <div class="story-ring"><div class="story-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Forest_in_Sweden.jpg/800px-Forest_in_Sweden.jpg');"></div></div>
@@ -154,13 +154,13 @@
                 </div>
 
                 <div class="ig-settings-section-title">Aplikace</div>
-                <div class="ig-setting-row" onclick="toggleLanguage()">
+                <div class="ig-setting-row" onclick="openLanguageModal()">
                     <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
                     <div class="ig-setting-text"><div class="ig-setting-label">Jazyk</div></div>
                     <div class="ig-setting-val" id="setting-lang-val">Čeština</div>
                     <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                 </div>
-                <div class="ig-setting-row" onclick="toggleTheme()">
+                <div class="ig-setting-row" onclick="openThemeModal()">
                     <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
                     <div class="ig-setting-text"><div class="ig-setting-label">Vzhled</div></div>
                     <div class="ig-setting-val" id="setting-theme-val">Systémový</div>
@@ -182,7 +182,7 @@
                 
                 <div class="ig-settings-section-title">Nápověda</div>
                 <div class="ig-setting-row" onclick="replayTutorial()">
-                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                    <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
                     <div class="ig-setting-text"><div class="ig-setting-label">Znovu spustit tutoriál</div></div>
                     <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
                 </div>
@@ -205,6 +205,18 @@
                 <div class="ig-modal-footer">
                     <button class="ig-modal-btn ig-modal-cancel" onclick="closePaceModal()">Zrušit</button>
                     <button class="ig-modal-btn ig-modal-confirm" onclick="savePaceModal()">Uložit</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-select-modal-overlay" class="ig-modal-overlay" style="display:none;" onclick="closeSettingsSelectModal(event)">
+            <div class="ig-modal-content" onclick="event.stopPropagation()">
+                <div class="ig-modal-header">
+                    <h3 id="settings-select-title">Výběr</h3>
+                </div>
+                <div class="ig-modal-body" id="settings-select-options" style="padding: 0;"></div>
+                <div class="ig-modal-footer">
+                    <button class="ig-modal-btn ig-modal-cancel" onclick="closeSettingsSelectModal()">Zrušit</button>
                 </div>
             </div>
         </div>
@@ -289,6 +301,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-    <script src="app.js?v=37"></script>
+    <script src="app.js?v=38"></script>
 </body>
 </html>

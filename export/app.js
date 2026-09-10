@@ -849,7 +849,7 @@ function renderChatScreen() {
     let screen = document.getElementById('screen-chat');
     if (!screen) return;
     
-    let userName = currentUser ? currentUser.displayName || 'franta14_' : 'franta14_';
+    let userName = (currentUser && currentUser.displayName) ? currentUser.displayName : (localStorage.getItem('profile_username') || 'franta14_');
     
     screen.innerHTML = `
         <div class="chat-header-main">${userName}</div>
@@ -920,15 +920,50 @@ function openChatConversation(name) {
                 const bubbleClass = isMe ? 'msg-outgoing' : 'msg-incoming';
                 
                 if (data.type === 'shared_route') {
+                    let bName = data.basename;
+                    let targetIndex = data.routeIndex;
+                    if (!bName && postupyData && postupyData.length > 0) {
+                        let found = postupyData.find(p => p.id === data.routeId || p.map_id === data.routeId);
+                        if (found) {
+                            bName = found.file ? found.file.replace('.geojson', '') : '';
+                            targetIndex = postupyData.indexOf(found);
+                        } else {
+                            bName = postupyData[0].file ? postupyData[0].file.replace('.geojson', '') : '';
+                            targetIndex = 0;
+                        }
+                    }
+                    let pts = (thumbsMeta && thumbsMeta.routes && bName) ? thumbsMeta.routes[bName] : null;
+                    let thumbImg = bName ? `thumbs/${bName}.jpg` : 'thumbs/map_homolka.jpg';
+                    let rName = data.routeName || 'Homolka';
+                    let distLabel = data.distM ? `${data.distM} m` : '';
+                    let maskId = 'chat-mask-' + Math.random().toString(36).substring(2, 9);
+                    
+                    let svgOverlay = '';
+                    if (pts) {
+                        svgOverlay = `
+                        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
+                            <defs>
+                                <mask id="${maskId}">
+                                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                                    <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" fill="black" />
+                                    <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" fill="black" />
+                                </mask>
+                            </defs>
+                            <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.6" stroke-opacity="0.9" stroke-linecap="round" mask="url(#${maskId})" />
+                            <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="9" stroke="#b300ff" stroke-width="2.6" fill="none" />
+                            <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="9" stroke="#b300ff" stroke-width="2.6" fill="none" />
+                        </svg>`;
+                    }
+                    
                     msgsEl.innerHTML += `
                         <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
                             ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 2px; opacity: 0.6; color:var(--text-color);">${data.authorName}</div>` : ''}
-                            <div class="ig-reel-card" onclick="openSharedRoute('${data.routeId}')" style="width: 200px; aspect-ratio: 9/16; border-radius: 12px; overflow: hidden; position: relative; background: #222; margin-top: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor:pointer;">
-                                <div style="position:absolute; top:0; left:0; width:100%; height:100%; background-image: url('tiles/3/1/2.png'); background-size: cover; background-position: center;"></div>
-                                <div style="position:absolute; bottom:0; left:0; width:100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); pointer-events:none;"></div>
-                                <div style="position:absolute; bottom: 15px; left: 15px; color: white; pointer-events:none;">
-                                    <div style="font-weight: 700; font-size: 15px;">${data.routeName}</div>
-                                    <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Klikni pro zobrazení</div>
+                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1})" style="width: 220px; aspect-ratio: 4/5; border-radius: 12px; overflow: hidden; position: relative; background: #1a1a1a; margin-top: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor:pointer; border: 1px solid var(--border-color);">
+                                <img src="${thumbImg}" alt="${rName}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                ${svgOverlay}
+                                <div style="position:absolute; bottom: 8px; left: 8px; right: 8px; display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); border-radius: 8px; padding: 4px 8px; color: white; font-size: 11px; pointer-events:none;">
+                                    <span style="font-weight: 700;">${distLabel || rName}</span>
+                                    <span style="opacity: 0.85; font-size: 10px;">Klikni pro postup</span>
                                 </div>
                             </div>
                         </div>`;
@@ -951,9 +986,9 @@ function closeChatConversation() {
 }
 
 
-function openSharedRoute(mapId) {
+function openSharedRoute(mapId, targetIndex) {
     closeChatConversation();
-    openFeed(mapId, false);
+    openFeed(mapId || 'homolka', false, targetIndex);
 }
 function openComments(index) {
     const postup = postupyData[index];
@@ -1254,7 +1289,7 @@ function loadData() {
         postupyData = data;
         thumbsMeta = metaData;
         postupyData.forEach((map, index) => {
-                map.terrain = 'cesky-les';
+                map.terrain = 'cesko';
                 map.map_id = 'homolka';    
                 map.map_name = 'Homolka';  
                 if (!map.id) map.id = index + 1;
@@ -1330,13 +1365,13 @@ function renderSettings() {
             </div>
 
             <div class="ig-settings-section-title">${t('application')}</div>
-            <div class="ig-setting-row" onclick="toggleLanguage()">
+            <div class="ig-setting-row" onclick="openLanguageModal()">
                 <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
                 <div class="ig-setting-text"><div class="ig-setting-label">${t('language')}</div></div>
                 <div class="ig-setting-val" id="setting-lang-val">${userSettings.language === 'cs' ? 'Čeština' : 'English'}</div>
                 <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
-            <div class="ig-setting-row" onclick="toggleTheme()">
+            <div class="ig-setting-row" onclick="openThemeModal()">
                 <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></div>
                 <div class="ig-setting-text"><div class="ig-setting-label">${t('theme')}</div></div>
                 <div class="ig-setting-val" id="setting-theme-val">${t('theme_' + userSettings.theme)}</div>
@@ -1358,7 +1393,7 @@ function renderSettings() {
             
             <div class="ig-settings-section-title">Nápověda</div>
             <div class="ig-setting-row" onclick="replayTutorial()">
-                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
                 <div class="ig-setting-text"><div class="ig-setting-label">Znovu spustit tutoriál</div></div>
                 <div class="ig-setting-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
             </div>
@@ -1368,16 +1403,57 @@ function renderSettings() {
     if(typeof updateCacheSize === 'function') updateCacheSize();
 }
 
-function toggleLanguage() {
-    let newLang = userSettings.language === 'cs' ? 'en' : 'cs';
-    updateSettings('language', newLang);
+function openLanguageModal() {
+    openSelectionModal('language', t('language'), [
+        { value: 'cs', label: 'Čeština' },
+        { value: 'en', label: 'English' }
+    ], userSettings.language, (selected) => {
+        updateSettings('language', selected);
+    });
 }
 
-function toggleTheme() {
-    let themes = ['system', 'light', 'dark'];
-    let idx = themes.indexOf(userSettings.theme);
-    let newTheme = themes[(idx + 1) % themes.length];
-    updateSettings('theme', newTheme);
+function openThemeModal() {
+    openSelectionModal('theme', t('theme'), [
+        { value: 'system', label: t('theme_system') },
+        { value: 'light', label: t('theme_light') },
+        { value: 'dark', label: t('theme_dark') }
+    ], userSettings.theme, (selected) => {
+        updateSettings('theme', selected);
+    });
+}
+
+function openSelectionModal(type, title, options, currentValue, onSelect) {
+    let overlay = document.getElementById('settings-select-modal-overlay');
+    let titleEl = document.getElementById('settings-select-title');
+    let optionsEl = document.getElementById('settings-select-options');
+    if (!overlay || !titleEl || !optionsEl) return;
+    
+    titleEl.innerText = title;
+    optionsEl.innerHTML = options.map(opt => {
+        const isSelected = opt.value === currentValue;
+        return `
+        <div class="ig-select-option ${isSelected ? 'selected' : ''}" onclick="window._onSelectSetting('${opt.value}')" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; cursor: pointer; border-bottom: 0.5px solid var(--border-color); font-size: 15px; font-weight: ${isSelected ? '600' : '400'}; color: ${isSelected ? 'var(--accent)' : 'inherit'};">
+            <span>${opt.label}</span>
+            ${isSelected ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+        </div>`;
+    }).join('');
+    
+    window._onSelectSetting = (val) => {
+        closeSettingsSelectModal();
+        onSelect(val);
+    };
+    
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => overlay.classList.add('active'));
+}
+
+function closeSettingsSelectModal(e) {
+    if (e && e.target && e.target.closest && e.target.closest('.ig-modal-content')) return;
+    const overlay = document.getElementById('settings-select-modal-overlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 250);
+    }
 }
 
 function openPaceModal() {
@@ -1657,8 +1733,21 @@ function preloadReel(i) {
 const originalSetView = L.GridLayer.prototype._setView;
 L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     let oldRound = Math.round;
-    Math.round = function(val) { return (val === zoom) ? Math.ceil(val) : oldRound(val); };
-    try { originalSetView.call(this, center, zoom, noPrune, noUpdate); } 
+    Math.round = function(val) { 
+        return (typeof val === 'number') ? Math.max(3, Math.ceil(val)) : oldRound(val); 
+    };
+    try { return originalSetView.call(this, center, zoom, noPrune, noUpdate); } 
+    finally { Math.round = oldRound; }
+};
+
+const originalUpdate = L.GridLayer.prototype._update;
+L.GridLayer.prototype._update = function (center) {
+    if (!this._map) return;
+    let oldRound = Math.round;
+    Math.round = function(val) { 
+        return (typeof val === 'number') ? Math.max(3, Math.ceil(val)) : oldRound(val); 
+    };
+    try { return originalUpdate.call(this, center); } 
     finally { Math.round = oldRound; }
 };
 
@@ -1770,7 +1859,7 @@ function renderMapData(index, geojsonOriginal) {
             
             map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
-                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 5,
+                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 6,
                 noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
             }).addTo(map);
             currentTileLayers[index] = tl;
@@ -2088,10 +2177,19 @@ function closeShareSheet() {
 
 function sendShareToChat(index, targetName, isGroup) {
     const postup = postupyData[index];
+    if (!postup) return;
+    const basename = postup.file ? postup.file.replace('.geojson', '') : '';
     if (isGroup) {
         db.collection('global_chat').add({
-            type: 'shared_route', routeId: postup.map_id, routeName: postup.map_name,
-            authorUid: currentUser.uid, authorName: currentUser.displayName,
+            type: 'shared_route',
+            routeIndex: index,
+            routeId: postup.id,
+            mapId: postup.map_id,
+            basename: basename,
+            routeName: postup.map_name || 'Homolka',
+            distM: Math.round(postup.dist_m || 0),
+            authorUid: currentUser ? currentUser.uid : 'anon',
+            authorName: currentUser ? currentUser.displayName : (localStorage.getItem('profile_username') || 'franta14_'),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
@@ -2155,11 +2253,14 @@ function renderProfileSaved() {
     });
     document.body.appendChild(fileInput);
 
+    let savedUsername = localStorage.getItem('profile_username') || 'franta14_';
+    let savedBio = localStorage.getItem('profile_bio') || t('bioDesc');
+
     profileContent.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px 8px; color: inherit; border-bottom: 0.5px solid var(--border-color);">
-            <div style="font-size: 20px; font-weight: 700; display:flex; align-items:center; gap: 4px; letter-spacing: -0.3px;">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
-                franta14_
+            <div style="font-size: 20px; font-weight: 700; display:flex; align-items:center; gap: 6px; letter-spacing: -0.3px;">
+                <span id="profile-username-val" contenteditable="true" spellcheck="false" class="editable-profile-field" title="Klikni pro úpravu">${savedUsername}</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4; cursor: pointer;" onclick="document.getElementById('profile-username-val').focus()"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </div>
         </div>
 
@@ -2185,10 +2286,41 @@ function renderProfileSaved() {
         
         <div style="padding: 0 16px 12px; font-size: 14px; color: inherit;">
             <div style="font-weight: 600; margin-bottom:2px;">František Čtrnáct</div>
-            <div style="color: var(--text-secondary, #737373); font-weight: 400; line-height: 1.4;">${t('bioDesc')}</div>
+            <div style="display: flex; align-items: flex-start; gap: 4px;">
+                <div id="profile-bio-val" contenteditable="true" spellcheck="false" class="editable-profile-field" style="color: var(--text-secondary, #737373); font-weight: 400; line-height: 1.4; flex: 1;" title="Klikni pro úpravu">${savedBio}</div>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4; cursor: pointer; flex-shrink: 0; margin-top: 3px;" onclick="document.getElementById('profile-bio-val').focus()"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </div>
         </div>
         <div id="profile-dynamic-content"></div>
     `;
+
+    const uValEl = document.getElementById('profile-username-val');
+    if (uValEl) {
+        uValEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                uValEl.blur();
+            }
+        });
+        uValEl.addEventListener('blur', () => {
+            let val = uValEl.innerText.trim();
+            if (!val) val = 'franta14_';
+            uValEl.innerText = val;
+            localStorage.setItem('profile_username', val);
+            const chatHeader = document.querySelector('.chat-header-main');
+            if (chatHeader) chatHeader.innerText = val;
+        });
+    }
+
+    const bValEl = document.getElementById('profile-bio-val');
+    if (bValEl) {
+        bValEl.addEventListener('blur', () => {
+            let val = bValEl.innerText.trim();
+            if (!val) val = t('bioDesc');
+            bValEl.innerText = val;
+            localStorage.setItem('profile_bio', val);
+        });
+    }
     
     let dynamicContent = document.getElementById('profile-dynamic-content');
     let savedIds = saved.map(String);
@@ -2221,9 +2353,19 @@ function renderProfileSaved() {
         return pill;
     };
 
+    const terrainDisplayNames = {
+        'cesko': 'Česko',
+        'cesky-les': 'Česko',
+        'skandinavie': 'Skandinávie',
+        'madarsko': 'Maďarsko',
+        'piskovce': 'Pískovce',
+        'alpy': 'Alpy',
+        'mesto': 'Město'
+    };
+
     pillsContainer.appendChild(createPill('Vše', t('all')));
     uniqueTerrains.forEach(t => {
-        const niceName = t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' ');
+        const niceName = terrainDisplayNames[t] || (t.charAt(0).toUpperCase() + t.slice(1).replace('-', ' '));
         pillsContainer.appendChild(createPill(t, niceName));
     });
     dynamicContent.appendChild(pillsContainer);
@@ -2319,7 +2461,7 @@ function renderProfileSaved() {
     dynamicContent.appendChild(gridContainer);
 }
 
-function openFeed(map_id, isSavedMode) {
+function openFeed(map_id, isSavedMode, specificIndex) {
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
     
@@ -2340,18 +2482,28 @@ function openFeed(map_id, isSavedMode) {
         let mIndex = reel.dataset.index;
         let postup = postupyData[mIndex];
         
-        let isMatch = (postup.map_id === map_id);
+        let isMatch = (postup && postup.map_id === map_id);
         if (isSavedMode) {
             isMatch = isMatch && savedStrings.includes(String(postup.id));
         }
 
         if (isMatch) {
             reel.style.display = 'block';
-            if (firstVisibleIndex === -1) firstVisibleIndex = mIndex;
+            if (specificIndex !== undefined && Number(specificIndex) >= 0) {
+                if (Number(mIndex) === Number(specificIndex)) firstVisibleIndex = mIndex;
+            } else {
+                if (firstVisibleIndex === -1) firstVisibleIndex = mIndex;
+            }
         } else {
             reel.style.display = 'none';
         }
     });
+
+    if (firstVisibleIndex === -1 && specificIndex !== undefined && Number(specificIndex) >= 0) {
+        firstVisibleIndex = specificIndex;
+        let tReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
+        if (tReel) tReel.style.display = 'block';
+    }
 
     if (firstVisibleIndex === -1) return;
 

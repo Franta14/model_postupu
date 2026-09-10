@@ -874,7 +874,8 @@ html, body {
 }
 
 .leaflet-tile {
-  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
 }
 
 /* ── Variants Panel ── */
@@ -1407,4 +1408,25 @@ body.saved-mode-active #screen-scroll {
 body.saved-mode-active #saved-mode-header {
   display: flex;
 }
+
+/* ── Editable Profile Fields ── */
+.editable-profile-field {
+  outline: none;
+  border-radius: 4px;
+  padding: 1px 4px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  cursor: text;
+}
+.editable-profile-field:hover {
+  background: var(--secondary-bg, rgba(255, 255, 255, 0.08));
+}
+.editable-profile-field:focus {
+  background: var(--secondary-bg, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 0 0 1px var(--accent, #b300ff);
+}
+
+.ig-select-option:hover {
+  background: var(--secondary-bg, rgba(255, 255, 255, 0.06));
+}
+
 
