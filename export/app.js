@@ -2292,7 +2292,10 @@ function openFeed(map_id, isSavedMode) {
 
     if (firstVisibleIndex === -1) return;
 
-    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.app-screen').forEach(s => {
+        if (isSavedMode && s.id === 'screen-profile') return;
+        s.classList.remove('active');
+    });
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     
     if (isSavedMode) {
@@ -2336,7 +2339,9 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         document.body.classList.remove('saved-mode-active');
         updateExploreBadge(document.getElementById('nav-badge'));
 
-        document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.app-screen').forEach(s => {
+            if (s.id !== 'screen-profile') s.classList.remove('active');
+        });
         document.getElementById('screen-profile').classList.add('active');
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));

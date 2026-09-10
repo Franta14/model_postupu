@@ -1376,3 +1376,7 @@ html, body {
   to { transform: translateX(100%); }
 }
 
+body.saved-mode-active #screen-scroll {
+  z-index: 50;
+}
+
