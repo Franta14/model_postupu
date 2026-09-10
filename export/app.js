@@ -288,7 +288,7 @@ input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active .map-clip { height: 100% !important; }
-#saved-mode-header { position: fixed; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; }
+#saved-mode-header { position: absolute; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; box-sizing: border-box; pointer-events: auto; user-select: none; -webkit-user-select: none; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* IG SETTINGS STYLES */
@@ -1059,6 +1059,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.body.classList.remove('saved-mode-active');
                 updateExploreBadge(document.getElementById('nav-badge'));
                 
+                const screenScroll = document.getElementById('screen-scroll');
+                if (screenScroll) {
+                    screenScroll.style.transform = '';
+                    screenScroll.style.transition = '';
+                }
+                
                 if (targetId === 'screen-scroll') {
                     let currentMapId = activeIndex !== -1 ? postupyData[activeIndex].id : null;
                     let visibleReels = Array.from(document.querySelectorAll('.reel')).filter(r => r.style.display !== 'none');
@@ -1112,69 +1118,125 @@ document.addEventListener("DOMContentLoaded", () => {
     let smh = document.createElement('div');
     smh.id = 'saved-mode-header';
     smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
-    smh.onclick = closeSavedFeed;
-    document.body.appendChild(smh);
+    smh.onclick = (e) => {
+        e.stopPropagation();
+        closeSavedFeed();
+    };
+    const screenScrollElContainer = document.getElementById('screen-scroll');
+    if (screenScrollElContainer) {
+        screenScrollElContainer.appendChild(smh);
+    } else {
+        document.body.appendChild(smh);
+    }
 
     let startX = 0;
     let startY = 0;
     let isSwiping = false;
+    let gestureDetermined = false;
     let screenScrollEl = null;
 
-    document.body.addEventListener('touchstart', e => {
+    window.addEventListener('touchstart', e => {
         if (!document.body.classList.contains('saved-mode-active')) return;
         if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
-            isSwiping = true;
+            isSwiping = false;
+            gestureDetermined = false;
             screenScrollEl = document.getElementById('screen-scroll');
             if (screenScrollEl) {
                 screenScrollEl.style.transition = 'none';
-                screenScrollEl.style.animation = 'none';
             }
         } else {
             isSwiping = false;
-            if (screenScrollEl) screenScrollEl.style.transform = '';
+            gestureDetermined = true;
+            if (screenScrollEl) {
+                screenScrollEl.style.transform = '';
+                screenScrollEl.style.transition = '';
+            }
         }
-    }, {passive: true});
+    }, { passive: true, capture: true });
 
-    document.body.addEventListener('touchmove', e => {
-        if (!isSwiping || !screenScrollEl) return;
-        let deltaX = e.touches[0].clientX - startX;
-        let deltaY = Math.abs(e.touches[0].clientY - startY);
-        
-        if (deltaY > 20 && deltaY > deltaX) {
-            isSwiping = false;
-            screenScrollEl.style.transform = '';
+    window.addEventListener('touchmove', e => {
+        if (!document.body.classList.contains('saved-mode-active') || !screenScrollEl) return;
+        if (e.touches.length !== 1) {
+            if (isSwiping) {
+                isSwiping = false;
+                gestureDetermined = true;
+                screenScrollEl.style.transform = '';
+                screenScrollEl.style.transition = '';
+            }
             return;
         }
 
-        if (deltaX > 0) {
-            screenScrollEl.style.transform = `translateX(${deltaX}px)`;
-        }
-    }, {passive: true});
+        let deltaX = e.touches[0].clientX - startX;
+        let deltaY = e.touches[0].clientY - startY;
+        let absY = Math.abs(deltaY);
 
-    document.body.addEventListener('touchend', e => {
-        if (!isSwiping || !screenScrollEl) return;
+        if (!gestureDetermined) {
+            if (Math.hypot(deltaX, deltaY) > 8) {
+                gestureDetermined = true;
+                if (deltaX > 0 && deltaX > absY * 1.1) {
+                    isSwiping = true;
+                } else {
+                    isSwiping = false;
+                }
+            }
+        }
+
+        if (isSwiping) {
+            // Uzamknout vertikální posun a zabránit Leaflet map drag
+            e.preventDefault();
+            e.stopPropagation();
+            let currentX = Math.max(0, deltaX);
+            screenScrollEl.style.transform = `translateX(${currentX}px)`;
+        }
+    }, { passive: false, capture: true });
+
+    const handleTouchEnd = (e) => {
+        if (!isSwiping || !screenScrollEl) {
+            isSwiping = false;
+            gestureDetermined = false;
+            return;
+        }
         isSwiping = false;
+        gestureDetermined = false;
+        e.preventDefault();
+        e.stopPropagation();
+
+        let changedTouch = e.changedTouches ? e.changedTouches[0] : null;
+        let deltaX = changedTouch ? changedTouch.clientX - startX : 0;
         
-        let deltaX = e.changedTouches[0].clientX - startX;
-        screenScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        screenScrollEl.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
         
-        if (deltaX > window.innerWidth / 3 || deltaX > 100) {
+        if (deltaX > window.innerWidth / 3 || deltaX > 90) {
             screenScrollEl.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                closeSavedFeed(true); // pass true to indicate it's already animated out
+                closeSavedFeed(true);
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
-            }, 300);
+            }, 280);
         } else {
             screenScrollEl.style.transform = 'translateX(0)';
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
-            }, 300);
+            }, 280);
         }
-    }, {passive: true});
+    };
+
+    window.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
+    window.addEventListener('touchcancel', () => {
+        if (isSwiping && screenScrollEl) {
+            isSwiping = false;
+            gestureDetermined = false;
+            screenScrollEl.style.transition = 'transform 0.2s ease-out';
+            screenScrollEl.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                screenScrollEl.style.transform = '';
+                screenScrollEl.style.transition = '';
+            }, 200);
+        }
+    }, { passive: true });
     
     loadData();
     setTimeout(updateUITexts, 200);
@@ -2307,30 +2369,63 @@ function openFeed(map_id, isSavedMode) {
     }
     
     document.getElementById('bottom-nav').classList.add('nav-dark');
-    document.getElementById('screen-scroll').classList.add('active');
-
+    
+    const screenScroll = document.getElementById('screen-scroll');
     const reelsContainer = document.getElementById('reels-container');
     const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
-    if (targetReel && reelsContainer) {
-        setTimeout(() => {
+
+    if (isSavedMode && screenScroll) {
+        // Umístíme obrazovku mimo zobrazení vpravo ještě před aktivací
+        screenScroll.style.transition = 'none';
+        screenScroll.style.transform = 'translateX(100%)';
+        screenScroll.classList.add('active');
+
+        if (targetReel && reelsContainer) {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
-            
-            // Masivní re-kalkulace všech map po otevření Feed zóny z Profilu
-            Object.values(mapInstances).forEach(m => {
-                m.invalidateSize();
-                if (m.originalMidX !== undefined) {
-                    m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
-                }
-            });
-            activateReel(firstVisibleIndex);
-            
-            if (isSavedMode) {
-                const screenScroll = document.getElementById('screen-scroll');
-                screenScroll.classList.remove('slide-out-right');
-                screenScroll.classList.add('slide-in-right');
-                setTimeout(() => screenScroll.classList.remove('slide-in-right'), 350);
+        }
+
+        const activeMap = mapInstances[firstVisibleIndex];
+        if (activeMap) {
+            activeMap.invalidateSize();
+            if (activeMap.originalMidX !== undefined) {
+                activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
             }
-        }, 50); 
+        }
+        activateReel(firstVisibleIndex);
+
+        // Double RAF zaručí vykreslení počáteční pozice (100%) a plynulý přejezd doleva na (0)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                screenScroll.style.transform = 'translateX(0)';
+
+                setTimeout(() => {
+                    screenScroll.style.transition = '';
+                    screenScroll.style.transform = '';
+                    // Dodatečný přepočet ostatních map až po dokončení animace
+                    Object.values(mapInstances).forEach(m => {
+                        if (m !== activeMap) m.invalidateSize();
+                    });
+                }, 300);
+            });
+        });
+    } else if (screenScroll) {
+        screenScroll.style.transition = '';
+        screenScroll.style.transform = '';
+        screenScroll.classList.add('active');
+
+        if (targetReel && reelsContainer) {
+            setTimeout(() => {
+                reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
+                Object.values(mapInstances).forEach(m => {
+                    m.invalidateSize();
+                    if (m.originalMidX !== undefined) {
+                        m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+                    }
+                });
+                activateReel(firstVisibleIndex);
+            }, 50);
+        }
     }
 }
 
@@ -2350,7 +2445,12 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         document.getElementById('bottom-nav').classList.remove('nav-dark');
         
         const screenScroll = document.getElementById('screen-scroll');
-        if (screenScroll) screenScroll.classList.remove('slide-out-right');
+        if (screenScroll) {
+            screenScroll.style.transform = '';
+            screenScroll.style.transition = '';
+            screenScroll.classList.remove('slide-out-right');
+            screenScroll.classList.remove('slide-in-right');
+        }
     };
 
     if (isAlreadyAnimatedOut === true) {
@@ -2358,9 +2458,9 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
     } else {
         const screenScroll = document.getElementById('screen-scroll');
         if (screenScroll) {
-            screenScroll.classList.remove('slide-in-right');
-            screenScroll.classList.add('slide-out-right');
-            setTimeout(doClose, 300);
+            screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+            screenScroll.style.transform = 'translateX(100%)';
+            setTimeout(doClose, 280);
         } else {
             doClose();
         }

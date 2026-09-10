@@ -1354,11 +1354,11 @@ html, body {
 
 /* --- Instagram-like Slide Transitions --- */
 .slide-in-right {
-  animation: slideInRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: slideInRight 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .slide-out-right {
-  animation: slideOutRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  animation: slideOutRight 0.28s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .swiping-active {
@@ -1378,5 +1378,33 @@ html, body {
 
 body.saved-mode-active #screen-scroll {
   z-index: 50;
+  animation: none !important;
+  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
+}
+
+#saved-mode-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  z-index: 9999;
+  display: none;
+  align-items: flex-end;
+  padding: 0 20px 15px 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.saved-mode-active #saved-mode-header {
+  display: flex;
 }
 
