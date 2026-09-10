@@ -5,11 +5,19 @@ Pro každou mapu vytvoří thumbnail s výřezem kolem bounding boxu všech post
 Pro každý jednotlivý postup vytvoří individuální thumbnail.
 """
 import os
+import sys
 import json
 import glob
 import math
 from PIL import Image, ImageDraw
 import config
+
+if sys.platform == "win32":
+    import io
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "buffer"):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 Image.MAX_IMAGE_PIXELS = None
 
@@ -43,12 +51,12 @@ def load_geojson_coords(geojson_path):
     return coords
 
 
-def geojson_to_pixel(coords, scale, offset_x, offset_y):
+def geojson_to_pixel(coords, scale):
     """Převede GeoJSON souřadnice zpět na pixelové souřadnice v originální mapě."""
     pixels = []
     for c in coords:
-        col = c[0] * scale - offset_x
-        row = -c[1] * scale - offset_y
+        col = c[0] * scale
+        row = -c[1] * scale
         pixels.append((col, row))
     return pixels
 
@@ -143,7 +151,7 @@ def generate_thumbnails():
         per_postup_features[basename] = features
         
         coords = load_geojson_coords(geojson_file)
-        pixels = geojson_to_pixel(coords, scale, config.MAP_OFFSET_X, config.MAP_OFFSET_Y)
+        pixels = geojson_to_pixel(coords, scale)
         all_pixels.extend(pixels)
         per_postup_pixels[basename] = pixels
     
@@ -181,8 +189,8 @@ def generate_thumbnails():
         # takže do JPEG se už trasa "nevypéká".
         
         def pt(c):
-            col = c[0] * scale - config.MAP_OFFSET_X
-            row = -c[1] * scale - config.MAP_OFFSET_Y
+            col = c[0] * scale
+            row = -c[1] * scale
             return (col - crop_box[0], row - crop_box[1])
             
         features = per_postup_features[basename]
@@ -226,7 +234,9 @@ def generate_thumbnails():
         entry["thumb"] = f"thumbs/{geojson_name}.jpg"
     
     # Přidáme mapové thumbnail info a metadata tras pro animace
+    import time
     thumbs_meta = {
+        "version": int(time.time()),
         "maps": {
             "homolka": "thumbs/map_homolka.jpg"
         },

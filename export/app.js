@@ -2258,6 +2258,7 @@ function renderProfileSaved() {
             thumbSrc = 'thumbs/map_' + route.map_id + '.jpg'; // fallback
         }
         
+        let thumbImgSrc = thumbSrc + (thumbsMeta && thumbsMeta.version ? '?v=' + thumbsMeta.version : '');
         let metaStyle = '';
         let animClass = 'animated-map-drift';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
@@ -2299,7 +2300,7 @@ function renderProfileSaved() {
             el.innerHTML = `
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
                     <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom*100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
-                        <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
+                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
                         ${svgOverlay}
                     </div>
                 </div>
@@ -2308,7 +2309,7 @@ function renderProfileSaved() {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;"`;
             el.innerHTML = `
                 <div class="${animClass}" ${metaStyle}>
-                    <img src="${thumbSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>
             `;
         }
