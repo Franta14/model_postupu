@@ -1351,3 +1351,28 @@ html, body {
     z-index: 10000 !important;
 }
 
+
+/* --- Instagram-like Slide Transitions --- */
+.slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.slide-out-right {
+  animation: slideOutRight 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.swiping-active {
+  transition: none !important;
+  animation: none !important;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+

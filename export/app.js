@@ -1116,8 +1116,65 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.appendChild(smh);
 
     let startX = 0;
-    document.body.addEventListener('touchstart', e => { if (document.body.classList.contains('saved-mode-active')) startX = e.touches[0].clientX; }, {passive: true});
-    document.body.addEventListener('touchend', e => { if (document.body.classList.contains('saved-mode-active')) { if (e.changedTouches[0].clientX - startX > 100) closeSavedFeed(); } }, {passive: true});
+    let startY = 0;
+    let isSwiping = false;
+    let screenScrollEl = null;
+
+    document.body.addEventListener('touchstart', e => {
+        if (!document.body.classList.contains('saved-mode-active')) return;
+        if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isSwiping = true;
+            screenScrollEl = document.getElementById('screen-scroll');
+            if (screenScrollEl) {
+                screenScrollEl.style.transition = 'none';
+                screenScrollEl.style.animation = 'none';
+            }
+        } else {
+            isSwiping = false;
+            if (screenScrollEl) screenScrollEl.style.transform = '';
+        }
+    }, {passive: true});
+
+    document.body.addEventListener('touchmove', e => {
+        if (!isSwiping || !screenScrollEl) return;
+        let deltaX = e.touches[0].clientX - startX;
+        let deltaY = Math.abs(e.touches[0].clientY - startY);
+        
+        if (deltaY > 20 && deltaY > deltaX) {
+            isSwiping = false;
+            screenScrollEl.style.transform = '';
+            return;
+        }
+
+        if (deltaX > 0) {
+            screenScrollEl.style.transform = `translateX(${deltaX}px)`;
+        }
+    }, {passive: true});
+
+    document.body.addEventListener('touchend', e => {
+        if (!isSwiping || !screenScrollEl) return;
+        isSwiping = false;
+        
+        let deltaX = e.changedTouches[0].clientX - startX;
+        screenScrollEl.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)';
+        
+        if (deltaX > window.innerWidth / 3 || deltaX > 100) {
+            screenScrollEl.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                closeSavedFeed(true); // pass true to indicate it's already animated out
+                screenScrollEl.style.transform = '';
+                screenScrollEl.style.transition = '';
+            }, 300);
+        } else {
+            screenScrollEl.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                screenScrollEl.style.transform = '';
+                screenScrollEl.style.transition = '';
+            }, 300);
+        }
+    }, {passive: true});
     
     loadData();
     setTimeout(updateUITexts, 200);
@@ -2263,21 +2320,46 @@ function openFeed(map_id, isSavedMode) {
                 }
             });
             activateReel(firstVisibleIndex);
+            
+            if (isSavedMode) {
+                const screenScroll = document.getElementById('screen-scroll');
+                screenScroll.classList.remove('slide-out-right');
+                screenScroll.classList.add('slide-in-right');
+                setTimeout(() => screenScroll.classList.remove('slide-in-right'), 350);
+            }
         }, 50); 
     }
 }
 
-function closeSavedFeed() {
-    document.body.classList.remove('saved-mode-active');
-    updateExploreBadge(document.getElementById('nav-badge'));
+function closeSavedFeed(isAlreadyAnimatedOut = false) {
+    const doClose = () => {
+        document.body.classList.remove('saved-mode-active');
+        updateExploreBadge(document.getElementById('nav-badge'));
 
-    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-profile').classList.add('active');
+        document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-profile').classList.add('active');
 
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
-    if (profileNavBtn) profileNavBtn.classList.add('active');
-    document.getElementById('bottom-nav').classList.remove('nav-dark');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
+        if (profileNavBtn) profileNavBtn.classList.add('active');
+        document.getElementById('bottom-nav').classList.remove('nav-dark');
+        
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) screenScroll.classList.remove('slide-out-right');
+    };
+
+    if (isAlreadyAnimatedOut === true) {
+        doClose();
+    } else {
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) {
+            screenScroll.classList.remove('slide-in-right');
+            screenScroll.classList.add('slide-out-right');
+            setTimeout(doClose, 300);
+        } else {
+            doClose();
+        }
+    }
 }
 
 let appState = { selectedTerrains: ['*'] };
