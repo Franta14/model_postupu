@@ -1053,7 +1053,23 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener('click', (e) => {
             const targetId = btn.getAttribute('data-target');
             
-            if (targetId === 'screen-scroll' && !document.body.classList.contains('saved-mode-active')) {
+            let wasSavedMode = document.body.classList.contains('saved-mode-active');
+            
+            if (wasSavedMode) {
+                document.body.classList.remove('saved-mode-active');
+                updateExploreBadge(document.getElementById('nav-badge'));
+                
+                if (targetId === 'screen-scroll') {
+                    let currentMapId = activeIndex !== -1 ? postupyData[activeIndex].id : null;
+                    let visibleReels = Array.from(document.querySelectorAll('.reel')).filter(r => r.style.display !== 'none');
+                    if (visibleReels.length > 0) {
+                        let nextReel = visibleReels.find(r => postupyData[r.dataset.index].id !== currentMapId) || visibleReels[0];
+                        activeIndex = parseInt(nextReel.dataset.index);
+                        const reelsContainer = document.getElementById('reels-container');
+                        if (reelsContainer) reelsContainer.scrollTo({ top: nextReel.offsetTop, behavior: 'instant' });
+                    }
+                }
+            } else if (targetId === 'screen-scroll') {
                 updateExploreBadge(document.getElementById('nav-badge'));
             }
 
