@@ -31,11 +31,13 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (zvýšena na 2600 pro křišťálovou ostrost i při 500% zoomu na Retina displejích)
-THUMB_WIDTH = 2600
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3250
-# JPEG kvalita (90 pro vysokou ostrost detailů mapy)
-JPEG_QUALITY = 90
+# Velikost výstupního thumbnailu (zvýšena na 3000 pro maximální ostrost i při vysokém zoomu na Retina displejích)
+THUMB_WIDTH = 3000
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3750
+# JPEG kvalita (93 pro precizní ostrost linií bez artefaktů)
+JPEG_QUALITY = 93
+# Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
+DEFAULT_MAP_ZOOM = 700
 
 # Padding pro vyříznutí mapy kolem postupu (zajišťuje dostatek "masa" pro zoom bez přejetí mimo mapu)
 BBOX_PADDING_RATIO = 0.35  # Velmi těsný ořez pro co největší detail
@@ -119,7 +121,7 @@ def crop_to_aspect(bbox, img_width, img_height, aspect_ratio=TARGET_ASPECT, padd
     return int(max(0, min_col)), int(max(0, min_row)), int(min(img_width, max_col)), int(min(img_height, max_row))
 
 
-def compute_map_drift(cropped_img, norm_route_pts=None):
+def compute_map_drift(cropped_img, norm_route_pts=None, zoom=DEFAULT_MAP_ZOOM):
     """
     Vypočítá optimální trajektorii kamery (startX/Y, midX/Y, endX/Y) pro dlaždici na homepage.
     - Analyzuje bílé / nezmapované okraje mapy a striktně se jim vyhýbá.
@@ -154,9 +156,10 @@ def compute_map_drift(cropped_img, norm_route_pts=None):
     else:
         route_map = detail_map.copy()
         
-    # Velikost zobrazeného výřezu při 500% zoomu (20% šířky i výšky)
-    win_w = 20
-    win_h = 25
+    # Velikost zobrazeného výřezu při zoomu (např. 700% -> viewport je 14.3% šířky i výšky)
+    vp_pct = 100.0 / (zoom / 100.0)
+    win_w = max(4, int(round(W * (vp_pct / 100.0))))
+    win_h = max(4, int(round(H * (vp_pct / 100.0))))
     half_w = win_w // 2
     half_h = win_h // 2
     
@@ -168,11 +171,11 @@ def compute_map_drift(cropped_img, norm_route_pts=None):
             sub_w = is_white[r - half_h : r + half_h + 1, c - half_w : c + half_w + 1]
             w_ratio = np.mean(sub_w)
             white_ratios[r, c] = w_ratio
-            # Striktní podmínka: maximálně 3 % bílého okraje v celém 20%x20% zorném poli
-            if w_ratio <= 0.03:
+            # Striktní podmínka: maximálně 2 % bílého okraje v celém zorném poli
+            if w_ratio <= 0.02:
                 r_val = np.mean(route_map[r - half_h : r + half_h + 1, c - half_w : c + half_w + 1])
                 d_val = np.mean(detail_map[r - half_h : r + half_h + 1, c - half_w : c + half_w + 1])
-                score = (1.0 - w_ratio * 25.0) * (r_val * 3.0 + d_val * 0.5)
+                score = (1.0 - w_ratio * 30.0) * (r_val * 3.0 + d_val * 0.5)
                 scores[r, c] = max(0.001, score)
                 
     if np.max(scores) == 0:
@@ -183,18 +186,18 @@ def compute_map_drift(cropped_img, norm_route_pts=None):
         c2, r2 = c_best, r_best
         cm, rm = c_best, r_best
     else:
-        threshold = np.percentile(scores[scores > 0], 75)
+        threshold = np.percentile(scores[scores > 0], 80)
         top_candidates = np.argwhere(scores >= threshold)
         
-        # Cílová vzdálenost pro jemný, decentní a pomalý drift (~8-10% šířky mapy)
-        target_dist = 10.0
+        # Cílová vzdálenost pro jemný, decentní a pomalý drift (~7-9% šířky mapy)
+        target_dist = 8.5
         best_pair = None
         best_diff = 999.0
         
         for r1_cand, c1_cand in top_candidates[::2]:
             for r2_cand, c2_cand in top_candidates[::2]:
                 d = np.hypot(c2_cand - c1_cand, r2_cand - r1_cand)
-                if 6.0 <= d <= 14.0:
+                if 5.0 <= d <= 12.0:
                     diff = abs(d - target_dist)
                     if diff < best_diff:
                         best_diff = diff
@@ -203,8 +206,8 @@ def compute_map_drift(cropped_img, norm_route_pts=None):
         if best_pair is None:
             max_idx = np.argmax(scores)
             br, bc = np.unravel_index(max_idx, scores.shape)
-            c1, r1 = bc - 4, br - 3
-            c2, r2 = bc + 4, br + 3
+            c1, r1 = bc - 3, br - 3
+            c2, r2 = bc + 3, br + 3
         else:
             (c1, r1), (c2, r2) = best_pair
             
@@ -212,21 +215,24 @@ def compute_map_drift(cropped_img, norm_route_pts=None):
         cm = int(round((c1 + c2) / 2.0 + (r2 - r1) * 0.15))
         rm = int(round((r1 + r2) / 2.0 - (c2 - c1) * 0.15))
         
-        if not (half_h <= rm < H - half_h and half_w <= cm < W - half_w and white_ratios[rm, cm] <= 0.04):
+        if not (half_h <= rm < H - half_h and half_w <= cm < W - half_w and white_ratios[rm, cm] <= 0.03):
             cm = int(round((c1 + c2) / 2.0))
             rm = int(round((r1 + r2) / 2.0))
 
+    half_vp = (vp_pct / 200.0)
+    max_t = -(100.0 - vp_pct)
     def to_css(col, row):
         cx = col / float(W)
         cy = row / float(H)
-        sx = max(-80.0, min(0.0, -(cx - 0.10) * 100.0))
-        sy = max(-80.0, min(0.0, -(cy - 0.10) * 100.0))
+        sx = max(max_t, min(0.0, -(cx - half_vp) * 100.0))
+        sy = max(max_t, min(0.0, -(cy - half_vp) * 100.0))
         return round(float(sx), 1), round(float(sy), 1)
 
     sx, sy = to_css(c1, r1)
     ex, ey = to_css(c2, r2)
     mx, my = to_css(cm, rm)
     return {
+        'zoom': zoom,
         'startX': sx, 'startY': sy,
         'midX': mx, 'midY': my,
         'endX': ex, 'endY': ey
@@ -289,7 +295,7 @@ def generate_thumbnails():
     thumb = cropped.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
     
     # Doostření pro maximální ostrost a čitelnost mapových prvků
-    thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.0, percent=65, threshold=2))
+    thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.3, percent=140, threshold=1))
     
     map_thumb_path = os.path.join(thumbs_dir, "map_homolka.jpg")
     thumb.save(map_thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
@@ -351,7 +357,7 @@ def generate_thumbnails():
         # ---------------------------------------------
         
         thumb = cropped.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
-        thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.0, percent=65, threshold=2))
+        thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.3, percent=140, threshold=1))
         
         thumb_path = os.path.join(thumbs_dir, f"{basename}.jpg")
         thumb.save(thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)

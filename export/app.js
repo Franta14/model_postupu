@@ -2777,7 +2777,8 @@ function renderExploreGrid() {
             driftVars += ` --drift-start-x: ${b.startX}%; --drift-start-y: ${b.startY}%; --drift-mid-x: ${b.midX}%; --drift-mid-y: ${b.midY}%; --drift-end-x: ${b.endX}%; --drift-end-y: ${b.endY}%;`;
         }
         
-        const driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%; ${driftVars}"`;
+        const zoom = (b && b.zoom) ? b.zoom : 700;
+        const driftStyle = `style="position: absolute; top: 0; left: 0; width: ${zoom}%; height: ${zoom}%; ${driftVars}"`;
         
         el.innerHTML = `
             <div class="animated-map-drift" ${driftStyle}>

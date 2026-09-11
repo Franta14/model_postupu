@@ -1,15 +1,16 @@
 {
-  "version": 1789116465,
+  "version": 1789117856,
   "maps": {
     "homolka": {
       "thumb": "thumbs/map_homolka.jpg",
       "drift": {
-        "startX": -59.0,
-        "startY": -36.4,
-        "midX": -64.0,
-        "midY": -38.0,
-        "endX": -67.0,
-        "endY": -41.2
+        "zoom": 700,
+        "startX": -69.9,
+        "startY": -36.9,
+        "midX": -67.9,
+        "midY": -40.1,
+        "endX": -63.9,
+        "endY": -41.7
       }
     }
   },
