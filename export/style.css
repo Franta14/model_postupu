@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ==================================================== */
-/* SPLASH SCREEN                                        */
+/* SPLASH SCREEN & LOGIN OVERLAY                        */
 /* ==================================================== */
-#splash-screen {
+#login-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -12,15 +12,17 @@
   background-color: #ffffff;
   z-index: 99999;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   pointer-events: auto;
   transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  padding-top: 15vh;
 }
 
 .splash-logo-container {
   width: 90%;
-  max-width: 450px;
+  max-width: 320px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -33,7 +35,7 @@
 }
 
 .circle-o {
-  transform-origin: 420px 72.5px;
+  transform-origin: 315px 72.5px;
   animation: rollO 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
@@ -43,7 +45,7 @@
 
 @keyframes rollO {
   0% {
-    transform: translate(-345px, 0) rotate(-720deg);
+    transform: translate(-240px, 0) rotate(-720deg);
   }
 
   100% {
@@ -57,7 +59,7 @@
   }
 
   100% {
-    width: 345px;
+    width: 240px;
   }
 }
 
