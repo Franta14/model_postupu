@@ -418,7 +418,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .rich-link-sub { font-size: 12px; color: var(--text-secondary, #737373); }
 
 /* IG Reel Share card v chatu - 9:16 poměr stran přesně jako sdílení Reel na IG */
-.ig-reel-card { width: 205px; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; position: relative; background: #111; margin-top: 4px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22); cursor: pointer; border: 1px solid var(--border-color); transition: transform 0.15s ease, box-shadow 0.15s ease; -webkit-tap-highlight-color: transparent; }
+.ig-reel-card { width: 145px; max-width: 44vw; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; position: relative; background: #111; margin-top: 4px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); cursor: pointer; border: 1px solid var(--border-color); transition: transform 0.15s ease, box-shadow 0.15s ease; -webkit-tap-highlight-color: transparent; }
 .ig-reel-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
 .ig-reel-card:active { transform: scale(0.97); }
 .ig-reel-card img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }

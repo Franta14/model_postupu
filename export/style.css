@@ -1443,14 +1443,15 @@ body.saved-mode-active #saved-mode-header {
 
 /* IG Reel Share card v chatu - 9:16 poměr stran přesně jako sdílení Reel na IG */
 .ig-reel-card {
-  width: 205px;
+  width: 145px;
+  max-width: 44vw;
   aspect-ratio: 9 / 16;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   position: relative;
   background: #111;
   margin-top: 4px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   border: 1px solid var(--border-color);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
