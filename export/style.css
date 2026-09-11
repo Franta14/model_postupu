@@ -42,7 +42,7 @@
 }
 
 .circle-o {
-  transform-origin: 275px 72.5px;
+  transform-origin: 295px 72.5px;
   animation: rollO 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
@@ -52,7 +52,7 @@
 
 @keyframes rollO {
   0% {
-    transform: translate(-200px, 0) rotate(-720deg);
+    transform: translate(-220px, 0) rotate(-720deg);
   }
 
   100% {
@@ -66,7 +66,7 @@
   }
 
   100% {
-    width: 200px;
+    width: 220px;
   }
 }
 

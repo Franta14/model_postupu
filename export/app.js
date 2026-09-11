@@ -41,7 +41,7 @@ const loginOverlay = document.createElement('div');
 loginOverlay.id = 'login-overlay';
 loginOverlay.innerHTML = `
     <div class="splash-logo-container" style="margin-bottom: 5vh; transition: margin 0.5s ease;">
-        <svg viewBox="0 0 340 150" class="splash-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 320px; overflow: visible;">
+        <svg viewBox="0 0 350 150" class="splash-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 320px; overflow: visible;">
             <defs>
                 <linearGradient id="diagonal-split" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="50%" stop-color="#ffffff" />
@@ -51,8 +51,8 @@ loginOverlay.innerHTML = `
                     <rect id="clip-rect" x="40" y="0" width="0" height="150" />
                 </clipPath>
             </defs>
-            <text x="40" y="110" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="95" fill="#000" letter-spacing="-2" clip-path="url(#reveal-clip)">REEL</text>
-            <circle class="circle-o" cx="275" cy="72.5" r="30" fill="url(#diagonal-split)" stroke="#000000" stroke-width="12" />
+            <text x="40" y="110" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="95" fill="#000" letter-spacing="-2" clip-path="url(#reveal-clip)">REEL</text>
+            <circle class="circle-o" cx="295" cy="72.5" r="30" fill="url(#diagonal-split)" stroke="#000000" stroke-width="9" />
         </svg>
     </div>
     <div id="splash-login-container" style="text-align: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out;">
