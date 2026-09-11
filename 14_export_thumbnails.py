@@ -370,7 +370,15 @@ def generate_thumbnails():
                 OUT_W, OUT_H = 1080, 1920
                 W2, H2 = 2160, 3840
                 cx2, cy2 = W2 / 2.0, H2 / 2.0
-                target_route_h2 = H2 * 0.74
+                
+                iof_purple = (179, 0, 255) # #b300ff
+                R2 = 64
+                line_w2 = 11
+                gap2 = 12
+                edge_margin2 = 36 # téměř se dotýká horního a spodního okraje
+
+                # Maximální možné přiblížení: kolečka se zespodu a shora skoro dotýkají okrajů karty
+                target_route_h2 = H2 - 2 * (R2 + line_w2 / 2.0 + edge_margin2)
 
                 zoom_factor2 = target_route_h2 / dist_px
                 scale_in2 = 1.0 / zoom_factor2
@@ -386,11 +394,6 @@ def generate_thumbnails():
                 draw2 = ImageDraw.Draw(card2)
                 pt_start2 = (cx2, cy2 + target_route_h2 / 2.0)
                 pt_end2 = (cx2, cy2 - target_route_h2 / 2.0)
-
-                iof_purple = (179, 0, 255) # #b300ff
-                R2 = 64
-                line_w2 = 11
-                gap2 = 12
 
                 # Spojnice a kolečka
                 draw2.line([(pt_start2[0], pt_start2[1] - R2 - gap2), (pt_end2[0], pt_end2[1] + R2 + gap2)], fill=iof_purple, width=line_w2)
