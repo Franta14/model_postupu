@@ -320,7 +320,7 @@ html, body {
 }
 
 .animated-map-drift {
-  animation: mapDrift var(--drift-dur, 90s) ease-in-out infinite alternate;
+  animation: mapDrift var(--drift-dur, 75s) ease-in-out infinite alternate;
   animation-delay: var(--drift-delay, 0s);
   will-change: transform;
   -webkit-backface-visibility: hidden;

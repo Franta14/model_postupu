@@ -2766,11 +2766,11 @@ function renderExploreGrid() {
             b = mapMeta.drift;
         }
         
-        // Pomalé, elegantní a plynulé časování: každá dlaždice má lehce odlišnou periodu a fázový posun,
-        // aby nepůsobily synchronizovaně a obrazovka nebyla přehlcená rychlým pohybem.
-        const baseDur = 85; 
-        const dur = baseDur + (idx % 4) * 12; // např. 85s, 97s, 109s, 121s
-        const delay = -((idx * 31) % baseDur);
+        // Pomalé, elegantní a plynulé časování (zrychleno o 15 %): každá dlaždice má lehce odlišnou periodu a fázový posun,
+        // aby nepůsobily synchronizovaně a pohyb byl přirozený.
+        const baseDur = 72; 
+        const dur = baseDur + (idx % 4) * 10; // např. 72s, 82s, 92s, 102s
+        const delay = -((idx * 27) % baseDur);
         
         let driftVars = `--drift-dur: ${dur}s; --drift-delay: ${delay}s;`;
         if (b) {
