@@ -320,7 +320,8 @@ html, body {
 }
 
 .animated-map-drift {
-  animation: mapDrift 60s ease-in-out infinite alternate;
+  animation: mapDrift var(--drift-dur, 90s) ease-in-out infinite alternate;
+  animation-delay: var(--drift-delay, 0s);
   will-change: transform;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -328,6 +329,13 @@ html, body {
   transform-style: preserve-3d;
   -webkit-perspective: 1000px;
   perspective: 1000px;
+}
+
+.animated-map-drift img {
+  image-rendering: auto;
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 @keyframes mapDrift {

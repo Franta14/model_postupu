@@ -9,11 +9,10 @@ window.ANIMATION_CONFIG = {
     routeOffsetX: 0,
     routeOffsetY: 15,
     
-    // POSUV KAMERY NA ÚVODNÍ STRÁNCE (Explore grid)
-    // Přesné koordináty posunu (zleva-doprava a shora-dolů) v záporných procentech
+    // VOLITELNÝ MANUÁLNÍ POSUV KAMERY NA ÚVODNÍ STRÁNCE (Explore grid)
+    // Pokud zde mapa není uvedena, použije se automatický inteligentní výpočet z metadat (vyhýbá se bílým okrajům)
     exploreMaps: {
-        'homolka': { startX: -30, startY: -25, midX: -45, midY: -35, endX: -25, endY: -50 }
-        // jakoukoliv další mapu sem můžete stejným způsobem připsat
+        // 'homolka': { startX: -60, startY: -34, midX: -65, midY: -35.6, endX: -68, endY: -38.8 }
     }
 };
 
@@ -2749,17 +2748,40 @@ function renderExploreGrid() {
         el.style.position = 'relative';
         
         const countText = getRoutesCountText(group.routes.length);
-        const thumbSrc = 'thumbs/map_' + group.map_id + '.jpg';
         
-        let driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%;"`;
+        // Získání metadat mapy (cesta a automatický drift z pipeline)
+        let mapMeta = (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[group.map_id]) ? thumbsMeta.maps[group.map_id] : null;
+        let thumbPath = (mapMeta && typeof mapMeta === 'object' && mapMeta.thumb) 
+            ? mapMeta.thumb 
+            : ('thumbs/map_' + group.map_id + '.jpg');
+        const thumbVersion = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+        const thumbSrc = thumbPath + thumbVersion;
+        
+        // 1. Priorita: Manuální override z ANIMATION_CONFIG (pokud existuje)
+        // 2. Priorita: Automatický bezpečný výpočet z thumbs_meta.json
+        let b = null;
         if (window.ANIMATION_CONFIG && window.ANIMATION_CONFIG.exploreMaps && window.ANIMATION_CONFIG.exploreMaps[group.map_id]) {
-            const b = window.ANIMATION_CONFIG.exploreMaps[group.map_id];
-            driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%; --drift-start-x: ${b.startX}%; --drift-start-y: ${b.startY}%; --drift-mid-x: ${b.midX}%; --drift-mid-y: ${b.midY}%; --drift-end-x: ${b.endX}%; --drift-end-y: ${b.endY}%;"`;
+            b = window.ANIMATION_CONFIG.exploreMaps[group.map_id];
+        } else if (mapMeta && typeof mapMeta === 'object' && mapMeta.drift) {
+            b = mapMeta.drift;
         }
+        
+        // Pomalé, elegantní a plynulé časování: každá dlaždice má lehce odlišnou periodu a fázový posun,
+        // aby nepůsobily synchronizovaně a obrazovka nebyla přehlcená rychlým pohybem.
+        const baseDur = 85; 
+        const dur = baseDur + (idx % 4) * 12; // např. 85s, 97s, 109s, 121s
+        const delay = -((idx * 31) % baseDur);
+        
+        let driftVars = `--drift-dur: ${dur}s; --drift-delay: ${delay}s;`;
+        if (b) {
+            driftVars += ` --drift-start-x: ${b.startX}%; --drift-start-y: ${b.startY}%; --drift-mid-x: ${b.midX}%; --drift-mid-y: ${b.midY}%; --drift-end-x: ${b.endX}%; --drift-end-y: ${b.endY}%;`;
+        }
+        
+        const driftStyle = `style="position: absolute; top: 0; left: 0; width: 500%; height: 500%; ${driftVars}"`;
         
         el.innerHTML = `
             <div class="animated-map-drift" ${driftStyle}>
-                <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast;" loading="lazy">
             </div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
                 <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>

@@ -1,7 +1,17 @@
 {
-  "version": 1789046180,
+  "version": 1789116465,
   "maps": {
-    "homolka": "thumbs/map_homolka.jpg"
+    "homolka": {
+      "thumb": "thumbs/map_homolka.jpg",
+      "drift": {
+        "startX": -59.0,
+        "startY": -36.4,
+        "midX": -64.0,
+        "midY": -38.0,
+        "endX": -67.0,
+        "endY": -41.2
+      }
+    }
   },
   "routes": {
     "postup_001_2948m_s91": {
