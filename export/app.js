@@ -417,6 +417,13 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .rich-link-title { font-weight: 600; font-size: 14px; color: var(--text-color); }
 .rich-link-sub { font-size: 12px; color: var(--text-secondary, #737373); }
 
+/* IG Reel Share card v chatu - 9:16 poměr stran přesně jako sdílení Reel na IG */
+.ig-reel-card { width: 205px; aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; position: relative; background: #111; margin-top: 4px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22); cursor: pointer; border: 1px solid var(--border-color); transition: transform 0.15s ease, box-shadow 0.15s ease; -webkit-tap-highlight-color: transparent; }
+.ig-reel-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
+.ig-reel-card:active { transform: scale(0.97); }
+.ig-reel-card img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+
+
 .conv-input { padding: 10px 16px 20px; background: var(--bg-color); display: flex; gap: 8px; border-top: 0.5px solid var(--border-color); align-items: center; }
 .conv-input input { flex: 1; padding: 9px 14px !important; border-radius: 22px !important; border: 1px solid var(--border-color) !important; background: var(--secondary-bg) !important; font-size: 14px; font-family: inherit; color: var(--text-color); }
 .conv-input button { background: var(--accent); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -965,39 +972,16 @@ function openChatConversation(name) {
                             targetIndex = 0;
                         }
                     }
-                    let pts = (thumbsMeta && thumbsMeta.routes && bName) ? thumbsMeta.routes[bName] : null;
-                    let thumbImg = bName ? `thumbs/${bName}.jpg` : 'thumbs/map_homolka.jpg';
+                    let vParam = (thumbsMeta && thumbsMeta.version) ? '?v=' + thumbsMeta.version : '';
+                    let shareImg = bName ? `thumbs/share_${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
+                    let fallbackImg = bName ? `thumbs/${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
                     let rName = data.routeName || 'Homolka';
-                    let distLabel = data.distM ? `${data.distM} m` : '';
-                    let maskId = 'chat-mask-' + Math.random().toString(36).substring(2, 9);
-                    
-                    let svgOverlay = '';
-                    if (pts) {
-                        svgOverlay = `
-                        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
-                            <defs>
-                                <mask id="${maskId}">
-                                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                                    <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" fill="black" />
-                                    <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" fill="black" />
-                                </mask>
-                            </defs>
-                            <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.6" stroke-opacity="0.9" stroke-linecap="round" mask="url(#${maskId})" />
-                            <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="9" stroke="#b300ff" stroke-width="2.6" fill="none" />
-                            <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="9" stroke="#b300ff" stroke-width="2.6" fill="none" />
-                        </svg>`;
-                    }
                     
                     msgsEl.innerHTML += `
                         <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
-                            ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 2px; opacity: 0.6; color:var(--text-color);">${data.authorName}</div>` : ''}
-                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1})" style="width: 220px; aspect-ratio: 4/5; border-radius: 12px; overflow: hidden; position: relative; background: #1a1a1a; margin-top: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); cursor:pointer; border: 1px solid var(--border-color);">
-                                <img src="${thumbImg}" alt="${rName}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                ${svgOverlay}
-                                <div style="position:absolute; bottom: 8px; left: 8px; right: 8px; display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); border-radius: 8px; padding: 4px 8px; color: white; font-size: 11px; pointer-events:none;">
-                                    <span style="font-weight: 700;">${distLabel || rName}</span>
-                                    <span style="opacity: 0.85; font-size: 10px;">Klikni pro postup</span>
-                                </div>
+                            ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500;">${data.authorName}</div>` : ''}
+                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1})">
+                                <img src="${shareImg}" alt="${rName}" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             </div>
                         </div>`;
                 } else {

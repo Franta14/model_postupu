@@ -1,5 +1,5 @@
 {
-  "version": 1789117856,
+  "version": 1789129953,
   "maps": {
     "homolka": {
       "thumb": "thumbs/map_homolka.jpg",
@@ -24,7 +24,8 @@
         56.807371015653,
         20.596353709473505
       ],
-      "crop_scale": 0.5954960091220068
+      "crop_scale": 0.5954960091220068,
+      "share_thumb": "thumbs/share_postup_001_2948m_s91.jpg"
     },
     "postup_002_2896m_s90": {
       "start": [
@@ -35,7 +36,8 @@
         56.10658535301688,
         20.592190075554424
       ],
-      "crop_scale": 0.5708380843785633
+      "crop_scale": 0.5708380843785633,
+      "share_thumb": "thumbs/share_postup_002_2896m_s90.jpg"
     },
     "postup_003_1710m_s82": {
       "start": [
@@ -46,7 +48,8 @@
         21.54607330688492,
         48.770065562951984
       ],
-      "crop_scale": 0.4740592930444698
+      "crop_scale": 0.4740592930444698,
+      "share_thumb": "thumbs/share_postup_003_1710m_s82.jpg"
     },
     "postup_004_1021m_s81": {
       "start": [
@@ -57,7 +60,8 @@
         63.911019477379774,
         20.60126652664932
       ],
-      "crop_scale": 0.22605473204104903
+      "crop_scale": 0.22605473204104903,
+      "share_thumb": "thumbs/share_postup_004_1021m_s81.jpg"
     },
     "postup_005_1300m_s77": {
       "start": [
@@ -68,7 +72,8 @@
         79.38432862260846,
         48.562389552453766
       ],
-      "crop_scale": 0.37214937286202965
+      "crop_scale": 0.37214937286202965,
+      "share_thumb": "thumbs/share_postup_005_1300m_s77.jpg"
     },
     "postup_006_2448m_s69": {
       "start": [
@@ -79,7 +84,8 @@
         79.42156580649892,
         30.44817272376057
       ],
-      "crop_scale": 0.5374857468643102
+      "crop_scale": 0.5374857468643102,
+      "share_thumb": "thumbs/share_postup_006_2448m_s69.jpg"
     },
     "postup_007_1595m_s68": {
       "start": [
@@ -90,7 +96,8 @@
         20.63298175379675,
         49.470909641090394
       ],
-      "crop_scale": 0.4549600912200684
+      "crop_scale": 0.4549600912200684,
+      "share_thumb": "thumbs/share_postup_007_1595m_s68.jpg"
     },
     "postup_008_1088m_s59": {
       "start": [
@@ -101,7 +108,8 @@
         68.32366761036766,
         79.43624443651639
       ],
-      "crop_scale": 0.22391676168757127
+      "crop_scale": 0.22391676168757127,
+      "share_thumb": "thumbs/share_postup_008_1088m_s59.jpg"
     }
   }
 }

@@ -353,8 +353,59 @@ def generate_thumbnails():
                 "crop_scale": cropped.width / img_w  # Pro frontend normalizaci zoomu
             }
                     
-        # Nepoužíváme composite, pouze původní crop
-        # ---------------------------------------------
+        # 3) Vertikální 9:16 náhled pro sdílení v chatu (ve stylu IG Reel, vycentrovaný a orientovaný zdola nahoru)
+        if start_c and end_c:
+            c_start = (start_c[0] * scale, -start_c[1] * scale)
+            c_end = (end_c[0] * scale, -end_c[1] * scale)
+            dx = c_end[0] - c_start[0]
+            dy = c_end[1] - c_start[1]
+            dist_px = math.hypot(dx, dy)
+            if dist_px > 0:
+                ux = dx / dist_px
+                uy = dy / dist_px
+                cx_in = (c_start[0] + c_end[0]) / 2.0
+                cy_in = (c_start[1] + c_end[1]) / 2.0
+
+                # 2x supersampling pro ultra hladké antialiased vykreslení
+                OUT_W, OUT_H = 1080, 1920
+                W2, H2 = 2160, 3840
+                cx2, cy2 = W2 / 2.0, H2 / 2.0
+                target_route_h2 = H2 * 0.74
+
+                zoom_factor2 = target_route_h2 / dist_px
+                scale_in2 = 1.0 / zoom_factor2
+
+                a = scale_in2 * (-uy)
+                b = scale_in2 * (-ux)
+                c = cx_in - a * cx2 - b * cy2
+                d = scale_in2 * ux
+                e = scale_in2 * (-uy)
+                f = cy_in - d * cx2 - e * cy2
+
+                card2 = img.transform((W2, H2), Image.Transform.AFFINE, data=(a, b, c, d, e, f), resample=Image.Resampling.BICUBIC)
+                draw2 = ImageDraw.Draw(card2)
+                pt_start2 = (cx2, cy2 + target_route_h2 / 2.0)
+                pt_end2 = (cx2, cy2 - target_route_h2 / 2.0)
+
+                iof_purple = (179, 0, 255) # #b300ff
+                R2 = 64
+                line_w2 = 11
+                gap2 = 12
+
+                # Spojnice a kolečka
+                draw2.line([(pt_start2[0], pt_start2[1] - R2 - gap2), (pt_end2[0], pt_end2[1] + R2 + gap2)], fill=iof_purple, width=line_w2)
+                draw2.ellipse([pt_start2[0] - R2, pt_start2[1] - R2, pt_start2[0] + R2, pt_start2[1] + R2], outline=iof_purple, width=line_w2)
+                draw2.ellipse([pt_end2[0] - R2, pt_end2[1] - R2, pt_end2[0] + R2, pt_end2[1] + R2], outline=iof_purple, width=line_w2)
+
+                final_share = card2.resize((OUT_W, OUT_H), Image.Resampling.LANCZOS)
+                final_share = final_share.filter(ImageFilter.UnsharpMask(radius=1.2, percent=130, threshold=1))
+
+                share_path = os.path.join(thumbs_dir, f"share_{basename}.jpg")
+                final_share.save(share_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
+                route_meta[basename]["share_thumb"] = f"thumbs/share_{basename}.jpg"
+                share_size = os.path.getsize(share_path) / 1024
+                print(f"    📱 share_{basename}.jpg (9:16 IG reel, {share_size:.1f} KB)")
+
         
         thumb = cropped.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
         thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.3, percent=140, threshold=1))
