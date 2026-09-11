@@ -40,8 +40,8 @@ let currentUser = null;
 const loginOverlay = document.createElement('div');
 loginOverlay.id = 'login-overlay';
 loginOverlay.innerHTML = `
-    <div class="splash-logo-container" style="margin-bottom: 5vh;">
-        <svg viewBox="0 0 380 150" class="splash-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 320px; overflow: visible;">
+    <div class="splash-logo-container" style="margin-bottom: 5vh; transition: margin 0.5s ease;">
+        <svg viewBox="0 0 340 150" class="splash-svg" xmlns="http://www.w3.org/2000/svg" style="width: 100%; max-width: 320px; overflow: visible;">
             <defs>
                 <linearGradient id="diagonal-split" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="50%" stop-color="#ffffff" />
@@ -51,8 +51,8 @@ loginOverlay.innerHTML = `
                     <rect id="clip-rect" x="40" y="0" width="0" height="150" />
                 </clipPath>
             </defs>
-            <text x="40" y="110" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="95" fill="#000" letter-spacing="-2" clip-path="url(#reveal-clip)">REEL</text>
-            <circle class="circle-o" cx="315" cy="72.5" r="35" fill="url(#diagonal-split)" stroke="#000000" stroke-width="18" />
+            <text x="40" y="110" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="700" font-size="95" fill="#000" letter-spacing="-2" clip-path="url(#reveal-clip)">REEL</text>
+            <circle class="circle-o" cx="275" cy="72.5" r="30" fill="url(#diagonal-split)" stroke="#000000" stroke-width="12" />
         </svg>
     </div>
     <div id="splash-login-container" style="text-align: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out;">
@@ -91,6 +91,9 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
 
+        // Pokud je přihlášený, ujistíme se, že nepoužíváme .show-login (logo zůstane uprostřed)
+        loginOverlay.classList.remove('show-login');
+
         // Plynulé skrytí splash/login screenu až po dokončení 2s úvodní animace
         const elapsed = Date.now() - (window.splashStartTime || Date.now());
         const remaining = Math.max(0, 2200 - elapsed);
@@ -127,11 +130,14 @@ auth.onAuthStateChanged(async (user) => {
         loginOverlay.style.display = 'flex';
         loginOverlay.style.opacity = '1';
 
-        // Plynulé zobrazení přihlašovacích tlačítek pod logem až po doběhnutí úvodní animace loga (2s)
+        // Plynulý posuv loga nahoru a zobrazení přihlašovacích tlačítek (2s)
         const elapsed = Date.now() - (window.splashStartTime || Date.now());
         const remaining = Math.max(0, 2000 - elapsed);
 
         setTimeout(() => {
+            // Přidáme třídu pro plynulý posun loga z prostředka na horní pozici
+            loginOverlay.classList.add('show-login');
+
             const loginBox = document.getElementById('splash-login-container');
             if (loginBox) {
                 loginBox.style.opacity = '1';
