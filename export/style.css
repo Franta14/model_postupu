@@ -16,8 +16,8 @@
   justify-content: flex-start;
   align-items: center;
   pointer-events: auto;
-  padding-top: calc(50dvh - 55px);
-  /* Centered by default for logged-in users */
+  padding-top: calc(43dvh - 55px);
+  /* Optical center (slightly above geometric center) - matches Instagram */
   transition: padding-top 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   box-sizing: border-box;
 }
