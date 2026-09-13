@@ -29,10 +29,11 @@
 
 .splash-logo-container {
   width: 90%;
-  max-width: 300px;
+  max-width: 150px;
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: splashScaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .splash-svg {
@@ -41,32 +42,14 @@
   overflow: visible;
 }
 
-.circle-o {
-  transform-origin: 295px 72.5px;
-  animation: rollO 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-#clip-rect {
-  animation: revealRect 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-@keyframes rollO {
+@keyframes splashScaleIn {
   0% {
-    transform: translate(-220px, 0) rotate(-720deg);
+    opacity: 0;
+    transform: scale(0.8);
   }
-
   100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-}
-
-@keyframes revealRect {
-  0% {
-    width: 0;
-  }
-
-  100% {
-    width: 220px;
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

@@ -65,9 +65,9 @@ auth.onAuthStateChanged(async (user) => {
         // Pokud je přihlášený, ujistíme se, že nepoužíváme .show-login (logo zůstane uprostřed)
         loginOverlay.classList.remove('show-login');
 
-        // Plynulé skrytí splash/login screenu až po dokončení 2s úvodní animace
+        // Plynulé skrytí splash/login screenu až po dokončení úvodní animace (1s)
         const elapsed = Date.now() - (window.splashStartTime || Date.now());
-        const remaining = Math.max(0, 2200 - elapsed);
+        const remaining = Math.max(0, 1000 - elapsed);
 
         setTimeout(() => {
             loginOverlay.style.opacity = '0';
@@ -101,9 +101,9 @@ auth.onAuthStateChanged(async (user) => {
         loginOverlay.style.display = 'flex';
         loginOverlay.style.opacity = '1';
 
-        // Plynulý posuv loga nahoru a zobrazení přihlašovacích tlačítek (2s)
+        // Plynulý posuv loga nahoru a zobrazení přihlašovacích tlačítek (0.8s)
         const elapsed = Date.now() - (window.splashStartTime || Date.now());
-        const remaining = Math.max(0, 2000 - elapsed);
+        const remaining = Math.max(0, 800 - elapsed);
 
         setTimeout(() => {
             // Přidáme třídu pro plynulý posun loga z prostředka na horní pozici
