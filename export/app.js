@@ -985,11 +985,34 @@ function openChatConversation(name) {
                     let fallbackImg = bName ? `thumbs/${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
                     let rName = data.routeName || 'Homolka';
 
+                    let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+                    let savedStrings = saved.map(String);
+                    let postupObj = postupyData[targetIndex];
+                    let postupIdStr = postupObj ? String(postupObj.id || (targetIndex + 1)) : String(targetIndex + 1);
+                    let isBookmarked = savedStrings.includes(postupIdStr);
+                    
+                    let bookmarkClass = isBookmarked ? 'chat-action-btn bookmark-btn bookmarked' : 'chat-action-btn bookmark-btn';
+                    let bookmarkSvg = isBookmarked
+                        ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+
+                    let flexDir = isMe ? 'row-reverse' : 'row';
+
                     msgsEl.innerHTML += `
-                        <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
-                            ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500;">${data.authorName}</div>` : ''}
-                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1}, event)">
-                                <img src="${shareImg}" alt="${rName}" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                        <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none; display:flex; flex-direction:${flexDir}; align-items:flex-end; gap:8px;">
+                            <div style="display:flex; flex-direction:column; align-items:${isMe ? 'flex-end' : 'flex-start'};">
+                                ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500; margin-left: 4px;">${data.authorName}</div>` : ''}
+                                <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1}, event)">
+                                    <img src="${shareImg}" alt="${rName}" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                                </div>
+                            </div>
+                            <div class="chat-share-actions" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px; align-self:flex-end;">
+                                <button class="${bookmarkClass}" onclick="event.stopPropagation(); toggleBookmark(${targetIndex}, this)" style="background:none; border:none; color:var(--text-color); padding:6px; cursor:pointer; opacity:0.8; outline:none; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center;">
+                                    ${bookmarkSvg}
+                                </button>
+                                <button class="chat-action-btn share-btn" onclick="event.stopPropagation(); sharePostup(${targetIndex})" style="background:none; border:none; color:var(--text-color); padding:6px; cursor:pointer; opacity:0.8; outline:none; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                </button>
                             </div>
                         </div>`;
                 } else {
@@ -1055,10 +1078,21 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
         doClose();
     } else {
         const screenScroll = document.getElementById('screen-scroll');
+        const bottomNav = document.getElementById('bottom-nav');
         if (screenScroll) {
             screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
             screenScroll.style.transform = 'translateX(100%)';
-            setTimeout(doClose, 280);
+            if (bottomNav) {
+                bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                bottomNav.style.transform = 'translateX(100%)';
+            }
+            setTimeout(() => {
+                doClose();
+                if (bottomNav) {
+                    bottomNav.style.transform = '';
+                    bottomNav.style.transition = '';
+                }
+            }, 280);
         } else {
             doClose();
         }
@@ -1312,6 +1346,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.stopPropagation();
             let currentX = Math.max(0, deltaX);
             screenScrollEl.style.transform = `translateX(${currentX}px)`;
+            if (document.body.classList.contains('chat-mode-active')) {
+                const bottomNav = document.getElementById('bottom-nav');
+                if (bottomNav) bottomNav.style.transform = `translateX(${currentX}px)`;
+            }
         }
     }, { passive: false, capture: true });
 
@@ -1330,9 +1368,16 @@ document.addEventListener("DOMContentLoaded", () => {
         let deltaX = changedTouch ? changedTouch.clientX - startX : 0;
 
         screenScrollEl.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+        const bottomNav = document.getElementById('bottom-nav');
+        if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+            bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
 
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
             screenScrollEl.style.transform = 'translateX(100%)';
+            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+                bottomNav.style.transform = 'translateX(100%)';
+            }
             setTimeout(() => {
                 if (document.body.classList.contains('chat-mode-active')) {
                     closeChatFeed(true);
@@ -1341,12 +1386,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
+                if (bottomNav) {
+                    bottomNav.style.transform = '';
+                    bottomNav.style.transition = '';
+                }
             }, 280);
         } else {
             screenScrollEl.style.transform = 'translateX(0)';
+            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+                bottomNav.style.transform = 'translateX(0)';
+            }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
+                if (bottomNav) {
+                    bottomNav.style.transform = '';
+                    bottomNav.style.transition = '';
+                }
             }, 280);
         }
     };
@@ -1358,9 +1414,18 @@ document.addEventListener("DOMContentLoaded", () => {
             gestureDetermined = false;
             screenScrollEl.style.transition = 'transform 0.2s ease-out';
             screenScrollEl.style.transform = 'translateX(0)';
+            const bottomNav = document.getElementById('bottom-nav');
+            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+                bottomNav.style.transition = 'transform 0.2s ease-out';
+                bottomNav.style.transform = 'translateX(0)';
+            }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
+                if (bottomNav) {
+                    bottomNav.style.transform = '';
+                    bottomNav.style.transition = '';
+                }
             }, 200);
         }
     }, { passive: true });
@@ -2668,9 +2733,16 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
 
     if ((isSavedMode || fromChat) && screenScroll) {
-        // Umístíme obrazovku mimo zobrazení vpravo ještě před aktivací
+        const bottomNav = document.getElementById('bottom-nav');
+
+        // Umístíme obrazovku (a spodní lištu) mimo zobrazení vpravo ještě před aktivací
         screenScroll.style.transition = 'none';
         screenScroll.style.transform = 'translateX(100%)';
+        if (fromChat && bottomNav) {
+            bottomNav.style.transition = 'none';
+            bottomNav.style.transform = 'translateX(100%)';
+        }
+
         screenScroll.classList.add('active');
 
         if (targetReel && reelsContainer) {
@@ -2691,10 +2763,18 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
             requestAnimationFrame(() => {
                 screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
                 screenScroll.style.transform = 'translateX(0)';
+                if (fromChat && bottomNav) {
+                    bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                    bottomNav.style.transform = 'translateX(0)';
+                }
 
                 setTimeout(() => {
                     screenScroll.style.transition = '';
                     screenScroll.style.transform = '';
+                    if (bottomNav) {
+                        bottomNav.style.transition = '';
+                        bottomNav.style.transform = '';
+                    }
                     // Dodatečný přepočet ostatních map až po dokončení animace
                     Object.values(mapInstances).forEach(m => {
                         if (m !== activeMap) m.invalidateSize();
