@@ -31,11 +31,11 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (optimalizována na 640px pro bleskurychlé načítání a perfektní ostrost na Retina mobilech)
-THUMB_WIDTH = 640
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 800
-# JPEG kvalita (80 pro ideální kompresi a vynikající ostrost)
-JPEG_QUALITY = 80
+# Velikost výstupního thumbnailu (vyváženo na 1200px pro perfektní 1:1 pixelovou ostrost při 7x zoomu)
+THUMB_WIDTH = 1200
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1500
+# JPEG kvalita (55 pro extrémně efektivní kompresi bez viditelných artefaktů na mobilu)
+JPEG_QUALITY = 55
 # Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
 DEFAULT_MAP_ZOOM = 700
 
