@@ -1540,6 +1540,11 @@ body.chat-mode-active #screen-scroll {
   background: var(--bg-color);
   box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
 }
+body.chat-mode-active #bottom-nav {
+  z-index: 10015;
+  display: flex !important;
+}
+
 
 #saved-mode-header {
   position: absolute;

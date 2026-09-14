@@ -1018,70 +1018,16 @@ function openSharedRoute(mapId, targetIndex, event) {
     }
     
     if (card) {
-        const rect = card.getBoundingClientRect();
-        
-        // Vytvořit kopii pro plynulý zoom transition (přesně jako IG)
-        const clone = document.createElement('div');
-        clone.className = 'zoom-transition-temp';
-        clone.style.position = 'fixed';
-        clone.style.top = `${rect.top}px`;
-        clone.style.left = `${rect.left}px`;
-        clone.style.width = `${rect.width}px`;
-        clone.style.height = `${rect.height}px`;
-        clone.style.zIndex = '11000';
-        clone.style.borderRadius = window.getComputedStyle(card).borderRadius || '14px';
-        clone.style.overflow = 'hidden';
-        clone.style.background = '#111';
-        clone.style.transition = 'all 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-        
-        const cardImg = card.querySelector('img');
-        if (cardImg) {
-            const innerImg = cardImg.cloneNode();
-            innerImg.style.width = '100%';
-            innerImg.style.height = '100%';
-            innerImg.style.objectFit = 'cover';
-            clone.appendChild(innerImg);
-        }
-        
-        document.body.appendChild(clone);
-        card.style.opacity = '0';
-        clone.offsetHeight; // trigger reflow
-        
-        // Otevřít reels bez zavření chatu, abychom se do něj mohli plynule vrátit
-        openFeed(mapId || 'homolka', false, targetIndex, true);
-        
-        const screenScroll = document.getElementById('screen-scroll');
-        if (screenScroll) {
-            screenScroll.style.transition = 'none';
-            screenScroll.style.opacity = '0';
-            screenScroll.style.transform = 'scale(0.95)';
-        }
-        
-        clone.style.top = '0';
-        clone.style.left = '0';
-        clone.style.width = '100vw';
-        clone.style.height = '100dvh';
-        clone.style.borderRadius = '0';
-        
+        // Vizuální odezva na kliknutí (stlačení)
+        card.style.transform = 'scale(0.96)';
+        card.style.transition = 'transform 0.12s cubic-bezier(0.16, 1, 0.3, 1)';
         setTimeout(() => {
-            if (screenScroll) {
-                screenScroll.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
-                screenScroll.style.opacity = '1';
-                screenScroll.style.transform = 'scale(1)';
-            }
-            setTimeout(() => {
-                if (clone.parentNode) clone.parentNode.removeChild(clone);
-                card.style.opacity = '';
-                if (screenScroll) {
-                    screenScroll.style.transition = '';
-                    screenScroll.style.transform = '';
-                    screenScroll.style.opacity = '';
-                }
-            }, 180);
-        }, 280);
-    } else {
-        openFeed(mapId || 'homolka', false, targetIndex, true);
+            card.style.transform = '';
+        }, 120);
     }
+    
+    // Spustit plynulé najetí celého Reels okna zprava doleva (iOS styl)
+    openFeed(mapId || 'homolka', false, targetIndex, true);
 }
 
 function closeChatFeed(isAlreadyAnimatedOut = false) {
@@ -2721,7 +2667,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     const reelsContainer = document.getElementById('reels-container');
     const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
 
-    if (isSavedMode && screenScroll) {
+    if ((isSavedMode || fromChat) && screenScroll) {
         // Umístíme obrazovku mimo zobrazení vpravo ještě před aktivací
         screenScroll.style.transition = 'none';
         screenScroll.style.transform = 'translateX(100%)';
