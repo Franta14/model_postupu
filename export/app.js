@@ -1221,6 +1221,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } else if (wasChatMode) {
                 document.body.classList.remove('chat-mode-active');
+                closeChatConversation();
                 updateExploreBadge(document.getElementById('nav-badge'));
 
                 const screenScroll = document.getElementById('screen-scroll');
