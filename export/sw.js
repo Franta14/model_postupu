@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scrollienteering-v25';
+const CACHE_NAME = 'scrollienteering-v26';
 
 self.addEventListener('install', event => {
     // Instalace proběhne rychle, nebudeme čekat na obří preload
@@ -27,8 +27,8 @@ self.addEventListener('fetch', event => {
     
     const url = new URL(event.request.url);
 
-    // 1. Dlaždice a data postupů - Cache First (nikdy se nemění)
-    if (url.pathname.includes('/tiles/') || url.pathname.includes('/postupy/')) {
+    // 1. Dlaždice, data postupů a náhledy (thumbs) - Cache First (nikdy se nemění bez změny verze v query parametru)
+    if (url.pathname.includes('/tiles/') || url.pathname.includes('/postupy/') || url.pathname.includes('/thumbs/')) {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
                 if (cachedResponse) return cachedResponse;

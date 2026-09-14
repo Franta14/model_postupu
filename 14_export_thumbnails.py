@@ -31,11 +31,11 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (zvýšena na 3000 pro maximální ostrost i při vysokém zoomu na Retina displejích)
-THUMB_WIDTH = 3000
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3750
-# JPEG kvalita (93 pro precizní ostrost linií bez artefaktů)
-JPEG_QUALITY = 93
+# Velikost výstupního thumbnailu (optimalizována na 640px pro bleskurychlé načítání a perfektní ostrost na Retina mobilech)
+THUMB_WIDTH = 640
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 800
+# JPEG kvalita (80 pro ideální kompresi a vynikající ostrost)
+JPEG_QUALITY = 80
 # Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
 DEFAULT_MAP_ZOOM = 700
 
@@ -366,16 +366,16 @@ def generate_thumbnails():
                 cx_in = (c_start[0] + c_end[0]) / 2.0
                 cy_in = (c_start[1] + c_end[1]) / 2.0
 
-                # 2x supersampling pro ultra hladké antialiased vykreslení
-                OUT_W, OUT_H = 1080, 1920
-                W2, H2 = 2160, 3840
+                # 2x supersampling pro ultra hladké antialiased vykreslení (optimalizováno na 540x960)
+                OUT_W, OUT_H = 540, 960
+                W2, H2 = 1080, 1920
                 cx2, cy2 = W2 / 2.0, H2 / 2.0
                 
                 iof_purple = (179, 0, 255) # #b300ff
-                R2 = 64
-                line_w2 = 11
-                gap2 = 12
-                edge_margin2 = 36 # téměř se dotýká horního a spodního okraje
+                R2 = 32
+                line_w2 = 6
+                gap2 = 6
+                edge_margin2 = 18 # téměř se dotýká horního a spodního okraje
 
                 # Maximální možné přiblížení: kolečka se zespodu a shora skoro dotýkají okrajů karty
                 target_route_h2 = H2 - 2 * (R2 + line_w2 / 2.0 + edge_margin2)
