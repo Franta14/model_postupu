@@ -988,7 +988,7 @@ function openChatConversation(name) {
                     msgsEl.innerHTML += `
                         <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none;">
                             ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500;">${data.authorName}</div>` : ''}
-                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1})">
+                            <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1}, event)">
                                 <img src="${shareImg}" alt="${rName}" onerror="this.onerror=null; this.src='${fallbackImg}';">
                             </div>
                         </div>`;
@@ -1011,9 +1011,112 @@ function closeChatConversation() {
 }
 
 
-function openSharedRoute(mapId, targetIndex) {
-    closeChatConversation();
-    openFeed(mapId || 'homolka', false, targetIndex);
+function openSharedRoute(mapId, targetIndex, event) {
+    let card = null;
+    if (event) {
+        card = event.currentTarget;
+    }
+    
+    if (card) {
+        const rect = card.getBoundingClientRect();
+        
+        // Vytvořit kopii pro plynulý zoom transition (přesně jako IG)
+        const clone = document.createElement('div');
+        clone.className = 'zoom-transition-temp';
+        clone.style.position = 'fixed';
+        clone.style.top = `${rect.top}px`;
+        clone.style.left = `${rect.left}px`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        clone.style.zIndex = '11000';
+        clone.style.borderRadius = window.getComputedStyle(card).borderRadius || '14px';
+        clone.style.overflow = 'hidden';
+        clone.style.background = '#111';
+        clone.style.transition = 'all 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+        
+        const cardImg = card.querySelector('img');
+        if (cardImg) {
+            const innerImg = cardImg.cloneNode();
+            innerImg.style.width = '100%';
+            innerImg.style.height = '100%';
+            innerImg.style.objectFit = 'cover';
+            clone.appendChild(innerImg);
+        }
+        
+        document.body.appendChild(clone);
+        card.style.opacity = '0';
+        clone.offsetHeight; // trigger reflow
+        
+        // Otevřít reels bez zavření chatu, abychom se do něj mohli plynule vrátit
+        openFeed(mapId || 'homolka', false, targetIndex, true);
+        
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) {
+            screenScroll.style.transition = 'none';
+            screenScroll.style.opacity = '0';
+            screenScroll.style.transform = 'scale(0.95)';
+        }
+        
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.width = '100vw';
+        clone.style.height = '100dvh';
+        clone.style.borderRadius = '0';
+        
+        setTimeout(() => {
+            if (screenScroll) {
+                screenScroll.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+                screenScroll.style.opacity = '1';
+                screenScroll.style.transform = 'scale(1)';
+            }
+            setTimeout(() => {
+                if (clone.parentNode) clone.parentNode.removeChild(clone);
+                card.style.opacity = '';
+                if (screenScroll) {
+                    screenScroll.style.transition = '';
+                    screenScroll.style.transform = '';
+                    screenScroll.style.opacity = '';
+                }
+            }, 180);
+        }, 280);
+    } else {
+        openFeed(mapId || 'homolka', false, targetIndex, true);
+    }
+}
+
+function closeChatFeed(isAlreadyAnimatedOut = false) {
+    const doClose = () => {
+        document.body.classList.remove('chat-mode-active');
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) {
+            screenScroll.classList.remove('active');
+            screenScroll.style.transform = '';
+            screenScroll.style.transition = '';
+        }
+        
+        const chatConv = document.getElementById('chat-conversation');
+        if (chatConv) {
+            chatConv.classList.add('active');
+        }
+        
+        const bottomNav = document.getElementById('bottom-nav');
+        if (bottomNav) {
+            bottomNav.style.display = 'none';
+        }
+    };
+
+    if (isAlreadyAnimatedOut === true) {
+        doClose();
+    } else {
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) {
+            screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+            screenScroll.style.transform = 'translateX(100%)';
+            setTimeout(doClose, 280);
+        } else {
+            doClose();
+        }
+    }
 }
 function openComments(index) {
     const postup = postupyData[index];
@@ -1114,6 +1217,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetId = btn.getAttribute('data-target');
 
             let wasSavedMode = document.body.classList.contains('saved-mode-active');
+            let wasChatMode = document.body.classList.contains('chat-mode-active');
 
             if (wasSavedMode) {
                 document.body.classList.remove('saved-mode-active');
@@ -1134,6 +1238,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         const reelsContainer = document.getElementById('reels-container');
                         if (reelsContainer) reelsContainer.scrollTo({ top: nextReel.offsetTop, behavior: 'instant' });
                     }
+                }
+            } else if (wasChatMode) {
+                document.body.classList.remove('chat-mode-active');
+                updateExploreBadge(document.getElementById('nav-badge'));
+
+                const screenScroll = document.getElementById('screen-scroll');
+                if (screenScroll) {
+                    screenScroll.style.transform = '';
+                    screenScroll.style.transition = '';
                 }
             } else if (targetId === 'screen-scroll') {
                 updateExploreBadge(document.getElementById('nav-badge'));
@@ -1180,7 +1293,11 @@ document.addEventListener("DOMContentLoaded", () => {
     smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
     smh.onclick = (e) => {
         e.stopPropagation();
-        closeSavedFeed();
+        if (document.body.classList.contains('chat-mode-active')) {
+            closeChatFeed();
+        } else {
+            closeSavedFeed();
+        }
     };
     const screenScrollElContainer = document.getElementById('screen-scroll');
     if (screenScrollElContainer) {
@@ -1196,7 +1313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let screenScrollEl = null;
 
     window.addEventListener('touchstart', e => {
-        if (!document.body.classList.contains('saved-mode-active')) return;
+        if (!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) return;
         if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
@@ -1217,7 +1334,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, { passive: true, capture: true });
 
     window.addEventListener('touchmove', e => {
-        if (!document.body.classList.contains('saved-mode-active') || !screenScrollEl) return;
+        if ((!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) || !screenScrollEl) return;
         if (e.touches.length !== 1) {
             if (isSwiping) {
                 isSwiping = false;
@@ -1271,7 +1388,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
             screenScrollEl.style.transform = 'translateX(100%)';
             setTimeout(() => {
-                closeSavedFeed(true);
+                if (document.body.classList.contains('chat-mode-active')) {
+                    closeChatFeed(true);
+                } else {
+                    closeSavedFeed(true);
+                }
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
             }, 280);
@@ -2521,7 +2642,7 @@ function renderProfileSaved() {
     dynamicContent.appendChild(gridContainer);
 }
 
-function openFeed(map_id, isSavedMode, specificIndex) {
+function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
 
@@ -2530,12 +2651,21 @@ function openFeed(map_id, isSavedMode, specificIndex) {
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
+        document.body.classList.remove('chat-mode-active');
+        const header = document.getElementById('saved-mode-header');
+        if (header) {
+            header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
+        }
+    } else if (fromChat) {
+        document.body.classList.add('chat-mode-active');
+        document.body.classList.remove('saved-mode-active');
         const header = document.getElementById('saved-mode-header');
         if (header) {
             header.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
         }
     } else {
         document.body.classList.remove('saved-mode-active');
+        document.body.classList.remove('chat-mode-active');
     }
 
     document.querySelectorAll('.reel').forEach(reel => {
@@ -2547,7 +2677,7 @@ function openFeed(map_id, isSavedMode, specificIndex) {
             isMatch = isMatch && savedStrings.includes(String(postup.id));
         }
 
-        if (isMatch) {
+        if (isMatch || fromChat) {
             reel.style.display = 'block';
             if (specificIndex !== undefined && Number(specificIndex) >= 0) {
                 if (Number(mIndex) === Number(specificIndex)) firstVisibleIndex = mIndex;
@@ -2569,6 +2699,7 @@ function openFeed(map_id, isSavedMode, specificIndex) {
 
     document.querySelectorAll('.app-screen').forEach(s => {
         if (isSavedMode && s.id === 'screen-profile') return;
+        if (fromChat && s.id === 'screen-chat') return;
         s.classList.remove('active');
     });
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -2576,6 +2707,9 @@ function openFeed(map_id, isSavedMode, specificIndex) {
     if (isSavedMode) {
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
         if (profileNavBtn) profileNavBtn.classList.add('active');
+    } else if (fromChat) {
+        const chatNavBtn = document.querySelector('.nav-btn[data-target="screen-chat"]');
+        if (chatNavBtn) chatNavBtn.classList.add('active');
     } else {
         const scrollNavBtn = document.querySelector('.nav-btn[data-target="screen-scroll"]');
         if (scrollNavBtn) scrollNavBtn.classList.add('active');

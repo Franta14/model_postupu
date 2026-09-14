@@ -1530,6 +1530,17 @@ body.saved-mode-active #screen-scroll {
   box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
 }
 
+body.chat-mode-active #screen-scroll {
+  z-index: 10010;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  background: var(--bg-color);
+  box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
+}
+
 #saved-mode-header {
   position: absolute;
   top: 0;
@@ -1552,7 +1563,8 @@ body.saved-mode-active #screen-scroll {
   -webkit-user-select: none;
 }
 
-body.saved-mode-active #saved-mode-header {
+body.saved-mode-active #saved-mode-header,
+body.chat-mode-active #saved-mode-header {
   display: flex;
 }
 
