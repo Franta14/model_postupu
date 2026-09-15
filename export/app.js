@@ -120,6 +120,8 @@ auth.onAuthStateChanged(async (user) => {
 
 let currentCommentsUnsubscribe = null;
 let currentChatUnsubscribe = null;
+let isNavigatingFeed = false;
+let isClosingChatFeed = false;
 
 document.addEventListener('click', async (e) => {
     const sendCommentBtn = e.target.closest('#send-comment-btn');
@@ -980,16 +982,25 @@ function openChatConversation(name) {
 
                 if (data.type === 'shared_route') {
                     let bName = data.basename;
-                    let targetIndex = data.routeIndex;
-                    if (!bName && postupyData && postupyData.length > 0) {
-                        let found = postupyData.find(p => p.id === data.routeId || p.map_id === data.routeId);
-                        if (found) {
-                            bName = found.file ? found.file.replace('.geojson', '') : '';
-                            targetIndex = postupyData.indexOf(found);
-                        } else {
-                            bName = postupyData[0].file ? postupyData[0].file.replace('.geojson', '') : '';
-                            targetIndex = 0;
+                    let targetIndex = -1;
+                    if (postupyData && postupyData.length > 0) {
+                        if (data.routeId) {
+                            let found = postupyData.find(p => String(p.id) === String(data.routeId));
+                            if (found) targetIndex = postupyData.indexOf(found);
                         }
+                        if (targetIndex === -1 && bName) {
+                            let found = postupyData.find(p => p.file && p.file.replace('.geojson', '') === bName);
+                            if (found) targetIndex = postupyData.indexOf(found);
+                        }
+                        if (targetIndex === -1 && data.routeIndex !== undefined && Number(data.routeIndex) >= 0 && Number(data.routeIndex) < postupyData.length) {
+                            targetIndex = Number(data.routeIndex);
+                        }
+                        if (targetIndex === -1) targetIndex = 0;
+                        if (!bName && postupyData[targetIndex]) {
+                            bName = postupyData[targetIndex].file ? postupyData[targetIndex].file.replace('.geojson', '') : '';
+                        }
+                    } else {
+                        targetIndex = Number(data.routeIndex) || 0;
                     }
                     let vParam = (thumbsMeta && thumbsMeta.version) ? '?v=' + thumbsMeta.version : '';
                     let shareImg = bName ? `thumbs/share_${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
@@ -1046,6 +1057,9 @@ function closeChatConversation() {
 
 
 function openSharedRoute(mapId, targetIndex, event) {
+    if (isNavigatingFeed || isClosingChatFeed) return;
+    isNavigatingFeed = true;
+
     let card = null;
     if (event) {
         card = event.currentTarget;
@@ -1065,6 +1079,10 @@ function openSharedRoute(mapId, targetIndex, event) {
 }
 
 function closeChatFeed(isAlreadyAnimatedOut = false) {
+    if (isClosingChatFeed) return;
+    isClosingChatFeed = true;
+    isNavigatingFeed = true;
+
     const doClose = () => {
         document.body.classList.remove('chat-mode-active');
         const screenScroll = document.getElementById('screen-scroll');
@@ -1081,8 +1099,14 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
 
         const bottomNav = document.getElementById('bottom-nav');
         if (bottomNav) {
+            bottomNav.classList.remove('nav-dark');
             bottomNav.style.display = 'none';
+            bottomNav.style.transform = '';
+            bottomNav.style.transition = '';
         }
+
+        isClosingChatFeed = false;
+        isNavigatingFeed = false;
     };
 
     if (isAlreadyAnimatedOut === true) {
@@ -1099,10 +1123,6 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
             }
             setTimeout(() => {
                 doClose();
-                if (bottomNav) {
-                    bottomNav.style.transform = '';
-                    bottomNav.style.transition = '';
-                }
             }, 280);
         } else {
             doClose();
@@ -1264,12 +1284,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (targetId === 'screen-scroll') {
                         setTimeout(() => {
-                            Object.values(mapInstances).forEach(m => {
-                                m.invalidateSize();
+                            if (activeIndex !== -1 && mapInstances[activeIndex]) {
+                                let m = mapInstances[activeIndex];
+                                m.invalidateSize({ animate: false });
                                 if (m.originalMidX !== undefined) {
                                     m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
                                 }
-                            });
+                            }
                             if (activeIndex !== -1) activateReel(activeIndex);
                         }, 50);
                     }
@@ -1285,6 +1306,7 @@ document.addEventListener("DOMContentLoaded", () => {
     smh.innerHTML = `<svg style="width:28px; height:28px; margin-right:10px; margin-bottom:-2px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>`;
     smh.onclick = (e) => {
         e.stopPropagation();
+        if (isClosingChatFeed) return;
         if (document.body.classList.contains('chat-mode-active')) {
             closeChatFeed();
         } else {
@@ -1306,6 +1328,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener('touchstart', e => {
         if (!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) return;
+        if (isClosingChatFeed || isNavigatingFeed) return;
         if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
@@ -1327,6 +1350,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.addEventListener('touchmove', e => {
         if ((!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) || !screenScrollEl) return;
+        if (isClosingChatFeed || isNavigatingFeed) return;
         if (e.touches.length !== 1) {
             if (isSwiping) {
                 isSwiping = false;
@@ -1371,6 +1395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             gestureDetermined = false;
             return;
         }
+        if (isClosingChatFeed || isNavigatingFeed) return;
         isSwiping = false;
         gestureDetermined = false;
         e.preventDefault();
@@ -1386,6 +1411,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
+            if (document.body.classList.contains('chat-mode-active')) {
+                isClosingChatFeed = true;
+                isNavigatingFeed = true;
+            }
             screenScrollEl.style.transform = 'translateX(100%)';
             if (document.body.classList.contains('chat-mode-active') && bottomNav) {
                 bottomNav.style.transform = 'translateX(100%)';
@@ -1757,6 +1786,7 @@ function setupObserver() {
     // 1. Observer pro okamžitý předstihový preload (1.5 výšky obrazovky dopředu i dozadu)
     let preloadOptions = { root: rc, rootMargin: '150% 0px 150% 0px', threshold: 0.01 };
     preloadObserver = new IntersectionObserver((entries) => {
+        if (isNavigatingFeed || isClosingChatFeed) return;
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
@@ -1768,11 +1798,16 @@ function setupObserver() {
     // 2. Observer pro aktivaci přehrávaného postupu
     let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
+        if (isNavigatingFeed || isClosingChatFeed) return;
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
                 if (activationTimeout) clearTimeout(activationTimeout);
-                activationTimeout = setTimeout(() => { activateReel(index); }, 60);
+                activationTimeout = setTimeout(() => {
+                    if (!isNavigatingFeed && !isClosingChatFeed) {
+                        activateReel(index);
+                    }
+                }, 60);
             }
         });
     }, options);
@@ -1947,6 +1982,7 @@ function preloadReel(i) {
 }
 
 function preloadAllVisibleReels(currentIndex) {
+    if (isNavigatingFeed || isClosingChatFeed) return;
     const visibleReels = Array.from(document.querySelectorAll('.reel'))
         .filter(r => r.style.display !== 'none')
         .map(r => parseInt(r.dataset.index));
@@ -1955,29 +1991,18 @@ function preloadAllVisibleReels(currentIndex) {
     let pos = visibleReels.indexOf(Number(currentIndex));
     if (pos === -1) pos = 0;
 
-    // Priorita 1: Okamžitě přednačíst následující postup (viditelný už během scrollu)
+    // Priorita 1: Přednačíst následující postup
     if (pos + 1 < visibleReels.length) {
-        preloadReel(visibleReels[pos + 1]);
+        setTimeout(() => {
+            if (!isNavigatingFeed && !isClosingChatFeed) preloadReel(visibleReels[pos + 1]);
+        }, 80);
     }
     // Priorita 2: Předchozí postup (pro okamžitý návrat zpět)
     if (pos - 1 >= 0) {
-        preloadReel(visibleReels[pos - 1]);
+        setTimeout(() => {
+            if (!isNavigatingFeed && !isClosingChatFeed) preloadReel(visibleReels[pos - 1]);
+        }, 180);
     }
-    // Priorita 3: Další v pořadí (+2 dopředu)
-    if (pos + 2 < visibleReels.length) {
-        setTimeout(() => preloadReel(visibleReels[pos + 2]), 40);
-    }
-
-    // Priorita 4: Postupně v pozadí načíst všechny zbývající z dané mapy
-    let delay = 80;
-    visibleReels.forEach(idx => {
-        if (!currentLayers[idx]) {
-            setTimeout(() => {
-                preloadReel(idx);
-            }, delay);
-            delay += 60;
-        }
-    });
 }
 
 const originalSetView = L.GridLayer.prototype._setView;
@@ -1995,8 +2020,9 @@ L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
 };
 
 function initMapForReel(index) {
+    if (mapInstances[index]) return mapInstances[index];
     const mapContainer = document.getElementById(`map-${index}`);
-    if (!mapContainer) return;
+    if (!mapContainer || mapContainer._leaflet_id) return mapInstances[index];
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
@@ -2751,7 +2777,9 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     let savedStrings = saved.map(String);
 
     let firstVisibleIndex = -1;
-    let groupName = postupyData.find(m => m.map_id === map_id)?.map_name || t('saved');
+    let targetPostup = (specificIndex !== undefined && Number(specificIndex) >= 0 && postupyData[specificIndex]) ? postupyData[specificIndex] : null;
+    let targetMapId = targetPostup ? targetPostup.map_id : (map_id || 'homolka');
+    let groupName = postupyData.find(m => m.map_id === targetMapId)?.map_name || t('saved');
 
     if (isSavedMode) {
         document.body.classList.add('saved-mode-active');
@@ -2773,18 +2801,24 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     }
 
     document.querySelectorAll('.reel').forEach(reel => {
-        let mIndex = reel.dataset.index;
+        let mIndex = Number(reel.dataset.index);
         let postup = postupyData[mIndex];
 
-        let isMatch = (postup && postup.map_id === map_id);
+        let isMatch = (postup && postup.map_id === targetMapId);
         if (isSavedMode) {
             isMatch = isMatch && savedStrings.includes(String(postup.id));
         }
 
-        if (isMatch || fromChat) {
+        if (fromChat) {
+            if (specificIndex !== undefined && Number(specificIndex) >= 0) {
+                isMatch = (mIndex === Number(specificIndex)) || (postup && postup.map_id === targetMapId);
+            }
+        }
+
+        if (isMatch) {
             reel.style.display = 'block';
             if (specificIndex !== undefined && Number(specificIndex) >= 0) {
-                if (Number(mIndex) === Number(specificIndex)) firstVisibleIndex = mIndex;
+                if (mIndex === Number(specificIndex)) firstVisibleIndex = mIndex;
             } else {
                 if (firstVisibleIndex === -1) firstVisibleIndex = mIndex;
             }
@@ -2794,12 +2828,15 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     });
 
     if (firstVisibleIndex === -1 && specificIndex !== undefined && Number(specificIndex) >= 0) {
-        firstVisibleIndex = specificIndex;
+        firstVisibleIndex = Number(specificIndex);
         let tReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
         if (tReel) tReel.style.display = 'block';
     }
 
-    if (firstVisibleIndex === -1) return;
+    if (firstVisibleIndex === -1) {
+        isNavigatingFeed = false;
+        return;
+    }
 
     document.querySelectorAll('.app-screen').forEach(s => {
         if (isSavedMode && s.id === 'screen-profile') return;
@@ -2826,6 +2863,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     const targetReel = document.querySelector(`.reel[data-index="${firstVisibleIndex}"]`);
 
     if ((isSavedMode || fromChat) && screenScroll) {
+        isNavigatingFeed = true;
         const bottomNav = document.getElementById('bottom-nav');
 
         // Umístíme obrazovku (a spodní lištu) mimo zobrazení vpravo ještě před aktivací
@@ -2842,14 +2880,23 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
         }
 
+        // POUZE inicializovat cílovou mapu bez těžkého hromadného preloadu
+        if (!mapInstances[firstVisibleIndex]) {
+            initMapForReel(firstVisibleIndex);
+        }
         const activeMap = mapInstances[firstVisibleIndex];
         if (activeMap) {
-            activeMap.invalidateSize();
+            activeMap.invalidateSize({ animate: false });
             if (activeMap.originalMidX !== undefined) {
                 activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
             }
         }
-        activateReel(firstVisibleIndex);
+        activeIndex = firstVisibleIndex;
+        if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
+            if (!currentLayers[firstVisibleIndex]) {
+                renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
+            }
+        }
 
         // Double RAF zaručí vykreslení počáteční pozice (100%) a plynulý přejezd doleva na (0)
         requestAnimationFrame(() => {
@@ -2868,10 +2915,18 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                         bottomNav.style.transition = '';
                         bottomNav.style.transform = '';
                     }
-                    // Dodatečný přepočet ostatních map až po dokončení animace
-                    Object.values(mapInstances).forEach(m => {
-                        if (m !== activeMap) m.invalidateSize();
-                    });
+
+                    isNavigatingFeed = false;
+                    const finalActiveMap = mapInstances[firstVisibleIndex];
+                    if (finalActiveMap) {
+                        finalActiveMap.invalidateSize({ animate: false });
+                    }
+                    // Po zklidnění animace přednačteme bezprostřední sousedy
+                    setTimeout(() => {
+                        if (!isClosingChatFeed) {
+                            preloadAllVisibleReels(firstVisibleIndex);
+                        }
+                    }, 120);
                 }, 300);
             });
         });
@@ -2883,12 +2938,13 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
         if (targetReel && reelsContainer) {
             setTimeout(() => {
                 reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
-                Object.values(mapInstances).forEach(m => {
-                    m.invalidateSize();
-                    if (m.originalMidX !== undefined) {
-                        m.setView([m.originalMidY, m.originalMidX], m.originalZoom, { animate: false });
+                const activeMap = mapInstances[firstVisibleIndex];
+                if (activeMap) {
+                    activeMap.invalidateSize({ animate: false });
+                    if (activeMap.originalMidX !== undefined) {
+                        activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
                     }
-                });
+                }
                 activateReel(firstVisibleIndex);
             }, 50);
         }
@@ -2896,6 +2952,10 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 }
 
 function closeSavedFeed(isAlreadyAnimatedOut = false) {
+    if (isClosingChatFeed) return;
+    isClosingChatFeed = true;
+    isNavigatingFeed = true;
+
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
         updateExploreBadge(document.getElementById('nav-badge'));
@@ -2917,6 +2977,9 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
             screenScroll.classList.remove('slide-out-right');
             screenScroll.classList.remove('slide-in-right');
         }
+
+        isClosingChatFeed = false;
+        isNavigatingFeed = false;
     };
 
     if (isAlreadyAnimatedOut === true) {

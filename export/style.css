@@ -1523,11 +1523,19 @@ body.chat-mode-active #screen-scroll {
   height: 100dvh;
   background: var(--bg-color);
   box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 body.chat-mode-active #bottom-nav {
   z-index: 10015;
   display: flex !important;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 
