@@ -99,7 +99,7 @@ def spocitat_metriky(cesta, working_grid_base, elev_grid, grid_size, nasobic_mer
         step_effort_algo = step_effort_base
         
         if is_runner_on_road and is_runner_next_road:
-            step_effort_algo *= 0.87
+            step_effort_algo *= 0.95  # bylo 0.87 - snizen agresivni bonus za cestu
             road_dist += dist_m
         elif is_runner_on_road and not is_runner_next_road:
             step_effort_algo += dist_m * 0.15

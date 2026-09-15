@@ -46,6 +46,15 @@ try:
     meta = np.load(os.path.join(cache_dir, "cenova_mapa_meta.npy"))
     min_x, min_y, max_x, max_y, grid_size = meta
     height, width = cost_grid_base.shape
+
+    # Crossing penalties (prikopy, srazy) - volitelne
+    crossing_path = os.path.join(cache_dir, "crossing_penalties.npy")
+    if os.path.exists(crossing_path):
+        crossing_grid = np.load(crossing_path)
+        print(f"   Crossing penalties nacteny ({int(np.count_nonzero(crossing_grid))} bunek).")
+    else:
+        crossing_grid = None
+        print("   ⚠️  Crossing penalties nenalezeny, prekazky ignorovany.")
 except FileNotFoundError:
     print(f"❌ Cache pro mapu '{map_name}' nenalezena.")
     print("   Nejprve spust:  python setup_mapa.py")
@@ -495,7 +504,7 @@ class AplikaceStavitel:
             t_iter = time.time()
             dist_forward, parents_y_f, parents_x_f = generator_engine.dijkstra_heatmap(
                 working_grid, elev_grid, start, maska, grid_size, NASOBIC_MERITKA, kopce_vaha=val_kopce,
-                direction='forward'
+                direction='forward', crossing_grid=crossing_grid
             )
             
             if np.isinf(dist_forward[g_y, g_x]):
@@ -602,7 +611,8 @@ class AplikaceStavitel:
             # Dijkstra z bodu A segmentu
             val_kopce = self.slider_kopce.val
             dist_seg, parents_y_seg, parents_x_seg = generator_engine.dijkstra_heatmap(
-                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size, NASOBIC_MERITKA, kopce_vaha=val_kopce, direction='forward'
+                cost_grid_base, elev_grid, seg_start, maska_seg, grid_size, NASOBIC_MERITKA, kopce_vaha=val_kopce, direction='forward',
+                crossing_grid=crossing_grid
             )
 
             # Kontrola dosazitelnosti

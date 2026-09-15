@@ -146,19 +146,19 @@ SIRKA_ZDI         = 1.0
 SIRKA_PLOTU       = 0.3    # Plot/oplocenka - uzsi buffer nez skala (realne max 1m sirka)
 
 COST_DICT = {
-    "Cesta (Zpevnena)":        0.915,
-    "Cesta (Lesni)":           0.965,
-    "Pesina":                  1.027,
+    "Cesta (Zpevnena)":        0.90,   # bylo 0.915
+    "Cesta (Lesni)":           0.96,   # bylo 0.965 (baseline)
+    "Pesina":                  1.00,   # bylo 1.027
     "Paseky":                  1.080,
-    "Prusek":                  1.105,
-    "Bily les":                1.172,
-    "Bazina":                  1.317,
-    "Voda":                    1.318,
-    "Hustnik 1 (Svetly)":      1.650,
-    "Podrost (Srafy)":         1.800,
-    "Hustnik 2 (Stredni)":     2.254,
-    "Hustnik 3 (Tmave)":       4.057,
-    "Kamenne pole":            1.840,
+    "Prusek":                  1.08,   # bylo 1.105
+    "Bily les":                1.10,   # bylo 1.172 – klic. snizeni biasu cest
+    "Bazina":                  1.35,   # bylo 1.317
+    "Voda":                    1.40,   # bylo 1.318
+    "Hustnik 1 (Svetly)":      1.650,  # nezmeneno
+    "Podrost (Srafy)":         1.55,   # bylo 1.800
+    "Hustnik 2 (Stredni)":     1.90,   # bylo 2.254
+    "Hustnik 3 (Tmave)":       3.00,   # bylo 4.057
+    "Kamenne pole":            1.75,   # bylo 1.840
     "Nepruchodna zed / plot":  9999.0,
     "Nepruchodna budova":      9999.0,
     "Nepruchodna voda":        9999.0,
@@ -177,6 +177,8 @@ kategorie = {k: [] for k in COST_DICT}
 contour_lines_raw = []   # pro vyskovy model
 text_objects_raw  = []   # popisky vrstevnic
 cesty_centerlines = []   # vektorove osy cest pro vizualni snap
+crossing_obstacles = []  # liniove prekazky s jednorázovou penalizaci (prikopy, srazy)
+# Format: {'geom': LineString, 'penalty_m': float} – penalizace v metrech ekvivalentu
 
 for obj in root.iter():
     tag = obj.tag.lower()
@@ -246,6 +248,12 @@ for obj in root.iter():
             # Ulozit puvodni centerline (pred bufferovanim) pro vizualni snap
             if ter_lin != "Nepruchodna zed / plot":
                 cesty_centerlines.append(pts)
+
+        # --- Liniove prekazky s jednorázovou penalizaci (krizovani) ---
+        # ISOM 112: vodní příkop (~20m ekviv.), 113: suchý příkop (~10m), 104: srázová linie (~25m)
+        if isom == '112':   crossing_obstacles.append({'geom': LineString(pts), 'penalty_m': 20.0})
+        elif isom == '113': crossing_obstacles.append({'geom': LineString(pts), 'penalty_m': 10.0})
+        elif isom == '104': crossing_obstacles.append({'geom': LineString(pts), 'penalty_m': 25.0})
 
     # --- Plošne objekty terenu ---
     if len(pts) >= 3:
@@ -363,6 +371,46 @@ if not skip_krok2:
     metadata = np.array([min_x, min_y, max_x, max_y, GRID_SIZE_M])
     np.save(cache_meta, metadata)
     print(f"   ✅ Cenova mrizka ulozena ({time.time()-t0:.0f}s).")
+
+# ============================================================
+# RASTERIZACE CROSSING OBSTACLES (prikopy, srazy)
+# ============================================================
+print(f"\n🚧 Rasterizuji {len(crossing_obstacles)} liniových překážek (příkopy/srázy)...")
+cache_crossing = os.path.join(cache_dir, "crossing_penalties.npy")
+crossing_grid = np.zeros((grid_h, grid_w), dtype=np.float32)
+
+for obs in crossing_obstacles:
+    geom = obs['geom']
+    pen  = obs['penalty_m']
+    if geom.is_empty:
+        continue
+    lines = [geom] if geom.geom_type == 'LineString' else list(geom.geoms)
+    for line in lines:
+        coords = np.array(line.coords)
+        if len(coords) < 2:
+            continue
+        for j in range(len(coords) - 1):
+            x1, y1 = coords[j]
+            x2, y2 = coords[j + 1]
+            gx1 = (x1 - min_x) / GRID_SIZE_M
+            gy1 = (y1 - min_y) / GRID_SIZE_M
+            gx2 = (x2 - min_x) / GRID_SIZE_M
+            gy2 = (y2 - min_y) / GRID_SIZE_M
+            dist = max(abs(gx2 - gx1), abs(gy2 - gy1))
+            n_steps = int(dist * 4) + 2
+            ts = np.linspace(0, 1, n_steps)
+            pxs = np.round(gx1 + ts * (gx2 - gx1)).astype(np.int32)
+            pys = np.round(gy1 + ts * (gy2 - gy1)).astype(np.int32)
+            valid = (pys >= 0) & (pys < grid_h) & (pxs >= 0) & (pxs < grid_w)
+            pys, pxs = pys[valid], pxs[valid]
+            # Přičítáme penalizaci (max, aby se nepřekrývaly - bereme tu horší)
+            np.maximum.at(crossing_grid, (pys, pxs), pen)
+
+np.save(cache_crossing, crossing_grid)
+n_nonzero = int(np.count_nonzero(crossing_grid))
+print(f"   ✅ Crossing grid uložen ({n_nonzero} buněk s penalizací).")
+
+
 
 
 # ============================================================

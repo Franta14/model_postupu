@@ -20,7 +20,7 @@ def vytvor_masku_elipsy(start, goal, h, w, rozsireni=0.45):
     mask = (dist_start + dist_goal) <= (dist_centers * (1.0 + rozsireni))
     return mask
 
-def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=5.0, direction='forward'):
+def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=5.0, direction='forward', crossing_grid=None):
     """
     Vektorizovana Dijkstra expanze pres celou povolenou oblast.
     """
@@ -62,16 +62,19 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=5
         if is_knight:
             mid_y = cy + (dy // 2)
             mid_x = cx + (dx // 2)
-            wall_check = grid[mid_y, mid_x] < 9000.0
+            mid_y2 = cy + (dy - dy // 2)
+            mid_x2 = cx + (dx - dx // 2)
+            # Kontrolujeme OBE stredni bunky rytirskych skoku (prev. pruchod stikem)
+            wall_check = (grid[mid_y, mid_x] < 9000.0) & (grid[mid_y2, mid_x2] < 9000.0)
             cy = cy[wall_check]
             cx = cx[wall_check]
             ny = ny[wall_check]
             nx = nx[wall_check]
             mid_y = mid_y[wall_check]
             mid_x = mid_x[wall_check]
-            terren_cost = grid[cy, cx] * 0.2 + grid[mid_y, mid_x] * 0.3 + grid[ny, nx] * 0.5
+            terren_cost = grid[cy, cx] * 0.5 + grid[ny, nx] * 0.5  # symetricky prumer
         else:
-            terren_cost = grid[cy, cx] * 0.35 + grid[ny, nx] * 0.65
+            terren_cost = grid[cy, cx] * 0.5 + grid[ny, nx] * 0.5  # symetricky prumer (bylo 0.35/0.65)
             
         valid_terren = terren_cost < 9000.0
         cy = cy[valid_terren]
@@ -121,6 +124,12 @@ def dijkstra_heatmap(grid, elev, source, mask, gs, nasobic_meritka, kopce_vaha=5
         hill_multiplier[down_mask] = hm_down
         
         final_cost = terren_cost * hill_multiplier * dist_m
+
+        # Additivni penalizace za krizovani liniove prekazky (prikop, sraz)
+        # Pridate se cena prekazky k cene hrany jako ekvivalentni metry
+        if crossing_grid is not None:
+            cross_pen = np.maximum(crossing_grid[cy, cx], crossing_grid[ny, nx])
+            final_cost = final_cost + cross_pen * nasobic_meritka
 
         u = cy * w + cx
         v = ny * w + nx
@@ -270,7 +279,7 @@ def penalizuj_grid(grid, trasa, sirka_px):
     zona[(Y - y_start)**2 + (X - x_start)**2 < ochranny_polomer**2] = False
     zona[(Y - y_cil)**2 + (X - x_cil)**2 < ochranny_polomer**2] = False
 
-    grid_pen[zona] *= 1.10
+    grid_pen[zona] *= 1.30  # bylo 1.10 - zvyseno pro generovani skutecne odlisnych alternativ
     return grid_pen
 
 

@@ -62,6 +62,15 @@ try:
 except FileNotFoundError:
     print("⚠️ Vektory cest nenalezeny, snap nebude aktivní. Spusťte setup_mapa.py.")
 
+# Crossing penalties (prikopy, srazy)
+crossing_grid = None
+crossing_path = os.path.join(cache_dir, "crossing_penalties.npy")
+if os.path.exists(crossing_path):
+    crossing_grid = np.load(crossing_path)
+    print(f"🚧 Crossing penalties načteny ({int(np.count_nonzero(crossing_grid))} buněk).")
+else:
+    print("⚠️ Crossing penalties nenalezeny, příkopy/srázy ignorovány.")
+
 def oom_to_grid(oom_x, oom_y):
     gx = (oom_x - min_x) / grid_size
     gy = (oom_y - min_y) / grid_size
@@ -330,7 +339,8 @@ for idx, (p1, p2, dist_m) in enumerate(candidates):
         dist_map, py, px = generator_engine.dijkstra_heatmap(
             penalized_grid, elev_grid,
             (p1['gy'], p1['gx']), mask, grid_size,
-            config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward'
+            config.NASOBIC_MERITKA, kopce_vaha=5.0, direction='forward',
+            crossing_grid=crossing_grid
         )
 
         route = generator_engine.trasuj_cestu(
