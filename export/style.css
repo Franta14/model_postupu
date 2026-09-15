@@ -239,44 +239,25 @@ body {
 /* EXPLORE SCREEN (IG Grid)                             */
 /* ==================================================== */
 
-.explore-search-container {
-  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+.explore-header {
+  padding: max(14px, env(safe-area-inset-top)) 16px 8px;
   background: var(--bg-color);
   position: sticky;
   top: 0;
   z-index: 10;
-}
-
-.explore-search-bar {
   display: flex;
   align-items: center;
-  background: var(--search-bg);
-  border-radius: 10px;
-  padding: 7px 12px;
-  gap: 6px;
+  justify-content: center;
 }
 
-.search-icon {
-  width: 16px;
-  height: 16px;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.explore-search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 14px;
+.explore-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: var(--text-primary);
-  font-family: inherit;
-  font-weight: 400;
-}
-
-.explore-search-input::placeholder {
-  color: var(--text-secondary);
-  font-weight: 400;
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .explore-stories {
@@ -712,6 +693,8 @@ body {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 #reels-container::-webkit-scrollbar {

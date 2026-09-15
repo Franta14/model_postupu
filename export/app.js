@@ -192,7 +192,7 @@ const i18n = {
         options: "Volby", aerial: "m vzdušně",
         bioDesc: "Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.",
         confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána.",
-        searchRoutes: "Hledat postupy...",
+        searchRoutes: "Hledat postupy...", terrains: "Terény",
         tutSwipe: "Potáhni nahoru pro další", tutLike: "Dvojklik pro To se mi líbí",
         tutOptions: "Klikni na Volby pro srovnání", tutBtn: "Rozumím!"
     },
@@ -207,7 +207,7 @@ const i18n = {
         options: "Options", aerial: "m aerial",
         bioDesc: "Here you can find all your favorite route choices from training and races.",
         confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared.",
-        searchRoutes: "Search routes...",
+        searchRoutes: "Search routes...", terrains: "Terrains",
         tutSwipe: "Swipe up for next route", tutLike: "Double tap to like",
         tutOptions: "Click Options for comparisons", tutBtn: "Got it!"
     }
@@ -234,6 +234,10 @@ function getAdjustedTime(baseSeconds) {
 }
 
 function updateUITexts() {
+    const exploreTitle = document.getElementById('explore-header-title');
+    if (exploreTitle) {
+        exploreTitle.textContent = t('terrains');
+    }
     const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"], input[placeholder*="Hledat"], input[placeholder*="Search"]');
     searchInputs.forEach(input => {
         input.placeholder = t('searchRoutes');
@@ -1467,6 +1471,7 @@ function loadData() {
         renderProfileSaved();
         renderChatScreen(); // Předgenerujeme chat screen
         updateUITexts();
+        prefetchGeojsons();
 
         setTimeout(() => {
             const loader = document.getElementById('loader');
@@ -1514,11 +1519,6 @@ function renderSettings() {
     screen.innerHTML = `
         <div class="screen-header"><h2>${t('settings')} a aktivita</h2></div>
         <div class="screen-content ig-settings-content">
-            <div class="ig-settings-search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" placeholder="${t('searchRoutes')}">
-            </div>
-            
             <div class="ig-settings-section-title">${t('runner')}</div>
             <div class="ig-setting-row" onclick="openPaceModal()">
                 <div class="ig-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
@@ -1729,27 +1729,58 @@ function buildReels() {
     });
 }
 
+function prefetchGeojsons() {
+    if (!postupyData) return;
+    const vStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    postupyData.forEach(p => {
+        if (p.file && !geojsonCache[p.file]) {
+            fetch('postupy/' + p.file + vStr)
+                .then(res => res.json())
+                .then(data => {
+                    geojsonCache[p.file] = data;
+                })
+                .catch(e => console.warn("Prefetch geojson error", e));
+        }
+    });
+}
+
 let reelObserver = null;
+let preloadObserver = null;
 let activationTimeout = null;
 
 function setupObserver() {
     if (reelObserver) reelObserver.disconnect();
+    if (preloadObserver) preloadObserver.disconnect();
     const rc = document.getElementById('reels-container');
     if (!rc) return;
 
-    // Observer už nespouští zpožděné centrování do zdi.
+    // 1. Observer pro okamžitý předstihový preload (1.5 výšky obrazovky dopředu i dozadu)
+    let preloadOptions = { root: rc, rootMargin: '150% 0px 150% 0px', threshold: 0.01 };
+    preloadObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.target.style.display !== 'none') {
+                const index = parseInt(entry.target.dataset.index);
+                preloadReel(index);
+            }
+        });
+    }, preloadOptions);
+
+    // 2. Observer pro aktivaci přehrávaného postupu
     let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
                 if (activationTimeout) clearTimeout(activationTimeout);
-                activationTimeout = setTimeout(() => { activateReel(index); }, 150);
+                activationTimeout = setTimeout(() => { activateReel(index); }, 60);
             }
         });
     }, options);
 
-    document.querySelectorAll('.reel').forEach(reel => reelObserver.observe(reel));
+    document.querySelectorAll('.reel').forEach(reel => {
+        reelObserver.observe(reel);
+        preloadObserver.observe(reel);
+    });
 }
 
 let showVariantsForIndex = {};
@@ -1876,23 +1907,77 @@ function activateReel(index) {
         activeIndex = index;
     }
     preloadReel(index);
+    preloadAllVisibleReels(index);
+    const activeMap = mapInstances[index];
+    if (activeMap) {
+        activeMap.invalidateSize({ animate: false });
+    }
 }
 
+let pendingLoads = {};
+
 function preloadReel(i) {
-    if (i < 0 || i >= postupyData.length) return;
+    if (i < 0 || i >= postupyData.length) return Promise.resolve();
+    if (currentLayers[i]) return Promise.resolve();
+    if (pendingLoads[i]) return pendingLoads[i];
+
     if (!mapInstances[i]) initMapForReel(i);
     const postup = postupyData[i];
+    if (!postup) return Promise.resolve();
+
     if (geojsonCache[postup.file]) {
         if (!currentLayers[i]) renderMapData(i, geojsonCache[postup.file]);
-    } else {
-        fetch('postupy/' + postup.file + '?v=' + Date.now())
-            .then(res => res.json())
-            .then(geojson => {
-                geojsonCache[postup.file] = geojson;
-                if (!currentLayers[i]) renderMapData(i, geojson);
-            })
-            .catch(err => console.warn("GeoJSON load error:", err));
+        return Promise.resolve();
     }
+
+    const versionStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    pendingLoads[i] = fetch('postupy/' + postup.file + versionStr)
+        .then(res => res.json())
+        .then(geojson => {
+            geojsonCache[postup.file] = geojson;
+            if (!currentLayers[i]) renderMapData(i, geojson);
+            delete pendingLoads[i];
+        })
+        .catch(err => {
+            console.warn("GeoJSON load error:", err);
+            delete pendingLoads[i];
+        });
+
+    return pendingLoads[i];
+}
+
+function preloadAllVisibleReels(currentIndex) {
+    const visibleReels = Array.from(document.querySelectorAll('.reel'))
+        .filter(r => r.style.display !== 'none')
+        .map(r => parseInt(r.dataset.index));
+    if (visibleReels.length === 0) return;
+
+    let pos = visibleReels.indexOf(Number(currentIndex));
+    if (pos === -1) pos = 0;
+
+    // Priorita 1: Okamžitě přednačíst následující postup (viditelný už během scrollu)
+    if (pos + 1 < visibleReels.length) {
+        preloadReel(visibleReels[pos + 1]);
+    }
+    // Priorita 2: Předchozí postup (pro okamžitý návrat zpět)
+    if (pos - 1 >= 0) {
+        preloadReel(visibleReels[pos - 1]);
+    }
+    // Priorita 3: Další v pořadí (+2 dopředu)
+    if (pos + 2 < visibleReels.length) {
+        setTimeout(() => preloadReel(visibleReels[pos + 2]), 40);
+    }
+
+    // Priorita 4: Postupně v pozadí načíst všechny zbývající z dané mapy
+    let delay = 80;
+    visibleReels.forEach(idx => {
+        if (!currentLayers[idx]) {
+            setTimeout(() => {
+                preloadReel(idx);
+            }, delay);
+            delay += 60;
+        }
+    });
 }
 
 const originalSetView = L.GridLayer.prototype._setView;
