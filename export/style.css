@@ -1632,10 +1632,6 @@ body.chat-mode-active #saved-mode-header {
   image-rendering: crisp-edges;
 }
 
-image-rendering: -webkit-optimize-contrast;
-image-rendering: crisp-edges;
-}
-
 /* Akční tlačítka u sdíleného postupu v chatu (IG styl) */
 .chat-share-actions {
   display: flex;
@@ -1643,11 +1639,12 @@ image-rendering: crisp-edges;
   gap: 8px;
   align-self: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .chat-action-circle {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background-color: var(--search-bg, #efefef);
   border: none;
@@ -1674,11 +1671,11 @@ image-rendering: crisp-edges;
 }
 
 .chat-action-circle svg {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
   display: block;
 }
 
 .chat-action-circle.bookmarked {
   color: var(--text-color, #000000);
-}
+}

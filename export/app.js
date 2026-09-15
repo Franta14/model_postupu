@@ -430,6 +430,12 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .ig-reel-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
 .ig-reel-card:active { transform: scale(0.97); }
 .ig-reel-card img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+.chat-share-actions { display: flex; flex-direction: column; gap: 8px; align-self: center; justify-content: center; }
+.chat-action-circle { width: 34px; height: 34px; border-radius: 50%; background-color: var(--search-bg, #efefef); border: none; outline: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-color, #000); padding: 0; transition: transform 0.12s ease, background-color 0.15s ease; -webkit-tap-highlight-color: transparent; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.chat-action-circle:hover { transform: scale(1.08); background-color: var(--border-color, #dbdbdb); }
+.chat-action-circle:active { transform: scale(0.92); }
+.chat-action-circle svg { width: 17px; height: 17px; display: block; }
+.chat-action-circle.bookmarked { color: var(--text-color, #000); }
 
 
 .conv-input { padding: 10px 16px 20px; background: var(--bg-color); display: flex; gap: 8px; border-top: 0.5px solid var(--border-color); align-items: center; }
@@ -964,7 +970,8 @@ function openChatConversation(name) {
             msgsEl.innerHTML = '';
             snapshot.forEach(doc => {
                 const data = doc.data();
-                const isMe = currentUser && data.authorUid === currentUser.uid;
+                const myLocalName = localStorage.getItem('profile_username') || 'franta14_';
+                const isMe = (currentUser && data.authorUid === currentUser.uid) || (!currentUser && (data.authorUid === 'anon' || data.authorName === myLocalName));
                 const bubbleClass = isMe ? 'msg-outgoing' : 'msg-incoming';
 
                 if (data.type === 'shared_route') {
@@ -991,28 +998,28 @@ function openChatConversation(name) {
                     let postupIdStr = postupObj ? String(postupObj.id || (targetIndex + 1)) : String(targetIndex + 1);
                     let isBookmarked = savedStrings.includes(postupIdStr);
 
-                    let bookmarkClass = isBookmarked ? 'chat-action-btn bookmark-btn bookmarked' : 'chat-action-btn bookmark-btn';
+                    let bookmarkClass = isBookmarked ? 'chat-action-circle bookmark-btn bookmarked' : 'chat-action-circle bookmark-btn';
                     let bookmarkSvg = isBookmarked
-                        ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
-                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+                        ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px; height:17px; display:block;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
+                        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px; height:17px; display:block;"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
 
                     let flexDir = isMe ? 'row-reverse' : 'row';
 
                     msgsEl.innerHTML += `
-                        <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none; display:flex; flex-direction:${flexDir}; align-items:flex-end; gap:8px;">
-                            <div style="display:flex; flex-direction:column; align-items:${isMe ? 'flex-end' : 'flex-start'};">
-                                ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500; margin-left: 4px;">${data.authorName}</div>` : ''}
+                        <div class="msg-bubble ${bubbleClass}" style="background:transparent; border:none; padding:0; box-shadow:none; display:flex; flex-direction:column; align-items:${isMe ? 'flex-end' : 'flex-start'};">
+                            ${!isMe ? `<div style="font-size: 0.75rem; margin-bottom: 3px; opacity: 0.7; color:var(--text-color); font-weight: 500; margin-left: 4px;">${data.authorName}</div>` : ''}
+                            <div style="display:flex; flex-direction:${flexDir}; align-items:center; gap:8px;">
                                 <div class="ig-reel-card" onclick="openSharedRoute('${data.mapId || 'homolka'}', ${targetIndex !== undefined ? targetIndex : -1}, event)">
                                     <img src="${shareImg}" alt="${rName}" onerror="this.onerror=null; this.src='${fallbackImg}';">
                                 </div>
-                            </div>
-                            <div class="chat-share-actions" style="display:flex; flex-direction:column; gap:4px; margin-bottom:4px; align-self:flex-end;">
-                                <button class="${bookmarkClass}" onclick="event.stopPropagation(); toggleBookmark(${targetIndex}, this)" style="background:none; border:none; color:var(--text-color); padding:6px; cursor:pointer; opacity:0.8; outline:none; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center;">
-                                    ${bookmarkSvg}
-                                </button>
-                                <button class="chat-action-btn share-btn" onclick="event.stopPropagation(); sharePostup(${targetIndex})" style="background:none; border:none; color:var(--text-color); padding:6px; cursor:pointer; opacity:0.8; outline:none; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center;">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                </button>
+                                <div class="chat-share-actions" style="display:flex; flex-direction:column; gap:8px; align-self:center; justify-content:center; flex-shrink:0;">
+                                    <button class="chat-action-circle share-btn" onclick="event.stopPropagation(); sharePostup(${targetIndex})" title="Sdílet" style="width:34px; height:34px; border-radius:50%; background-color:var(--search-bg, #efefef); border:none; outline:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-color, #000); padding:0; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.08); -webkit-tap-highlight-color:transparent;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px; height:17px; margin-left:-1px; margin-top:1px; display:block;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                    </button>
+                                    <button class="${bookmarkClass}" onclick="event.stopPropagation(); toggleBookmark(${targetIndex}, this)" title="Uložit" style="width:34px; height:34px; border-radius:50%; background-color:var(--search-bg, #efefef); border:none; outline:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-color, #000); padding:0; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.08); -webkit-tap-highlight-color:transparent;">
+                                        ${bookmarkSvg}
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                 } else {

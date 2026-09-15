@@ -4,8 +4,14 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
     protocol_version = "HTTP/1.1" # Enables Keep-Alive
     
     def end_headers(self):
-        # Force aggressive caching for 1 year
-        self.send_header('Cache-Control', 'public, max-age=31536000')
+        # Cache tiles and thumbs, but no-cache for HTML, JS, CSS and service worker
+        path_clean = self.path.split('?')[0]
+        if path_clean.endswith(('.html', '.js', '.css')) or path_clean.endswith('/') or 'sw.js' in path_clean:
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        else:
+            self.send_header('Cache-Control', 'public, max-age=31536000')
         super().end_headers()
 
 if __name__ == '__main__':
