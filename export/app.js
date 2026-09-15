@@ -2908,38 +2908,40 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
             }
         }
 
-        // Double RAF zaručí vykreslení počáteční pozice (100%) a plynulý přejezd doleva na (0)
-        requestAnimationFrame(() => {
+        // 50ms delay pro vykreslení Leaflet DOMu a SVG bez blokování animace
+        setTimeout(() => {
             requestAnimationFrame(() => {
-                screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-                screenScroll.style.transform = 'translateX(0)';
-                if (fromChat && bottomNav) {
-                    bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-                    bottomNav.style.transform = 'translateX(0)';
-                }
-
-                setTimeout(() => {
-                    screenScroll.style.transition = '';
-                    screenScroll.style.transform = '';
-                    if (bottomNav) {
-                        bottomNav.style.transition = '';
-                        bottomNav.style.transform = '';
+                requestAnimationFrame(() => {
+                    screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                    screenScroll.style.transform = 'translateX(0)';
+                    if (fromChat && bottomNav) {
+                        bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+                        bottomNav.style.transform = 'translateX(0)';
                     }
 
-                    isNavigatingFeed = false;
-                    const finalActiveMap = mapInstances[firstVisibleIndex];
-                    if (finalActiveMap) {
-                        finalActiveMap.invalidateSize({ animate: false });
-                    }
-                    // Po zklidnění animace přednačteme bezprostřední sousedy
                     setTimeout(() => {
-                        if (!isClosingChatFeed) {
-                            preloadAllVisibleReels(firstVisibleIndex);
+                        screenScroll.style.transition = '';
+                        screenScroll.style.transform = '';
+                        if (bottomNav) {
+                            bottomNav.style.transition = '';
+                            bottomNav.style.transform = '';
                         }
-                    }, 120);
-                }, 300);
+
+                        isNavigatingFeed = false;
+                        const finalActiveMap = mapInstances[firstVisibleIndex];
+                        if (finalActiveMap) {
+                            finalActiveMap.invalidateSize({ animate: false });
+                        }
+                        // Po zklidnění animace přednačteme bezprostřední sousedy
+                        setTimeout(() => {
+                            if (!isClosingChatFeed) {
+                                preloadAllVisibleReels(firstVisibleIndex);
+                            }
+                        }, 120);
+                    }, 300);
+                });
             });
-        });
+        }, 50);
     } else if (screenScroll) {
         screenScroll.style.transition = '';
         screenScroll.style.transform = '';
