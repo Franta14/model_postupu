@@ -1105,6 +1105,14 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
             bottomNav.style.transition = '';
         }
 
+        Object.keys(mapInstances).forEach(idx => {
+            if (mapInstances[idx]) {
+                mapInstances[idx].remove();
+                delete mapInstances[idx];
+                currentLayers[idx] = null;
+            }
+        });
+
         isClosingChatFeed = false;
         isNavigatingFeed = false;
     };
@@ -2809,7 +2817,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 
         if (fromChat) {
             if (specificIndex !== undefined && Number(specificIndex) >= 0) {
-                isMatch = (mIndex === Number(specificIndex)) || (postup && postup.map_id === targetMapId);
+                isMatch = (mIndex === Number(specificIndex));
             }
         }
 
@@ -2979,6 +2987,14 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
             screenScroll.classList.remove('slide-out-right');
             screenScroll.classList.remove('slide-in-right');
         }
+
+        Object.keys(mapInstances).forEach(idx => {
+            if (mapInstances[idx]) {
+                mapInstances[idx].remove();
+                delete mapInstances[idx];
+                currentLayers[idx] = null;
+            }
+        });
 
         isClosingChatFeed = false;
         isNavigatingFeed = false;
