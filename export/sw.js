@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scrollienteering-v28';
+const CACHE_NAME = 'scrollienteering-v30';
 
 self.addEventListener('install', event => {
     // Instalace proběhne rychle, nebudeme čekat na obří preload
@@ -24,7 +24,7 @@ self.addEventListener('activate', event => {
 // Rozdělená strategie: Dlaždice Cache-First, Zbytek Network-First
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
-    
+
     const url = new URL(event.request.url);
 
     // 1. Dlaždice, data postupů a náhledy (thumbs) - Cache First (nikdy se nemění bez změny verze v query parametru)
@@ -40,10 +40,10 @@ self.addEventListener('fetch', event => {
                         });
                     }
                     return networkResponse;
-                }).catch(() => {});
+                }).catch(() => { });
             })
         );
-    } 
+    }
     // 2. Aplikace (HTML, CSS, JS) - Network First s 'no-cache' (vynutí čerstvou verzi)
     else {
         event.respondWith(

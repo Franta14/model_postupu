@@ -47,6 +47,7 @@
     opacity: 0;
     transform: scale(0.8);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -238,23 +239,44 @@ body {
 /* EXPLORE SCREEN (IG Grid)                             */
 /* ==================================================== */
 
-.explore-header {
-  padding: max(12px, env(safe-area-inset-top)) 16px 4px;
+.explore-search-container {
+  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
   background: var(--bg-color);
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
-  align-items: center;
 }
 
-.explore-title {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.6px;
+.explore-search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--search-bg);
+  border-radius: 10px;
+  padding: 7px 12px;
+  gap: 6px;
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.explore-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
   color: var(--text-primary);
-  margin: 0;
-  line-height: 1.2;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.explore-search-input::placeholder {
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .explore-stories {
@@ -690,8 +712,6 @@ body {
   scroll-snap-type: y mandatory;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
 }
 
 #reels-container::-webkit-scrollbar {
@@ -1521,6 +1541,7 @@ body.chat-mode-active #screen-scroll {
   background: var(--bg-color);
   box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
 }
+
 body.chat-mode-active #bottom-nav {
   z-index: 10015;
   display: flex !important;
@@ -1609,4 +1630,55 @@ body.chat-mode-active #saved-mode-header {
   display: block;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+}
+
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+}
+
+/* Akční tlačítka u sdíleného postupu v chatu (IG styl) */
+.chat-share-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: center;
+  justify-content: center;
+}
+
+.chat-action-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--search-bg, #efefef);
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-color, #000000);
+  padding: 0;
+  transition: transform 0.12s ease, background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.chat-action-circle:hover {
+  transform: scale(1.08);
+  background-color: var(--border-color, #dbdbdb);
+}
+
+.chat-action-circle:active {
+  transform: scale(0.92);
+}
+
+.chat-action-circle svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.chat-action-circle.bookmarked {
+  color: var(--text-color, #000000);
 }
