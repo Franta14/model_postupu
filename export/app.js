@@ -1079,7 +1079,7 @@ function openSharedRoute(mapId, targetIndex, event) {
 }
 
 function closeChatFeed(isAlreadyAnimatedOut = false) {
-    if (isClosingChatFeed) return;
+    if (isClosingChatFeed && !isAlreadyAnimatedOut) return;
     isClosingChatFeed = true;
     isNavigatingFeed = true;
 
@@ -1411,10 +1411,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
-            if (document.body.classList.contains('chat-mode-active')) {
-                isClosingChatFeed = true;
-                isNavigatingFeed = true;
-            }
+            isClosingChatFeed = true;
+            isNavigatingFeed = true;
             screenScrollEl.style.transform = 'translateX(100%)';
             if (document.body.classList.contains('chat-mode-active') && bottomNav) {
                 bottomNav.style.transform = 'translateX(100%)';
@@ -2875,6 +2873,10 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
         }
 
         screenScroll.classList.add('active');
+        if (fromChat && bottomNav) {
+            bottomNav.style.display = 'flex';
+        }
+        void screenScroll.offsetWidth;
 
         if (targetReel && reelsContainer) {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
@@ -2952,7 +2954,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 }
 
 function closeSavedFeed(isAlreadyAnimatedOut = false) {
-    if (isClosingChatFeed) return;
+    if (isClosingChatFeed && !isAlreadyAnimatedOut) return;
     isClosingChatFeed = true;
     isNavigatingFeed = true;
 
