@@ -15,7 +15,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg">
 
-    <link rel="stylesheet" href="style.css?v=42" />
+    <link rel="stylesheet" href="style.css?v=44" />
     <link rel="preload" as="image" href="logo.png">
 
     <script>
@@ -78,15 +78,8 @@
 
     <main id="app-content">
         <div id="screen-explore" class="app-screen active">
-            <div class="explore-search-container">
-                <div class="explore-search-bar">
-                    <svg viewBox="0 0 24 24" class="search-icon" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5" fill="none" />
-                        <line x1="16" y1="16" x2="21" y2="21" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" />
-                    </svg>
-                    <input type="text" placeholder="Hledat postupy..." class="explore-search-input">
-                </div>
+            <div class="explore-header">
+                <h1 class="explore-title" id="explore-header-title">Terény</h1>
             </div>
 
             <div class="explore-stories">
@@ -490,7 +483,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-    <script src="app.js?v=42"></script>
+    <script src="app.js?v=44"></script>
 </body>
 
 </html>

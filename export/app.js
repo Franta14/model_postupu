@@ -192,7 +192,7 @@ const i18n = {
         options: "Volby", aerial: "m vzdušně",
         bioDesc: "Zde najdeš všechny své oblíbené volby postupů z tréninků a závodů.",
         confirmClear: "Opravdu chceš vymazat uložené offline mapy?", cacheCleared: "Cache byla vymazána.",
-        searchRoutes: "Hledat postupy...",
+        searchRoutes: "Hledat postupy...", terrains: "Terény",
         tutSwipe: "Potáhni nahoru pro další", tutLike: "Dvojklik pro To se mi líbí",
         tutOptions: "Klikni na Volby pro srovnání", tutBtn: "Rozumím!"
     },
@@ -207,7 +207,7 @@ const i18n = {
         options: "Options", aerial: "m aerial",
         bioDesc: "Here you can find all your favorite route choices from training and races.",
         confirmClear: "Do you really want to clear offline maps?", cacheCleared: "Cache cleared.",
-        searchRoutes: "Search routes...",
+        searchRoutes: "Search routes...", terrains: "Terrains",
         tutSwipe: "Swipe up for next route", tutLike: "Double tap to like",
         tutOptions: "Click Options for comparisons", tutBtn: "Got it!"
     }
@@ -234,6 +234,10 @@ function getAdjustedTime(baseSeconds) {
 }
 
 function updateUITexts() {
+    const exploreTitle = document.getElementById('explore-header-title');
+    if (exploreTitle) {
+        exploreTitle.textContent = t('terrains');
+    }
     const searchInputs = document.querySelectorAll('input[type="search"], input[type="text"], input[placeholder*="Hledat"], input[placeholder*="Search"]');
     searchInputs.forEach(input => {
         input.placeholder = t('searchRoutes');
@@ -1460,6 +1464,7 @@ function loadData() {
         renderProfileSaved();
         renderChatScreen(); // Předgenerujeme chat screen
         updateUITexts();
+        prefetchGeojsons();
 
         setTimeout(() => {
             const loader = document.getElementById('loader');
@@ -1722,27 +1727,58 @@ function buildReels() {
     });
 }
 
+function prefetchGeojsons() {
+    if (!postupyData) return;
+    const vStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    postupyData.forEach(p => {
+        if (p.file && !geojsonCache[p.file]) {
+            fetch('postupy/' + p.file + vStr)
+                .then(res => res.json())
+                .then(data => {
+                    geojsonCache[p.file] = data;
+                })
+                .catch(e => console.warn("Prefetch geojson error", e));
+        }
+    });
+}
+
 let reelObserver = null;
+let preloadObserver = null;
 let activationTimeout = null;
 
 function setupObserver() {
     if (reelObserver) reelObserver.disconnect();
+    if (preloadObserver) preloadObserver.disconnect();
     const rc = document.getElementById('reels-container');
     if (!rc) return;
 
-    // Observer už nespouští zpožděné centrování do zdi.
+    // 1. Observer pro okamžitý předstihový preload (1.5 výšky obrazovky dopředu i dozadu)
+    let preloadOptions = { root: rc, rootMargin: '150% 0px 150% 0px', threshold: 0.01 };
+    preloadObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && entry.target.style.display !== 'none') {
+                const index = parseInt(entry.target.dataset.index);
+                preloadReel(index);
+            }
+        });
+    }, preloadOptions);
+
+    // 2. Observer pro aktivaci přehrávaného postupu
     let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
                 if (activationTimeout) clearTimeout(activationTimeout);
-                activationTimeout = setTimeout(() => { activateReel(index); }, 150);
+                activationTimeout = setTimeout(() => { activateReel(index); }, 60);
             }
         });
     }, options);
 
-    document.querySelectorAll('.reel').forEach(reel => reelObserver.observe(reel));
+    document.querySelectorAll('.reel').forEach(reel => {
+        reelObserver.observe(reel);
+        preloadObserver.observe(reel);
+    });
 }
 
 let showVariantsForIndex = {};
@@ -1869,23 +1905,77 @@ function activateReel(index) {
         activeIndex = index;
     }
     preloadReel(index);
+    preloadAllVisibleReels(index);
+    const activeMap = mapInstances[index];
+    if (activeMap) {
+        activeMap.invalidateSize({ animate: false });
+    }
 }
 
+let pendingLoads = {};
+
 function preloadReel(i) {
-    if (i < 0 || i >= postupyData.length) return;
+    if (i < 0 || i >= postupyData.length) return Promise.resolve();
+    if (currentLayers[i]) return Promise.resolve();
+    if (pendingLoads[i]) return pendingLoads[i];
+
     if (!mapInstances[i]) initMapForReel(i);
     const postup = postupyData[i];
+    if (!postup) return Promise.resolve();
+
     if (geojsonCache[postup.file]) {
         if (!currentLayers[i]) renderMapData(i, geojsonCache[postup.file]);
-    } else {
-        fetch('postupy/' + postup.file + '?v=' + Date.now())
-            .then(res => res.json())
-            .then(geojson => {
-                geojsonCache[postup.file] = geojson;
-                if (!currentLayers[i]) renderMapData(i, geojson);
-            })
-            .catch(err => console.warn("GeoJSON load error:", err));
+        return Promise.resolve();
     }
+
+    const versionStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    pendingLoads[i] = fetch('postupy/' + postup.file + versionStr)
+        .then(res => res.json())
+        .then(geojson => {
+            geojsonCache[postup.file] = geojson;
+            if (!currentLayers[i]) renderMapData(i, geojson);
+            delete pendingLoads[i];
+        })
+        .catch(err => {
+            console.warn("GeoJSON load error:", err);
+            delete pendingLoads[i];
+        });
+
+    return pendingLoads[i];
+}
+
+function preloadAllVisibleReels(currentIndex) {
+    const visibleReels = Array.from(document.querySelectorAll('.reel'))
+        .filter(r => r.style.display !== 'none')
+        .map(r => parseInt(r.dataset.index));
+    if (visibleReels.length === 0) return;
+
+    let pos = visibleReels.indexOf(Number(currentIndex));
+    if (pos === -1) pos = 0;
+
+    // Priorita 1: Okamžitě přednačíst následující postup (viditelný už během scrollu)
+    if (pos + 1 < visibleReels.length) {
+        preloadReel(visibleReels[pos + 1]);
+    }
+    // Priorita 2: Předchozí postup (pro okamžitý návrat zpět)
+    if (pos - 1 >= 0) {
+        preloadReel(visibleReels[pos - 1]);
+    }
+    // Priorita 3: Další v pořadí (+2 dopředu)
+    if (pos + 2 < visibleReels.length) {
+        setTimeout(() => preloadReel(visibleReels[pos + 2]), 40);
+    }
+
+    // Priorita 4: Postupně v pozadí načíst všechny zbývající z dané mapy
+    let delay = 80;
+    visibleReels.forEach(idx => {
+        if (!currentLayers[idx]) {
+            setTimeout(() => {
+                preloadReel(idx);
+            }, delay);
+            delay += 60;
+        }
+    });
 }
 
 const originalSetView = L.GridLayer.prototype._setView;
@@ -2937,9 +3027,8 @@ function renderExploreGrid() {
             <div class="animated-map-drift" ${driftStyle}>
                 <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast;" loading="lazy">
             </div>
-            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 70%, transparent 100%); color:#fff; font-size:13px; padding:12px 8px 8px 8px; box-sizing:border-box; z-index: 1000;">
-                <div style="font-weight:700; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${group.map_name}</div>
-                <div style="font-size:10px; font-weight:600; color:#ddd; margin-top:2px;">${countText}</div>
+            <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%); color:#fff; padding:12px 8px 6px 8px; box-sizing:border-box; z-index: 10; pointer-events:none;">
+                <div style="font-size:11px; font-weight:600; color:#fff; text-shadow: 0 1px 2px rgba(0,0,0,0.85);">${countText}</div>
             </div>
         `;
         el.addEventListener('click', () => openFeed(group.map_id, false));
