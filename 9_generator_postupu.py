@@ -58,18 +58,18 @@ try:
                 gy = (oy - min_y) / grid_size
                 pts_grid.append((gx, gy))  # Shapely: (x, y)
             road_lines_grid.append(LineString(pts_grid))
-    print(f"📏 Načteno {len(road_lines_grid)} vektorových os cest pro vizuální snap.")
+    print(f"[Cesty] Nacteno {len(road_lines_grid)} vektorovych os cest pro vizualni snap.")
 except FileNotFoundError:
-    print("⚠️ Vektory cest nenalezeny, snap nebude aktivní. Spusťte setup_mapa.py.")
+    print("[!] Vektory cest nenalezeny, snap nebude aktivni. Spustte setup_mapa.py.")
 
 # Crossing penalties (prikopy, srazy)
 crossing_grid = None
 crossing_path = os.path.join(cache_dir, "crossing_penalties.npy")
 if os.path.exists(crossing_path):
     crossing_grid = np.load(crossing_path)
-    print(f"🚧 Crossing penalties načteny ({int(np.count_nonzero(crossing_grid))} buněk).")
+    print(f"[Crossing] Penalties nacteny ({int(np.count_nonzero(crossing_grid))} bunek).")
 else:
-    print("⚠️ Crossing penalties nenalezeny, příkopy/srázy ignorovány.")
+    print("[!] Crossing penalties nenalezeny, prikopy/srazy ignorovany.")
 
 def oom_to_grid(oom_x, oom_y):
     gx = (oom_x - min_x) / grid_size
