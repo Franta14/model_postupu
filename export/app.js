@@ -1107,9 +1107,13 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
 
         Object.keys(mapInstances).forEach(idx => {
             if (mapInstances[idx]) {
+                const mc = mapInstances[idx].getContainer();
                 mapInstances[idx].remove();
+                if (mc) mc._leaflet_id = null;
                 delete mapInstances[idx];
                 currentLayers[idx] = null;
+                if (typeof currentTileLayers !== 'undefined') currentTileLayers[idx] = null;
+                if (typeof currentOverlays !== 'undefined') currentOverlays[idx] = null;
             }
         });
 
@@ -2992,9 +2996,13 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
 
         Object.keys(mapInstances).forEach(idx => {
             if (mapInstances[idx]) {
+                const mc = mapInstances[idx].getContainer();
                 mapInstances[idx].remove();
+                if (mc) mc._leaflet_id = null;
                 delete mapInstances[idx];
                 currentLayers[idx] = null;
+                if (typeof currentTileLayers !== 'undefined') currentTileLayers[idx] = null;
+                if (typeof currentOverlays !== 'undefined') currentOverlays[idx] = null;
             }
         });
 
