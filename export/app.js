@@ -1327,14 +1327,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let screenScrollEl = null;
 
     window.addEventListener('touchstart', e => {
-        if (!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) return;
+        let isScreenScrollActive = document.body.classList.contains('saved-mode-active') || document.body.classList.contains('chat-mode-active');
+        let isChatConvOnlyActive = !isScreenScrollActive && document.getElementById('chat-conversation') && document.getElementById('chat-conversation').classList.contains('active');
+        
+        if (!isScreenScrollActive && !isChatConvOnlyActive) return;
         if (isClosingChatFeed || isNavigatingFeed) return;
         if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isSwiping = false;
             gestureDetermined = false;
-            screenScrollEl = document.getElementById('screen-scroll');
+            screenScrollEl = isScreenScrollActive ? document.getElementById('screen-scroll') : document.getElementById('chat-conversation');
             if (screenScrollEl) {
                 screenScrollEl.style.transition = 'none';
             }
@@ -1349,7 +1352,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }, { passive: true, capture: true });
 
     window.addEventListener('touchmove', e => {
-        if ((!document.body.classList.contains('saved-mode-active') && !document.body.classList.contains('chat-mode-active')) || !screenScrollEl) return;
+        let isScreenScrollActive = document.body.classList.contains('saved-mode-active') || document.body.classList.contains('chat-mode-active');
+        let isChatConvOnlyActive = !isScreenScrollActive && document.getElementById('chat-conversation') && document.getElementById('chat-conversation').classList.contains('active');
+        
+        if ((!isScreenScrollActive && !isChatConvOnlyActive) || !screenScrollEl) return;
         if (isClosingChatFeed || isNavigatingFeed) return;
         if (e.touches.length !== 1) {
             if (isSwiping) {
@@ -1382,7 +1388,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.stopPropagation();
             let currentX = Math.max(0, deltaX);
             screenScrollEl.style.transform = `translate3d(${currentX}px, 0, 0)`;
-            if (document.body.classList.contains('chat-mode-active')) {
+            if (isScreenScrollActive && document.body.classList.contains('chat-mode-active')) {
                 const bottomNav = document.getElementById('bottom-nav');
                 if (bottomNav) bottomNav.style.transform = `translate3d(${currentX}px, 0, 0)`;
             }
@@ -1404,41 +1410,53 @@ document.addEventListener("DOMContentLoaded", () => {
         let changedTouch = e.changedTouches ? e.changedTouches[0] : null;
         let deltaX = changedTouch ? changedTouch.clientX - startX : 0;
 
+        let isScreenScrollActive = document.body.classList.contains('saved-mode-active') || document.body.classList.contains('chat-mode-active');
+        let isChatConvOnlyActive = !isScreenScrollActive && document.getElementById('chat-conversation') && document.getElementById('chat-conversation').classList.contains('active');
+
         screenScrollEl.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
         const bottomNav = document.getElementById('bottom-nav');
-        if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+        if (isScreenScrollActive && document.body.classList.contains('chat-mode-active') && bottomNav) {
             bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
         }
 
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
-            isClosingChatFeed = true;
-            isNavigatingFeed = true;
-            screenScrollEl.style.transform = 'translate3d(100%, 0, 0)';
-            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
-                bottomNav.style.transform = 'translate3d(100%, 0, 0)';
+            if (isChatConvOnlyActive) {
+                screenScrollEl.style.transform = 'translate3d(100%, 0, 0)';
+                setTimeout(() => {
+                    closeChatConversation();
+                    screenScrollEl.style.transform = '';
+                    screenScrollEl.style.transition = '';
+                }, 280);
+            } else {
+                isClosingChatFeed = true;
+                isNavigatingFeed = true;
+                screenScrollEl.style.transform = 'translate3d(100%, 0, 0)';
+                if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+                    bottomNav.style.transform = 'translate3d(100%, 0, 0)';
+                }
+                setTimeout(() => {
+                    if (document.body.classList.contains('chat-mode-active')) {
+                        closeChatFeed(true);
+                    } else {
+                        closeSavedFeed(true);
+                    }
+                    screenScrollEl.style.transform = '';
+                    screenScrollEl.style.transition = '';
+                    if (bottomNav) {
+                        bottomNav.style.transform = '';
+                        bottomNav.style.transition = '';
+                    }
+                }, 280);
             }
-            setTimeout(() => {
-                if (document.body.classList.contains('chat-mode-active')) {
-                    closeChatFeed(true);
-                } else {
-                    closeSavedFeed(true);
-                }
-                screenScrollEl.style.transform = '';
-                screenScrollEl.style.transition = '';
-                if (bottomNav) {
-                    bottomNav.style.transform = '';
-                    bottomNav.style.transition = '';
-                }
-            }, 280);
         } else {
             screenScrollEl.style.transform = 'translate3d(0, 0, 0)';
-            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+            if (isScreenScrollActive && document.body.classList.contains('chat-mode-active') && bottomNav) {
                 bottomNav.style.transform = 'translate3d(0, 0, 0)';
             }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
-                if (bottomNav) {
+                if (isScreenScrollActive && bottomNav) {
                     bottomNav.style.transform = '';
                     bottomNav.style.transition = '';
                 }
@@ -1451,17 +1469,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isSwiping && screenScrollEl) {
             isSwiping = false;
             gestureDetermined = false;
+
+            let isScreenScrollActive = document.body.classList.contains('saved-mode-active') || document.body.classList.contains('chat-mode-active');
+
             screenScrollEl.style.transition = 'transform 0.2s ease-out';
             screenScrollEl.style.transform = 'translate3d(0, 0, 0)';
             const bottomNav = document.getElementById('bottom-nav');
-            if (document.body.classList.contains('chat-mode-active') && bottomNav) {
+            if (isScreenScrollActive && document.body.classList.contains('chat-mode-active') && bottomNav) {
                 bottomNav.style.transition = 'transform 0.2s ease-out';
                 bottomNav.style.transform = 'translate3d(0, 0, 0)';
             }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
                 screenScrollEl.style.transition = '';
-                if (bottomNav) {
+                if (isScreenScrollActive && bottomNav) {
                     bottomNav.style.transform = '';
                     bottomNav.style.transition = '';
                 }
