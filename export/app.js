@@ -1105,18 +1105,6 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
             bottomNav.style.transition = '';
         }
 
-        Object.keys(mapInstances).forEach(idx => {
-            if (mapInstances[idx]) {
-                const mc = mapInstances[idx].getContainer();
-                mapInstances[idx].remove();
-                if (mc) mc._leaflet_id = null;
-                delete mapInstances[idx];
-                currentLayers[idx] = null;
-                if (typeof currentTileLayers !== 'undefined') currentTileLayers[idx] = null;
-                if (typeof currentOverlays !== 'undefined') currentOverlays[idx] = null;
-            }
-        });
-
         isClosingChatFeed = false;
         isNavigatingFeed = false;
     };
@@ -1128,10 +1116,10 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
         const bottomNav = document.getElementById('bottom-nav');
         if (screenScroll) {
             screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-            screenScroll.style.transform = 'translateX(100%)';
+            screenScroll.style.transform = 'translate3d(100%, 0, 0)';
             if (bottomNav) {
                 bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-                bottomNav.style.transform = 'translateX(100%)';
+                bottomNav.style.transform = 'translate3d(100%, 0, 0)';
             }
             setTimeout(() => {
                 doClose();
@@ -1393,10 +1381,10 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             e.stopPropagation();
             let currentX = Math.max(0, deltaX);
-            screenScrollEl.style.transform = `translateX(${currentX}px)`;
+            screenScrollEl.style.transform = `translate3d(${currentX}px, 0, 0)`;
             if (document.body.classList.contains('chat-mode-active')) {
                 const bottomNav = document.getElementById('bottom-nav');
-                if (bottomNav) bottomNav.style.transform = `translateX(${currentX}px)`;
+                if (bottomNav) bottomNav.style.transform = `translate3d(${currentX}px, 0, 0)`;
             }
         }
     }, { passive: false, capture: true });
@@ -1425,9 +1413,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (deltaX > window.innerWidth / 3 || deltaX > 90) {
             isClosingChatFeed = true;
             isNavigatingFeed = true;
-            screenScrollEl.style.transform = 'translateX(100%)';
+            screenScrollEl.style.transform = 'translate3d(100%, 0, 0)';
             if (document.body.classList.contains('chat-mode-active') && bottomNav) {
-                bottomNav.style.transform = 'translateX(100%)';
+                bottomNav.style.transform = 'translate3d(100%, 0, 0)';
             }
             setTimeout(() => {
                 if (document.body.classList.contains('chat-mode-active')) {
@@ -1443,9 +1431,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }, 280);
         } else {
-            screenScrollEl.style.transform = 'translateX(0)';
+            screenScrollEl.style.transform = 'translate3d(0, 0, 0)';
             if (document.body.classList.contains('chat-mode-active') && bottomNav) {
-                bottomNav.style.transform = 'translateX(0)';
+                bottomNav.style.transform = 'translate3d(0, 0, 0)';
             }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
@@ -1464,11 +1452,11 @@ document.addEventListener("DOMContentLoaded", () => {
             isSwiping = false;
             gestureDetermined = false;
             screenScrollEl.style.transition = 'transform 0.2s ease-out';
-            screenScrollEl.style.transform = 'translateX(0)';
+            screenScrollEl.style.transform = 'translate3d(0, 0, 0)';
             const bottomNav = document.getElementById('bottom-nav');
             if (document.body.classList.contains('chat-mode-active') && bottomNav) {
                 bottomNav.style.transition = 'transform 0.2s ease-out';
-                bottomNav.style.transform = 'translateX(0)';
+                bottomNav.style.transform = 'translate3d(0, 0, 0)';
             }
             setTimeout(() => {
                 screenScrollEl.style.transform = '';
@@ -2878,10 +2866,10 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 
         // Umístíme obrazovku (a spodní lištu) mimo zobrazení vpravo ještě před aktivací
         screenScroll.style.transition = 'none';
-        screenScroll.style.transform = 'translateX(100%)';
+        screenScroll.style.transform = 'translate3d(100%, 0, 0)';
         if (fromChat && bottomNav) {
             bottomNav.style.transition = 'none';
-            bottomNav.style.transform = 'translateX(100%)';
+            bottomNav.style.transform = 'translate3d(100%, 0, 0)';
         }
 
         screenScroll.classList.add('active');
@@ -2893,59 +2881,54 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
         if (targetReel && reelsContainer) {
             reelsContainer.scrollTo({ top: targetReel.offsetTop, behavior: 'instant' });
         }
-
-        // POUZE inicializovat cílovou mapu bez těžkého hromadného preloadu
-        if (!mapInstances[firstVisibleIndex]) {
-            initMapForReel(firstVisibleIndex);
-        }
-        const activeMap = mapInstances[firstVisibleIndex];
-        if (activeMap) {
-            activeMap.invalidateSize({ animate: false });
-            if (activeMap.originalMidX !== undefined) {
-                activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
-            }
-        }
+        
         activeIndex = firstVisibleIndex;
-        if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
-            if (!currentLayers[firstVisibleIndex]) {
-                renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
-            }
-        }
-
-        // 50ms delay pro vykreslení Leaflet DOMu a SVG bez blokování animace
-        setTimeout(() => {
+        
+        requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-                    screenScroll.style.transform = 'translateX(0)';
-                    if (fromChat && bottomNav) {
-                        bottomNav.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-                        bottomNav.style.transform = 'translateX(0)';
+                screenScroll.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+                screenScroll.style.transform = 'translate3d(0, 0, 0)';
+                if (fromChat && bottomNav) {
+                    bottomNav.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
+                    bottomNav.style.transform = 'translate3d(0, 0, 0)';
+                }
+
+                setTimeout(() => {
+                    // Po dokončení animace provedeme těžkou inicializaci mapy
+                    if (!mapInstances[firstVisibleIndex]) {
+                        initMapForReel(firstVisibleIndex);
+                    }
+                    const activeMap = mapInstances[firstVisibleIndex];
+                    if (activeMap) {
+                        activeMap.invalidateSize({ animate: false });
+                        if (activeMap.originalMidX !== undefined) {
+                            activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
+                        }
+                    }
+                    if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
+                        if (!currentLayers[firstVisibleIndex]) {
+                            renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
+                        }
+                    }
+                    
+                    screenScroll.style.transition = '';
+                    screenScroll.style.transform = '';
+                    if (bottomNav) {
+                        bottomNav.style.transition = '';
+                        bottomNav.style.transform = '';
                     }
 
+                    isNavigatingFeed = false;
+                    
+                    // Po zklidnění animace přednačteme bezprostřední sousedy
                     setTimeout(() => {
-                        screenScroll.style.transition = '';
-                        screenScroll.style.transform = '';
-                        if (bottomNav) {
-                            bottomNav.style.transition = '';
-                            bottomNav.style.transform = '';
+                        if (!isClosingChatFeed) {
+                            preloadAllVisibleReels(firstVisibleIndex);
                         }
-
-                        isNavigatingFeed = false;
-                        const finalActiveMap = mapInstances[firstVisibleIndex];
-                        if (finalActiveMap) {
-                            finalActiveMap.invalidateSize({ animate: false });
-                        }
-                        // Po zklidnění animace přednačteme bezprostřední sousedy
-                        setTimeout(() => {
-                            if (!isClosingChatFeed) {
-                                preloadAllVisibleReels(firstVisibleIndex);
-                            }
-                        }, 120);
-                    }, 300);
-                });
+                    }, 50);
+                }, 350);
             });
-        }, 50);
+        });
     } else if (screenScroll) {
         screenScroll.style.transition = '';
         screenScroll.style.transform = '';
@@ -2962,7 +2945,10 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                     }
                 }
                 activateReel(firstVisibleIndex);
+                isNavigatingFeed = false;
             }, 50);
+        } else {
+            isNavigatingFeed = false;
         }
     }
 }
@@ -2994,18 +2980,6 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
             screenScroll.classList.remove('slide-in-right');
         }
 
-        Object.keys(mapInstances).forEach(idx => {
-            if (mapInstances[idx]) {
-                const mc = mapInstances[idx].getContainer();
-                mapInstances[idx].remove();
-                if (mc) mc._leaflet_id = null;
-                delete mapInstances[idx];
-                currentLayers[idx] = null;
-                if (typeof currentTileLayers !== 'undefined') currentTileLayers[idx] = null;
-                if (typeof currentOverlays !== 'undefined') currentOverlays[idx] = null;
-            }
-        });
-
         isClosingChatFeed = false;
         isNavigatingFeed = false;
     };
@@ -3016,7 +2990,7 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         const screenScroll = document.getElementById('screen-scroll');
         if (screenScroll) {
             screenScroll.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
-            screenScroll.style.transform = 'translateX(100%)';
+            screenScroll.style.transform = 'translate3d(100%, 0, 0)';
             setTimeout(doClose, 280);
         } else {
             doClose();
