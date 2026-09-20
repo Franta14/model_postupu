@@ -31,9 +31,9 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (zvýšena na 2000px pro absolutní ostrost i při extrémním 13x zoomu)
-THUMB_WIDTH = 2500
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3125
+# Velikost výstupního thumbnailu (1080px pro optimální poměr kvality a spotřeby mobilních dat)
+THUMB_WIDTH = 1080
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1350
 # JPEG kvalita (45 pro vynikající kompresi velkých rozlišení bez jakýchkoliv viditelných artefaktů)
 JPEG_QUALITY = 85
 # Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
@@ -260,9 +260,22 @@ def generate_thumbnails():
     scale = 2 ** max_zoom
     print(f"  Max zoom: {max_zoom}, scale: {scale}")
     
-    # Načteme GeoJSON soubory
+    # Načteme GeoJSON soubory a filtrujeme jen ty, které patří k této mapě
     geojson_dir = os.path.join("export", "postupy")
-    geojson_files = sorted(glob.glob(os.path.join(geojson_dir, "*.geojson")))
+    
+    index_path = os.path.join(geojson_dir, "postupy_index.json")
+    valid_files = set()
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            index_data = json.load(f)
+            for entry in index_data:
+                if entry.get("map_id") == args.map_id:
+                    valid_files.add(entry.get("file"))
+                    
+    geojson_files = []
+    for g in sorted(glob.glob(os.path.join(geojson_dir, "*.geojson"))):
+        if os.path.basename(g) in valid_files:
+            geojson_files.append(g)
     
     if not geojson_files:
         print("⚠ Žádné GeoJSON soubory nenalezeny!")
@@ -291,7 +304,7 @@ def generate_thumbnails():
         per_postup_pixels[basename] = pixels
     
     # 1) Thumbnail per mapa (bounding box všech postupů)
-    print("\n  📐 Generuji thumbnail pro celou mapu (Homolka)...")
+    print(f"\n  📐 Generuji thumbnail pro celou mapu ({args.map_id})...")
     bbox = compute_bbox(all_pixels)
     print(f"    Bounding box: col={bbox[0]:.0f}-{bbox[2]:.0f}, row={bbox[1]:.0f}-{bbox[3]:.0f}")
     
@@ -304,7 +317,7 @@ def generate_thumbnails():
     # Doostření pro maximální ostrost a čitelnost mapových prvků
     thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.3, percent=140, threshold=1))
     
-    map_thumb_path = os.path.join(thumbs_dir, "map_homolka.jpg")
+    map_thumb_path = os.path.join(thumbs_dir, f"map_{args.map_id}.jpg")
     thumb.save(map_thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
     file_size = os.path.getsize(map_thumb_path) / 1024
     print(f"    ✅ Uloženo: {map_thumb_path} ({THUMB_WIDTH}×{THUMB_HEIGHT}, {file_size:.1f} KB)")
@@ -317,122 +330,10 @@ def generate_thumbnails():
     map_drift = compute_map_drift(cropped, norm_pts)
     print(f"    🎯 Automatický drift: {map_drift}")
     
-    # 2) Thumbnail per postup (individuální bounding box)
-    print(f"\n  📐 Generuji individuální thumbnaily pro {len(per_postup_pixels)} postupů...")
-    route_meta = {}
-    for basename, pixels in per_postup_pixels.items():
-        if len(pixels) < 2:
-            print(f"    ⚠ {basename}: příliš málo souřadnic, přeskakuji")
-            continue
-        
-        bbox = compute_bbox(pixels)
-        crop_box = crop_to_aspect(bbox, img_w, img_h)
-        
-        cropped = img.crop(crop_box)
-        
-        # --- Kresleni postupu (spojnice a kolecka) BYLO ODSTRANĚNO ---
-        # Nyní kreslíme trasu plně dynamicky na frontendu pomocí SVG,
-        # takže do JPEG se už trasa "nevypéká".
-        
-        def pt(c):
-            col = c[0] * scale
-            row = -c[1] * scale
-            return (col - crop_box[0], row - crop_box[1])
-            
-        features = per_postup_features[basename]
-        start_c = None
-        end_c = None
-        for f in features:
-            geom = f.get("geometry", {})
-            props = f.get("properties", {})
-            if geom.get("type") == "Point":
-                if props.get("type") == "start":
-                    start_c = geom.get("coordinates", [])
-                elif props.get("type") == "end":
-                    end_c = geom.get("coordinates", [])
-                    
-        if start_c and end_c:
-            x1, y1 = pt(start_c)
-            x2, y2 = pt(end_c)
-            route_meta[basename] = {
-                "start": [(x1 / cropped.width) * 100, (y1 / cropped.height) * 100],
-                "end": [(x2 / cropped.width) * 100, (y2 / cropped.height) * 100],
-                "crop_scale": cropped.width / img_w  # Pro frontend normalizaci zoomu
-            }
-                    
-        # 3) Vertikální 9:16 náhled pro sdílení v chatu (ve stylu IG Reel, vycentrovaný a orientovaný zdola nahoru)
-        if start_c and end_c:
-            c_start = (start_c[0] * scale, -start_c[1] * scale)
-            c_end = (end_c[0] * scale, -end_c[1] * scale)
-            dx = c_end[0] - c_start[0]
-            dy = c_end[1] - c_start[1]
-            dist_px = math.hypot(dx, dy)
-            if dist_px > 0:
-                ux = dx / dist_px
-                uy = dy / dist_px
-                cx_in = (c_start[0] + c_end[0]) / 2.0
-                cy_in = (c_start[1] + c_end[1]) / 2.0
-
-                # 2x supersampling pro ultra hladké antialiased vykreslení (optimalizováno na 540x960)
-                OUT_W, OUT_H = 540, 960
-                W2, H2 = 1080, 1920
-                cx2, cy2 = W2 / 2.0, H2 / 2.0
-                
-                iof_purple = (179, 0, 255) # #b300ff
-                R2 = 32
-                line_w2 = 6
-                gap2 = 6
-                edge_margin2 = 18 # téměř se dotýká horního a spodního okraje
-
-                # Maximální možné přiblížení: kolečka se zespodu a shora skoro dotýkají okrajů karty
-                target_route_h2 = H2 - 2 * (R2 + line_w2 / 2.0 + edge_margin2)
-
-                zoom_factor2 = target_route_h2 / dist_px
-                scale_in2 = 1.0 / zoom_factor2
-
-                a = scale_in2 * (-uy)
-                b = scale_in2 * (-ux)
-                c = cx_in - a * cx2 - b * cy2
-                d = scale_in2 * ux
-                e = scale_in2 * (-uy)
-                f = cy_in - d * cx2 - e * cy2
-
-                card2 = img.transform((W2, H2), Image.Transform.AFFINE, data=(a, b, c, d, e, f), resample=Image.Resampling.BICUBIC)
-                draw2 = ImageDraw.Draw(card2)
-                pt_start2 = (cx2, cy2 + target_route_h2 / 2.0)
-                pt_end2 = (cx2, cy2 - target_route_h2 / 2.0)
-
-                # Spojnice a kolečka
-                draw2.line([(pt_start2[0], pt_start2[1] - R2 - gap2), (pt_end2[0], pt_end2[1] + R2 + gap2)], fill=iof_purple, width=line_w2)
-                draw2.ellipse([pt_start2[0] - R2, pt_start2[1] - R2, pt_start2[0] + R2, pt_start2[1] + R2], outline=iof_purple, width=line_w2)
-                draw2.ellipse([pt_end2[0] - R2, pt_end2[1] - R2, pt_end2[0] + R2, pt_end2[1] + R2], outline=iof_purple, width=line_w2)
-
-                final_share = card2.resize((OUT_W, OUT_H), Image.Resampling.LANCZOS)
-                final_share = final_share.filter(ImageFilter.UnsharpMask(radius=1.2, percent=130, threshold=1))
-
-                share_path = os.path.join(thumbs_dir, f"share_{basename}.jpg")
-                final_share.save(share_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
-                route_meta[basename]["share_thumb"] = f"thumbs/share_{basename}.jpg"
-                share_size = os.path.getsize(share_path) / 1024
-                print(f"    📱 share_{basename}.jpg (9:16 IG reel, {share_size:.1f} KB)")
-
-        
-        thumb = cropped.resize((THUMB_WIDTH, THUMB_HEIGHT), Image.Resampling.LANCZOS)
-        thumb = thumb.filter(ImageFilter.UnsharpMask(radius=1.3, percent=140, threshold=1))
-        
-        thumb_path = os.path.join(thumbs_dir, f"{basename}.jpg")
-        thumb.save(thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
-        file_size = os.path.getsize(thumb_path) / 1024
-        print(f"    ✅ {basename}.jpg ({file_size:.1f} KB)")
-    
-    # 3) Aktualizujeme postupy_index.json s thumb cestami
+    # 2) Aktualizujeme postupy_index.json
     index_path = os.path.join(geojson_dir, "postupy_index.json")
     with open(index_path, "r", encoding="utf-8") as f:
         index_data = json.load(f)
-    
-    for entry in index_data:
-        geojson_name = entry["file"].replace(".geojson", "")
-        entry["thumb"] = f"thumbs/{geojson_name}.jpg"
     
     # Přidáme mapové thumbnail info a metadata tras pro animace
     import time
@@ -453,8 +354,6 @@ def generate_thumbnails():
         "drift": map_drift
     }
     
-    # Pridame nove routes k existujicim
-    thumbs_meta["routes"].update(route_meta)
     thumbs_meta["version"] = int(time.time())
     
     thumbs_meta_path = os.path.join("export", "thumbs", "thumbs_meta.json")
@@ -464,7 +363,7 @@ def generate_thumbnails():
     with open(index_path, "w", encoding="utf-8") as f:
         json.dump(index_data, f, indent=2)
     
-    print(f"\n🎉 Hotovo! Vygenerováno {len(per_postup_pixels) + 1} thumbnailů do {thumbs_dir}/")
+    print(f"\n🎉 Hotovo! Vygenerován 1 mapový náhled do {thumbs_dir}/")
 
 
 if __name__ == "__main__":

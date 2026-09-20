@@ -1003,8 +1003,9 @@ function openChatConversation(name) {
                         targetIndex = Number(data.routeIndex) || 0;
                     }
                     let vParam = (thumbsMeta && thumbsMeta.version) ? '?v=' + thumbsMeta.version : '';
-                    let shareImg = bName ? `thumbs/share_${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
-                    let fallbackImg = bName ? `thumbs/${bName}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
+                    let mapThumbPath = data.mapId ? `thumbs/map_${data.mapId}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
+                    let shareImg = mapThumbPath;
+                    let fallbackImg = mapThumbPath;
                     let rName = data.routeName || 'Homolka';
 
                     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
@@ -3114,7 +3115,6 @@ function renderExploreGrid() {
                 <img src="${thumbSrc}" alt="${group.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast;" loading="lazy">
             </div>
             <div style="position:absolute; bottom:0; left:0; width:100%; background:linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 60%, transparent 100%); color:#fff; padding:12px 10px 8px 10px; box-sizing:border-box; z-index: 10; pointer-events:none;">
-                <div style="font-size:14px; font-weight:700; color:#fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); margin-bottom: 2px;">${group.map_name}</div>
                 <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.85);">${countText}</div>
             </div>
         `;
