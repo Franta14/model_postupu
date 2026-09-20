@@ -29,7 +29,8 @@
             });
         }
         window.onerror = function (message, source, lineno, colno, error) {
-            alert("JS Error: " + message + " at " + lineno + ":" + colno);
+            let stack = (error && error.stack) ? "\nStack: " + error.stack : "";
+            alert("JS Error: " + message + " at " + lineno + ":" + colno + stack);
             return true;
         };
         window.addEventListener('unhandledrejection', function (event) {

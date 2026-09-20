@@ -2789,7 +2789,13 @@ function renderProfileSaved() {
                 </div>
             `;
         }
-        el.addEventListener('click', () => openFeed(route.map_id, true));
+        el.addEventListener('click', () => {
+            try {
+                openFeed(route.map_id, true);
+            } catch (err) {
+                alert("Vyjimka v click handleru: " + err.message + "\n" + err.stack);
+            }
+        });
         gridContainer.appendChild(el);
     });
     dynamicContent.appendChild(gridContainer);
@@ -3124,7 +3130,13 @@ function renderExploreGrid() {
                 <div style="font-size:11px; font-weight:600; color:rgba(255,255,255,0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.85);">${countText}</div>
             </div>
         `;
-        el.addEventListener('click', () => openFeed(group.map_id, false));
+        el.addEventListener('click', () => {
+            try {
+                openFeed(group.map_id, false);
+            } catch (err) {
+                alert("Vyjimka v explore click handleru: " + err.message + "\n" + err.stack);
+            }
+        });
         container.appendChild(el);
     });
 }
