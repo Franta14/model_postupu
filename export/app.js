@@ -2022,19 +2022,7 @@ function preloadAllVisibleReels(currentIndex) {
     }
 }
 
-const originalSetView = L.GridLayer.prototype._setView;
-L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
-    let oldRound = Math.round;
-    Math.round = function (val) {
-        if (val === zoom && typeof val === 'number') {
-            // Vybíráme ostřejší úroveň dlaždic (ceil z desetinného zoomu, min. 3)
-            return Math.min(6, Math.max(3, Math.ceil(val)));
-        }
-        return oldRound(val);
-    };
-    try { return originalSetView.call(this, center, zoom, noPrune, noUpdate); }
-    finally { Math.round = oldRound; }
-};
+// Removed dangerous L.GridLayer.prototype._setView override
 
 function initMapForReel(index) {
     if (mapInstances[index]) return mapInstances[index];
