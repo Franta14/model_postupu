@@ -2171,6 +2171,11 @@ function renderMapData(index, geojsonOriginal) {
             }
         });
 
+        let currentMapId = postupyData[index] ? postupyData[index].map_id : 'homolka';
+        let mapScale = (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[currentMapId] && thumbsMeta.maps[currentMapId].scale) ? thumbsMeta.maps[currentMapId].scale : 32;
+        let maxNative = Math.max(3, Math.round(Math.log2(mapScale)));
+        let nf = 32 / mapScale;
+
         if (!currentTileLayers[index] && allLngs.length > 0) {
             let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
             let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
@@ -2183,11 +2188,6 @@ function renderMapData(index, geojsonOriginal) {
             let marginLng = maxSpan * 0.45;
             let marginLat = maxSpan * 0.45;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
-
-            let currentMapId = postupyData[index] ? postupyData[index].map_id : 'homolka';
-            let mapScale = (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[currentMapId] && thumbsMeta.maps[currentMapId].scale) ? thumbsMeta.maps[currentMapId].scale : 32;
-            let maxNative = Math.max(3, Math.round(Math.log2(mapScale)));
-            let nf = 32 / mapScale;
 
             map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/' + currentMapId + '/{z}/{x}/{y}.png', {
