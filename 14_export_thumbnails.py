@@ -351,6 +351,8 @@ def generate_thumbnails():
             
     thumbs_meta["maps"][args.map_id] = {
         "thumb": f"thumbs/map_{args.map_id}.jpg",
+        "scale": scale,
+        "max_zoom": max_zoom,
         "drift": map_drift
     }
     

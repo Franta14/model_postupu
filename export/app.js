@@ -2185,9 +2185,13 @@ function renderMapData(index, geojsonOriginal) {
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
 
             let currentMapId = postupyData[index] ? postupyData[index].map_id : 'homolka';
+            let mapScale = (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[currentMapId] && thumbsMeta.maps[currentMapId].scale) ? thumbsMeta.maps[currentMapId].scale : 32;
+            let maxNative = Math.max(3, Math.round(Math.log2(mapScale)));
+            let nf = 32 / mapScale;
+
             map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/' + currentMapId + '/{z}/{x}/{y}.png', {
-                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 6,
+                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: maxNative,
                 noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
             }).addTo(map);
             currentTileLayers[index] = tl;
@@ -2201,8 +2205,8 @@ function renderMapData(index, geojsonOriginal) {
                 return true;
             },
             style: function (f) {
-                if (f.properties && f.properties.type === 'variant') return { color: f.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
-                if (f.properties && f.properties.type === 'spojnice') return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                if (f.properties && f.properties.type === 'variant') return { color: f.properties.color, weight: 6 * nf, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                if (f.properties && f.properties.type === 'spojnice') return { color: iofPurple, weight: 3 * nf, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             },
         });
 
@@ -2211,8 +2215,8 @@ function renderMapData(index, geojsonOriginal) {
             let dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 0) {
                 let distM = postupyData[index].dist_m || 0;
-                let R = 1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40;
-                let gap = 0.10;
+                let R = (1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40) * nf;
+                let gap = 0.10 * nf;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
 
@@ -2240,7 +2244,8 @@ function renderMapData(index, geojsonOriginal) {
                     svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
                     svgText.setAttribute('viewBox', "0 0 100 100");
                     svgText.setAttribute('preserveAspectRatio', 'none');
-                    svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
+                    let fontSize = 75 * nf;
+                    svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
                     let halfSizeText = 1.0;
                     let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
                     overlays.addLayer(L.svgOverlay(svgText, boundsText, { interactive: false, pane: 'markerPane' }));
