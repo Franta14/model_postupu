@@ -59,6 +59,18 @@ def run_export():
         except subprocess.CalledProcessError as e:
             print(f"Error exporting thumbnails for {m['map_name']}")
             continue
+        # 3. Export map tiles
+        cmd3 = [
+            "python", "11_export_tiler.py",
+            "--map-id", m["map_id"],
+            "--png-file", m["png_file"]
+        ]
+        print(f"Running: {' '.join(cmd3)}")
+        try:
+            subprocess.run(cmd3, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error exporting tiles for {m['map_name']}")
+            continue
         print("\n")
 
 if __name__ == "__main__":

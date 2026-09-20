@@ -2184,8 +2184,9 @@ function renderMapData(index, geojsonOriginal) {
             let marginLat = maxSpan * 0.45;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
 
+            let currentMapId = postupyData[index] ? postupyData[index].map_id : 'homolka';
             map.setMaxBounds(tileBounds);
-            let tl = L.tileLayer('tiles/{z}/{x}/{y}.png', {
+            let tl = L.tileLayer('tiles/' + currentMapId + '/{z}/{x}/{y}.png', {
                 tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: 6,
                 noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
             }).addTo(map);

@@ -51,8 +51,15 @@ def generate_tiles(input_png, output_dir, tile_size=512):
                 tile_path = os.path.join(tile_dir, f"{ty}.png")
                 tile.save(tile_path, "PNG")
 
+import argparse
+
 if __name__ == "__main__":
-    out_dir = os.path.join("export", "tiles")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--map-id', required=True)
+    parser.add_argument('--png-file', required=True)
+    args = parser.parse_args()
+
+    out_dir = os.path.join("export", "tiles", args.map_id)
     os.makedirs(out_dir, exist_ok=True)
-    generate_tiles(config.PNG_FILE, out_dir)
-    print("✅ Tiles generated successfully in /export/tiles/")
+    generate_tiles(args.png_file, out_dir)
+    print(f"[OK] Tiles generated successfully in {out_dir}")

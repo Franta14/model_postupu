@@ -31,9 +31,9 @@ Image.MAX_IMAGE_PIXELS = None
 
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
-# Velikost výstupního thumbnailu (1080px pro optimální poměr kvality a spotřeby mobilních dat)
-THUMB_WIDTH = 1080
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 1350
+# Velikost výstupního thumbnailu (2500px pro zachování ostrosti při 700% zoomu)
+THUMB_WIDTH = 2500
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3125
 # JPEG kvalita (45 pro vynikající kompresi velkých rozlišení bez jakýchkoliv viditelných artefaktů)
 JPEG_QUALITY = 85
 # Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
