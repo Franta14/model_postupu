@@ -2177,8 +2177,10 @@ function renderMapData(index, geojsonOriginal) {
         let nf = 32 / mapScale;
 
         if (!currentTileLayers[index] && allLngs.length > 0) {
-            let minLng = Math.min(...allLngs), maxLng = Math.max(...allLngs);
-            let minLat = Math.min(...allLats), maxLat = Math.max(...allLats);
+            let minLng = allLngs.reduce((a, b) => Math.min(a, b), Infinity);
+            let maxLng = allLngs.reduce((a, b) => Math.max(a, b), -Infinity);
+            let minLat = allLats.reduce((a, b) => Math.min(a, b), Infinity);
+            let maxLat = allLats.reduce((a, b) => Math.max(a, b), -Infinity);
 
             let spanLng = maxLng - minLng;
             let spanLat = maxLat - minLat;
