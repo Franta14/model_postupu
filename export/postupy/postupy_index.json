@@ -1,0 +1,5470 @@
+[
+  {
+    "id": 1,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_001_1780m_s512.geojson",
+    "dist_m": 1780.23172648956,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1899,
+        "prevyseni_m": 41,
+        "cas_s": 573,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2081,
+        "prevyseni_m": 43,
+        "cas_s": 573,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1889,
+        "prevyseni_m": 50,
+        "cas_s": 589,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_001_1780m_s512.jpg"
+  },
+  {
+    "id": 2,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_001_1966m_s308.geojson",
+    "dist_m": 1966.6278244751854,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2151,
+        "prevyseni_m": 61,
+        "cas_s": 650,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2146,
+        "prevyseni_m": 77,
+        "cas_s": 637,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2242,
+        "prevyseni_m": 50,
+        "cas_s": 672,
+        "tempo_str": "4:59"
+      }
+    ],
+    "thumb": "thumbs/postup_001_1966m_s308.jpg"
+  },
+  {
+    "id": 3,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_001_2120m_s323.geojson",
+    "dist_m": 2120.4775405554287,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2266,
+        "prevyseni_m": 30,
+        "cas_s": 657,
+        "tempo_str": "4:50"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2340,
+        "prevyseni_m": 21,
+        "cas_s": 662,
+        "tempo_str": "4:42"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2261,
+        "prevyseni_m": 29,
+        "cas_s": 664,
+        "tempo_str": "4:53"
+      }
+    ],
+    "thumb": "thumbs/postup_001_2120m_s323.jpg"
+  },
+  {
+    "id": 4,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_002_1611m_s298.geojson",
+    "dist_m": 1611.4977505414024,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1705,
+        "prevyseni_m": 22,
+        "cas_s": 507,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1673,
+        "prevyseni_m": 22,
+        "cas_s": 517,
+        "tempo_str": "5:08"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1806,
+        "prevyseni_m": 17,
+        "cas_s": 515,
+        "tempo_str": "4:45"
+      }
+    ],
+    "thumb": "thumbs/postup_002_1611m_s298.jpg"
+  },
+  {
+    "id": 5,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_002_2081m_s261.geojson",
+    "dist_m": 2081.2736485142937,
+    "variants_count": 4,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2261,
+        "prevyseni_m": 12,
+        "cas_s": 619,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2304,
+        "prevyseni_m": 17,
+        "cas_s": 616,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2277,
+        "prevyseni_m": 15,
+        "cas_s": 645,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 4,
+        "color": "#ffaa00",
+        "vzdal_m": 2146,
+        "prevyseni_m": 28,
+        "cas_s": 633,
+        "tempo_str": "4:54"
+      }
+    ],
+    "thumb": "thumbs/postup_002_2081m_s261.jpg"
+  },
+  {
+    "id": 6,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_002_2187m_s454.geojson",
+    "dist_m": 2187.6128542317538,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2364,
+        "prevyseni_m": 52,
+        "cas_s": 696,
+        "tempo_str": "4:54"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2430,
+        "prevyseni_m": 52,
+        "cas_s": 705,
+        "tempo_str": "4:50"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2271,
+        "prevyseni_m": 50,
+        "cas_s": 750,
+        "tempo_str": "5:30"
+      }
+    ],
+    "thumb": "thumbs/postup_002_2187m_s454.jpg"
+  },
+  {
+    "id": 7,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_003_1800m_s376.geojson",
+    "dist_m": 1800.2846997072436,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1883,
+        "prevyseni_m": 45,
+        "cas_s": 584,
+        "tempo_str": "5:10"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2085,
+        "prevyseni_m": 47,
+        "cas_s": 586,
+        "tempo_str": "4:40"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1938,
+        "prevyseni_m": 43,
+        "cas_s": 585,
+        "tempo_str": "5:01"
+      }
+    ],
+    "thumb": "thumbs/postup_003_1800m_s376.jpg"
+  },
+  {
+    "id": 8,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_003_1947m_s445.geojson",
+    "dist_m": 1947.0811487968342,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1980,
+        "prevyseni_m": 91,
+        "cas_s": 665,
+        "tempo_str": "5:35"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2287,
+        "prevyseni_m": 84,
+        "cas_s": 669,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2254,
+        "prevyseni_m": 96,
+        "cas_s": 689,
+        "tempo_str": "5:05"
+      }
+    ],
+    "thumb": "thumbs/postup_003_1947m_s445.jpg"
+  },
+  {
+    "id": 9,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_004_1655m_s374.geojson",
+    "dist_m": 1655.2492259475612,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1722,
+        "prevyseni_m": 8,
+        "cas_s": 472,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1784,
+        "prevyseni_m": 6,
+        "cas_s": 479,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1867,
+        "prevyseni_m": 12,
+        "cas_s": 493,
+        "tempo_str": "4:23"
+      }
+    ],
+    "thumb": "thumbs/postup_004_1655m_s374.jpg"
+  },
+  {
+    "id": 10,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_004_1916m_s424.geojson",
+    "dist_m": 1916.5398508770957,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2040,
+        "prevyseni_m": 43,
+        "cas_s": 578,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2197,
+        "prevyseni_m": 42,
+        "cas_s": 598,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1963,
+        "prevyseni_m": 41,
+        "cas_s": 614,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_004_1916m_s424.jpg"
+  },
+  {
+    "id": 11,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_004_2075m_s254.geojson",
+    "dist_m": 2075.361414308361,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2160,
+        "prevyseni_m": 23,
+        "cas_s": 631,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2161,
+        "prevyseni_m": 26,
+        "cas_s": 631,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2337,
+        "prevyseni_m": 24,
+        "cas_s": 638,
+        "tempo_str": "4:32"
+      }
+    ],
+    "thumb": "thumbs/postup_004_2075m_s254.jpg"
+  },
+  {
+    "id": 12,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_004_800m_s280.geojson",
+    "dist_m": 800.9993757800315,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 920,
+        "prevyseni_m": 19,
+        "cas_s": 286,
+        "tempo_str": "5:11"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 958,
+        "prevyseni_m": 27,
+        "cas_s": 297,
+        "tempo_str": "5:09"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 868,
+        "prevyseni_m": 29,
+        "cas_s": 293,
+        "tempo_str": "5:37"
+      }
+    ],
+    "thumb": "thumbs/postup_004_800m_s280.jpg"
+  },
+  {
+    "id": 13,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_005_1840m_s367.geojson",
+    "dist_m": 1840.2853039678384,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1978,
+        "prevyseni_m": 118,
+        "cas_s": 700,
+        "tempo_str": "5:53"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2056,
+        "prevyseni_m": 114,
+        "cas_s": 750,
+        "tempo_str": "6:04"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2081,
+        "prevyseni_m": 107,
+        "cas_s": 707,
+        "tempo_str": "5:39"
+      }
+    ],
+    "thumb": "thumbs/postup_005_1840m_s367.jpg"
+  },
+  {
+    "id": 14,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_005_1912m_s421.geojson",
+    "dist_m": 1912.0800192460567,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2312,
+        "prevyseni_m": 75,
+        "cas_s": 650,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2029,
+        "prevyseni_m": 74,
+        "cas_s": 672,
+        "tempo_str": "5:31"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2109,
+        "prevyseni_m": 71,
+        "cas_s": 666,
+        "tempo_str": "5:15"
+      }
+    ],
+    "thumb": "thumbs/postup_005_1912m_s421.jpg"
+  },
+  {
+    "id": 15,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_005_900m_s278.geojson",
+    "dist_m": 900.6802984411283,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1017,
+        "prevyseni_m": 17,
+        "cas_s": 294,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1014,
+        "prevyseni_m": 10,
+        "cas_s": 290,
+        "tempo_str": "4:46"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 937,
+        "prevyseni_m": 19,
+        "cas_s": 291,
+        "tempo_str": "5:10"
+      }
+    ],
+    "thumb": "thumbs/postup_005_900m_s278.jpg"
+  },
+  {
+    "id": 16,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_006_2054m_s241.geojson",
+    "dist_m": 2054.2760281909536,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2159,
+        "prevyseni_m": 24,
+        "cas_s": 603,
+        "tempo_str": "4:39"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2218,
+        "prevyseni_m": 20,
+        "cas_s": 600,
+        "tempo_str": "4:30"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2248,
+        "prevyseni_m": 28,
+        "cas_s": 621,
+        "tempo_str": "4:36"
+      }
+    ],
+    "thumb": "thumbs/postup_006_2054m_s241.jpg"
+  },
+  {
+    "id": 17,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_007_1750m_s352.geojson",
+    "dist_m": 1750.8426542667962,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1905,
+        "prevyseni_m": 87,
+        "cas_s": 628,
+        "tempo_str": "5:29"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1916,
+        "prevyseni_m": 89,
+        "cas_s": 632,
+        "tempo_str": "5:29"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1881,
+        "prevyseni_m": 92,
+        "cas_s": 644,
+        "tempo_str": "5:42"
+      }
+    ],
+    "thumb": "thumbs/postup_007_1750m_s352.jpg"
+  },
+  {
+    "id": 18,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_007_1757m_s394.geojson",
+    "dist_m": 1757.960465994614,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1843,
+        "prevyseni_m": 111,
+        "cas_s": 688,
+        "tempo_str": "6:13"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1983,
+        "prevyseni_m": 97,
+        "cas_s": 751,
+        "tempo_str": "6:18"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2015,
+        "prevyseni_m": 115,
+        "cas_s": 735,
+        "tempo_str": "6:04"
+      }
+    ],
+    "thumb": "thumbs/postup_007_1757m_s394.jpg"
+  },
+  {
+    "id": 19,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_008_2077m_s340.geojson",
+    "dist_m": 2077.961741707484,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2164,
+        "prevyseni_m": 97,
+        "cas_s": 704,
+        "tempo_str": "5:25"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2287,
+        "prevyseni_m": 97,
+        "cas_s": 712,
+        "tempo_str": "5:11"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2133,
+        "prevyseni_m": 100,
+        "cas_s": 720,
+        "tempo_str": "5:37"
+      }
+    ],
+    "thumb": "thumbs/postup_008_2077m_s340.jpg"
+  },
+  {
+    "id": 20,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_008_2107m_s248.geojson",
+    "dist_m": 2107.7238908357995,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2259,
+        "prevyseni_m": 110,
+        "cas_s": 776,
+        "tempo_str": "5:43"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2362,
+        "prevyseni_m": 111,
+        "cas_s": 781,
+        "tempo_str": "5:30"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2226,
+        "prevyseni_m": 100,
+        "cas_s": 780,
+        "tempo_str": "5:50"
+      }
+    ],
+    "thumb": "thumbs/postup_008_2107m_s248.jpg"
+  },
+  {
+    "id": 21,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_009_1669m_s306.geojson",
+    "dist_m": 1669.0191730474519,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1819,
+        "prevyseni_m": 37,
+        "cas_s": 539,
+        "tempo_str": "4:56"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1737,
+        "prevyseni_m": 53,
+        "cas_s": 533,
+        "tempo_str": "5:07"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1822,
+        "prevyseni_m": 50,
+        "cas_s": 538,
+        "tempo_str": "4:55"
+      }
+    ],
+    "thumb": "thumbs/postup_009_1669m_s306.jpg"
+  },
+  {
+    "id": 22,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_009_1806m_s221.geojson",
+    "dist_m": 1806.7443095247318,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1860,
+        "prevyseni_m": 22,
+        "cas_s": 541,
+        "tempo_str": "4:50"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1941,
+        "prevyseni_m": 21,
+        "cas_s": 552,
+        "tempo_str": "4:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1909,
+        "prevyseni_m": 24,
+        "cas_s": 557,
+        "tempo_str": "4:51"
+      }
+    ],
+    "thumb": "thumbs/postup_009_1806m_s221.jpg"
+  },
+  {
+    "id": 23,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_009_2144m_s245.geojson",
+    "dist_m": 2144.2131423904666,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2262,
+        "prevyseni_m": 65,
+        "cas_s": 703,
+        "tempo_str": "5:10"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2300,
+        "prevyseni_m": 75,
+        "cas_s": 736,
+        "tempo_str": "5:20"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2255,
+        "prevyseni_m": 75,
+        "cas_s": 750,
+        "tempo_str": "5:32"
+      }
+    ],
+    "thumb": "thumbs/postup_009_2144m_s245.jpg"
+  },
+  {
+    "id": 24,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_010_1099m_s243.geojson",
+    "dist_m": 1099.840897584737,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1142,
+        "prevyseni_m": 10,
+        "cas_s": 341,
+        "tempo_str": "4:58"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1230,
+        "prevyseni_m": 6,
+        "cas_s": 353,
+        "tempo_str": "4:47"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1203,
+        "prevyseni_m": 12,
+        "cas_s": 363,
+        "tempo_str": "5:01"
+      }
+    ],
+    "thumb": "thumbs/postup_010_1099m_s243.jpg"
+  },
+  {
+    "id": 25,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_011_2129m_s369.geojson",
+    "dist_m": 2129.812198293549,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2260,
+        "prevyseni_m": 17,
+        "cas_s": 614,
+        "tempo_str": "4:31"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2235,
+        "prevyseni_m": 14,
+        "cas_s": 636,
+        "tempo_str": "4:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2329,
+        "prevyseni_m": 22,
+        "cas_s": 649,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_011_2129m_s369.jpg"
+  },
+  {
+    "id": 26,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_011_2143m_s236.geojson",
+    "dist_m": 2143.5309654866196,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2236,
+        "prevyseni_m": 81,
+        "cas_s": 740,
+        "tempo_str": "5:31"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2248,
+        "prevyseni_m": 90,
+        "cas_s": 769,
+        "tempo_str": "5:41"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2337,
+        "prevyseni_m": 84,
+        "cas_s": 776,
+        "tempo_str": "5:31"
+      }
+    ],
+    "thumb": "thumbs/postup_011_2143m_s236.jpg"
+  },
+  {
+    "id": 27,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_012_1050m_s231.geojson",
+    "dist_m": 1050.5355776935876,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1086,
+        "prevyseni_m": 26,
+        "cas_s": 336,
+        "tempo_str": "5:09"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1174,
+        "prevyseni_m": 30,
+        "cas_s": 350,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1196,
+        "prevyseni_m": 21,
+        "cas_s": 355,
+        "tempo_str": "4:56"
+      }
+    ],
+    "thumb": "thumbs/postup_012_1050m_s231.jpg"
+  },
+  {
+    "id": 28,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_012_1989m_s368.geojson",
+    "dist_m": 1989.0952717253138,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2189,
+        "prevyseni_m": 6,
+        "cas_s": 574,
+        "tempo_str": "4:21"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2190,
+        "prevyseni_m": 13,
+        "cas_s": 596,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2274,
+        "prevyseni_m": 5,
+        "cas_s": 604,
+        "tempo_str": "4:25"
+      }
+    ],
+    "thumb": "thumbs/postup_012_1989m_s368.jpg"
+  },
+  {
+    "id": 29,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_013_1409m_s363.geojson",
+    "dist_m": 1409.432509913121,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1582,
+        "prevyseni_m": 6,
+        "cas_s": 424,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1534,
+        "prevyseni_m": 19,
+        "cas_s": 406,
+        "tempo_str": "4:24"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1477,
+        "prevyseni_m": 6,
+        "cas_s": 422,
+        "tempo_str": "4:45"
+      }
+    ],
+    "thumb": "thumbs/postup_013_1409m_s363.jpg"
+  },
+  {
+    "id": 30,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_013_2107m_s206.geojson",
+    "dist_m": 2107.474792257312,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2184,
+        "prevyseni_m": 84,
+        "cas_s": 708,
+        "tempo_str": "5:24"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2172,
+        "prevyseni_m": 83,
+        "cas_s": 715,
+        "tempo_str": "5:29"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2220,
+        "prevyseni_m": 86,
+        "cas_s": 725,
+        "tempo_str": "5:26"
+      }
+    ],
+    "thumb": "thumbs/postup_013_2107m_s206.jpg"
+  },
+  {
+    "id": 31,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_014_1594m_s201.geojson",
+    "dist_m": 1594.2396306703708,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1714,
+        "prevyseni_m": 81,
+        "cas_s": 542,
+        "tempo_str": "5:16"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1639,
+        "prevyseni_m": 80,
+        "cas_s": 567,
+        "tempo_str": "5:45"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1695,
+        "prevyseni_m": 82,
+        "cas_s": 591,
+        "tempo_str": "5:48"
+      }
+    ],
+    "thumb": "thumbs/postup_014_1594m_s201.jpg"
+  },
+  {
+    "id": 32,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_014_2004m_s296.geojson",
+    "dist_m": 2004.875307843358,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2081,
+        "prevyseni_m": 9,
+        "cas_s": 579,
+        "tempo_str": "4:38"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2114,
+        "prevyseni_m": 11,
+        "cas_s": 590,
+        "tempo_str": "4:39"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2206,
+        "prevyseni_m": 11,
+        "cas_s": 583,
+        "tempo_str": "4:24"
+      }
+    ],
+    "thumb": "thumbs/postup_014_2004m_s296.jpg"
+  },
+  {
+    "id": 33,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_014_2016m_s360.geojson",
+    "dist_m": 2016.7362246957337,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2227,
+        "prevyseni_m": 3,
+        "cas_s": 581,
+        "tempo_str": "4:20"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2174,
+        "prevyseni_m": 0,
+        "cas_s": 576,
+        "tempo_str": "4:24"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2139,
+        "prevyseni_m": 2,
+        "cas_s": 607,
+        "tempo_str": "4:43"
+      }
+    ],
+    "thumb": "thumbs/postup_014_2016m_s360.jpg"
+  },
+  {
+    "id": 34,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_015_2038m_s354.geojson",
+    "dist_m": 2038.1916004144457,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2291,
+        "prevyseni_m": 5,
+        "cas_s": 570,
+        "tempo_str": "4:08"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2206,
+        "prevyseni_m": 0,
+        "cas_s": 588,
+        "tempo_str": "4:26"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2165,
+        "prevyseni_m": 1,
+        "cas_s": 594,
+        "tempo_str": "4:34"
+      }
+    ],
+    "thumb": "thumbs/postup_015_2038m_s354.jpg"
+  },
+  {
+    "id": 35,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_016_2055m_s353.geojson",
+    "dist_m": 2055.2980319165395,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2195,
+        "prevyseni_m": 51,
+        "cas_s": 638,
+        "tempo_str": "4:50"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2340,
+        "prevyseni_m": 50,
+        "cas_s": 694,
+        "tempo_str": "4:56"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2232,
+        "prevyseni_m": 48,
+        "cas_s": 671,
+        "tempo_str": "5:00"
+      }
+    ],
+    "thumb": "thumbs/postup_016_2055m_s353.jpg"
+  },
+  {
+    "id": 36,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_017_1997m_s352.geojson",
+    "dist_m": 1997.5046933611948,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2101,
+        "prevyseni_m": 55,
+        "cas_s": 641,
+        "tempo_str": "5:04"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2075,
+        "prevyseni_m": 55,
+        "cas_s": 652,
+        "tempo_str": "5:14"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2233,
+        "prevyseni_m": 56,
+        "cas_s": 651,
+        "tempo_str": "4:51"
+      }
+    ],
+    "thumb": "thumbs/postup_017_1997m_s352.jpg"
+  },
+  {
+    "id": 37,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_018_1803m_s191.geojson",
+    "dist_m": 1803.8361899019546,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1903,
+        "prevyseni_m": 17,
+        "cas_s": 563,
+        "tempo_str": "4:55"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1935,
+        "prevyseni_m": 20,
+        "cas_s": 559,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1930,
+        "prevyseni_m": 20,
+        "cas_s": 564,
+        "tempo_str": "4:52"
+      }
+    ],
+    "thumb": "thumbs/postup_018_1803m_s191.jpg"
+  },
+  {
+    "id": 38,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_018_2030m_s349.geojson",
+    "dist_m": 2030.7695585664073,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2191,
+        "prevyseni_m": 35,
+        "cas_s": 633,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2133,
+        "prevyseni_m": 48,
+        "cas_s": 639,
+        "tempo_str": "4:59"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2117,
+        "prevyseni_m": 46,
+        "cas_s": 658,
+        "tempo_str": "5:11"
+      }
+    ],
+    "thumb": "thumbs/postup_018_2030m_s349.jpg"
+  },
+  {
+    "id": 39,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_019_1216m_s340.geojson",
+    "dist_m": 1216.9326193343657,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1411,
+        "prevyseni_m": 71,
+        "cas_s": 448,
+        "tempo_str": "5:17"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1372,
+        "prevyseni_m": 69,
+        "cas_s": 475,
+        "tempo_str": "5:46"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1313,
+        "prevyseni_m": 71,
+        "cas_s": 464,
+        "tempo_str": "5:53"
+      }
+    ],
+    "thumb": "thumbs/postup_019_1216m_s340.jpg"
+  },
+  {
+    "id": 40,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_020_1484m_s185.geojson",
+    "dist_m": 1484.7642910576749,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1582,
+        "prevyseni_m": 28,
+        "cas_s": 459,
+        "tempo_str": "4:49"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1547,
+        "prevyseni_m": 27,
+        "cas_s": 453,
+        "tempo_str": "4:52"
+      }
+    ],
+    "thumb": "thumbs/postup_020_1484m_s185.jpg"
+  },
+  {
+    "id": 41,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_020_1838m_s336.geojson",
+    "dist_m": 1838.600010877842,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1926,
+        "prevyseni_m": 45,
+        "cas_s": 575,
+        "tempo_str": "4:58"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2095,
+        "prevyseni_m": 38,
+        "cas_s": 610,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2027,
+        "prevyseni_m": 37,
+        "cas_s": 588,
+        "tempo_str": "4:50"
+      }
+    ],
+    "thumb": "thumbs/postup_020_1838m_s336.jpg"
+  },
+  {
+    "id": 42,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_023_1657m_s273.geojson",
+    "dist_m": 1657.5358216340303,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1724,
+        "prevyseni_m": 6,
+        "cas_s": 474,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1784,
+        "prevyseni_m": 10,
+        "cas_s": 486,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1743,
+        "prevyseni_m": 3,
+        "cas_s": 479,
+        "tempo_str": "4:35"
+      }
+    ],
+    "thumb": "thumbs/postup_023_1657m_s273.jpg"
+  },
+  {
+    "id": 43,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_023_1930m_s333.geojson",
+    "dist_m": 1930.0841950547133,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1990,
+        "prevyseni_m": 99,
+        "cas_s": 691,
+        "tempo_str": "5:46"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2189,
+        "prevyseni_m": 87,
+        "cas_s": 701,
+        "tempo_str": "5:20"
+      }
+    ],
+    "thumb": "thumbs/postup_023_1930m_s333.jpg"
+  },
+  {
+    "id": 44,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_024_1682m_s332.geojson",
+    "dist_m": 1682.6244381917195,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1817,
+        "prevyseni_m": 96,
+        "cas_s": 680,
+        "tempo_str": "6:14"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1868,
+        "prevyseni_m": 94,
+        "cas_s": 659,
+        "tempo_str": "5:52"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1881,
+        "prevyseni_m": 102,
+        "cas_s": 728,
+        "tempo_str": "6:26"
+      }
+    ],
+    "thumb": "thumbs/postup_024_1682m_s332.jpg"
+  },
+  {
+    "id": 45,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_024_1765m_s175.geojson",
+    "dist_m": 1765.0,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1878,
+        "prevyseni_m": 50,
+        "cas_s": 592,
+        "tempo_str": "5:15"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1827,
+        "prevyseni_m": 64,
+        "cas_s": 590,
+        "tempo_str": "5:22"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1865,
+        "prevyseni_m": 64,
+        "cas_s": 600,
+        "tempo_str": "5:21"
+      }
+    ],
+    "thumb": "thumbs/postup_024_1765m_s175.jpg"
+  },
+  {
+    "id": 46,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_025_1345m_s175.geojson",
+    "dist_m": 1345.6689786124966,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1364,
+        "prevyseni_m": 4,
+        "cas_s": 381,
+        "tempo_str": "4:39"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1462,
+        "prevyseni_m": 8,
+        "cas_s": 393,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1402,
+        "prevyseni_m": 4,
+        "cas_s": 387,
+        "tempo_str": "4:36"
+      }
+    ],
+    "thumb": "thumbs/postup_025_1345m_s175.jpg"
+  },
+  {
+    "id": 47,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_025_1603m_s261.geojson",
+    "dist_m": 1603.262299188751,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1645,
+        "prevyseni_m": 42,
+        "cas_s": 505,
+        "tempo_str": "5:06"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1721,
+        "prevyseni_m": 39,
+        "cas_s": 523,
+        "tempo_str": "5:04"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1703,
+        "prevyseni_m": 44,
+        "cas_s": 533,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_025_1603m_s261.jpg"
+  },
+  {
+    "id": 48,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_026_1434m_s259.geojson",
+    "dist_m": 1434.1635192682875,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1474,
+        "prevyseni_m": 25,
+        "cas_s": 444,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1507,
+        "prevyseni_m": 25,
+        "cas_s": 449,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1658,
+        "prevyseni_m": 27,
+        "cas_s": 454,
+        "tempo_str": "4:33"
+      }
+    ],
+    "thumb": "thumbs/postup_026_1434m_s259.jpg"
+  },
+  {
+    "id": 49,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_028_844m_s257.geojson",
+    "dist_m": 844.4228798416111,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 975,
+        "prevyseni_m": 51,
+        "cas_s": 311,
+        "tempo_str": "5:19"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 938,
+        "prevyseni_m": 58,
+        "cas_s": 323,
+        "tempo_str": "5:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 873,
+        "prevyseni_m": 59,
+        "cas_s": 322,
+        "tempo_str": "6:08"
+      }
+    ],
+    "thumb": "thumbs/postup_028_844m_s257.jpg"
+  },
+  {
+    "id": 50,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_029_1156m_s162.geojson",
+    "dist_m": 1156.2439189029278,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1192,
+        "prevyseni_m": 40,
+        "cas_s": 402,
+        "tempo_str": "5:37"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1192,
+        "prevyseni_m": 46,
+        "cas_s": 399,
+        "tempo_str": "5:34"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1274,
+        "prevyseni_m": 45,
+        "cas_s": 414,
+        "tempo_str": "5:24"
+      }
+    ],
+    "thumb": "thumbs/postup_029_1156m_s162.jpg"
+  },
+  {
+    "id": 51,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_030_1192m_s161.geojson",
+    "dist_m": 1192.7489258012351,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1294,
+        "prevyseni_m": 33,
+        "cas_s": 383,
+        "tempo_str": "4:56"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1232,
+        "prevyseni_m": 36,
+        "cas_s": 403,
+        "tempo_str": "5:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1275,
+        "prevyseni_m": 41,
+        "cas_s": 399,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_030_1192m_s161.jpg"
+  },
+  {
+    "id": 52,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_030_2063m_s254.geojson",
+    "dist_m": 2063.419492008351,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2223,
+        "prevyseni_m": 103,
+        "cas_s": 759,
+        "tempo_str": "5:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2167,
+        "prevyseni_m": 104,
+        "cas_s": 718,
+        "tempo_str": "5:31"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2302,
+        "prevyseni_m": 95,
+        "cas_s": 720,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_030_2063m_s254.jpg"
+  },
+  {
+    "id": 53,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_031_1073m_s161.geojson",
+    "dist_m": 1073.7085265564392,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1162,
+        "prevyseni_m": 25,
+        "cas_s": 363,
+        "tempo_str": "5:12"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1110,
+        "prevyseni_m": 26,
+        "cas_s": 372,
+        "tempo_str": "5:34"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1261,
+        "prevyseni_m": 35,
+        "cas_s": 375,
+        "tempo_str": "4:57"
+      }
+    ],
+    "thumb": "thumbs/postup_031_1073m_s161.jpg"
+  },
+  {
+    "id": 54,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_031_1114m_s249.geojson",
+    "dist_m": 1114.1476562825953,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1198,
+        "prevyseni_m": 20,
+        "cas_s": 355,
+        "tempo_str": "4:55"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1188,
+        "prevyseni_m": 28,
+        "cas_s": 349,
+        "tempo_str": "4:53"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1153,
+        "prevyseni_m": 25,
+        "cas_s": 363,
+        "tempo_str": "5:14"
+      }
+    ],
+    "thumb": "thumbs/postup_031_1114m_s249.jpg"
+  },
+  {
+    "id": 55,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_032_1168m_s160.geojson",
+    "dist_m": 1168.3428435181172,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1264,
+        "prevyseni_m": 6,
+        "cas_s": 345,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1207,
+        "prevyseni_m": 7,
+        "cas_s": 349,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1238,
+        "prevyseni_m": 9,
+        "cas_s": 345,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_032_1168m_s160.jpg"
+  },
+  {
+    "id": 56,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_033_1000m_s160.geojson",
+    "dist_m": 1000.4249097258623,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1068,
+        "prevyseni_m": 32,
+        "cas_s": 335,
+        "tempo_str": "5:14"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1049,
+        "prevyseni_m": 45,
+        "cas_s": 338,
+        "tempo_str": "5:21"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1155,
+        "prevyseni_m": 32,
+        "cas_s": 345,
+        "tempo_str": "4:58"
+      }
+    ],
+    "thumb": "thumbs/postup_033_1000m_s160.jpg"
+  },
+  {
+    "id": 57,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_033_2020m_s245.geojson",
+    "dist_m": 2020.426935080801,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2227,
+        "prevyseni_m": 86,
+        "cas_s": 698,
+        "tempo_str": "5:13"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2249,
+        "prevyseni_m": 82,
+        "cas_s": 708,
+        "tempo_str": "5:14"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2177,
+        "prevyseni_m": 86,
+        "cas_s": 736,
+        "tempo_str": "5:37"
+      }
+    ],
+    "thumb": "thumbs/postup_033_2020m_s245.jpg"
+  },
+  {
+    "id": 58,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_034_1403m_s240.geojson",
+    "dist_m": 1403.6470354045564,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1516,
+        "prevyseni_m": 62,
+        "cas_s": 478,
+        "tempo_str": "5:15"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1600,
+        "prevyseni_m": 54,
+        "cas_s": 482,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1558,
+        "prevyseni_m": 54,
+        "cas_s": 480,
+        "tempo_str": "5:08"
+      }
+    ],
+    "thumb": "thumbs/postup_034_1403m_s240.jpg"
+  },
+  {
+    "id": 59,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_034_1980m_s160.geojson",
+    "dist_m": 1980.3156314082864,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2129,
+        "prevyseni_m": 9,
+        "cas_s": 585,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2162,
+        "prevyseni_m": 9,
+        "cas_s": 596,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2143,
+        "prevyseni_m": 31,
+        "cas_s": 610,
+        "tempo_str": "4:44"
+      }
+    ],
+    "thumb": "thumbs/postup_034_1980m_s160.jpg"
+  },
+  {
+    "id": 60,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_035_1446m_s240.geojson",
+    "dist_m": 1446.003112029846,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1498,
+        "prevyseni_m": 11,
+        "cas_s": 422,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1499,
+        "prevyseni_m": 13,
+        "cas_s": 423,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1576,
+        "prevyseni_m": 17,
+        "cas_s": 429,
+        "tempo_str": "4:32"
+      }
+    ],
+    "thumb": "thumbs/postup_035_1446m_s240.jpg"
+  },
+  {
+    "id": 61,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_036_1931m_s237.geojson",
+    "dist_m": 1931.2495954692133,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2047,
+        "prevyseni_m": 38,
+        "cas_s": 614,
+        "tempo_str": "4:59"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2076,
+        "prevyseni_m": 37,
+        "cas_s": 618,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2094,
+        "prevyseni_m": 33,
+        "cas_s": 626,
+        "tempo_str": "4:58"
+      }
+    ],
+    "thumb": "thumbs/postup_036_1931m_s237.jpg"
+  },
+  {
+    "id": 62,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_037_1094m_s153.geojson",
+    "dist_m": 1094.0978018440583,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1139,
+        "prevyseni_m": 6,
+        "cas_s": 342,
+        "tempo_str": "5:00"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1182,
+        "prevyseni_m": 5,
+        "cas_s": 342,
+        "tempo_str": "4:49"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1186,
+        "prevyseni_m": 9,
+        "cas_s": 344,
+        "tempo_str": "4:49"
+      }
+    ],
+    "thumb": "thumbs/postup_037_1094m_s153.jpg"
+  },
+  {
+    "id": 63,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_038_1460m_s152.geojson",
+    "dist_m": 1460.522166897853,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1510,
+        "prevyseni_m": 17,
+        "cas_s": 444,
+        "tempo_str": "4:53"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1550,
+        "prevyseni_m": 18,
+        "cas_s": 446,
+        "tempo_str": "4:47"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1556,
+        "prevyseni_m": 17,
+        "cas_s": 443,
+        "tempo_str": "4:44"
+      }
+    ],
+    "thumb": "thumbs/postup_038_1460m_s152.jpg"
+  },
+  {
+    "id": 64,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_039_1097m_s152.geojson",
+    "dist_m": 1097.7249200050076,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1128,
+        "prevyseni_m": 6,
+        "cas_s": 330,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1176,
+        "prevyseni_m": 6,
+        "cas_s": 330,
+        "tempo_str": "4:40"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1194,
+        "prevyseni_m": 9,
+        "cas_s": 349,
+        "tempo_str": "4:52"
+      }
+    ],
+    "thumb": "thumbs/postup_039_1097m_s152.jpg"
+  },
+  {
+    "id": 65,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_039_483m_s108.geojson",
+    "dist_m": 483.01138702933287,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 499,
+        "prevyseni_m": 7,
+        "cas_s": 146,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 508,
+        "prevyseni_m": 5,
+        "cas_s": 150,
+        "tempo_str": "4:54"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 590,
+        "prevyseni_m": 11,
+        "cas_s": 164,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_039_483m_s108.jpg"
+  },
+  {
+    "id": 66,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_040_1040m_s149.geojson",
+    "dist_m": 1040.9851103642166,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1110,
+        "prevyseni_m": 26,
+        "cas_s": 340,
+        "tempo_str": "5:06"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1081,
+        "prevyseni_m": 33,
+        "cas_s": 350,
+        "tempo_str": "5:23"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1142,
+        "prevyseni_m": 30,
+        "cas_s": 349,
+        "tempo_str": "5:05"
+      }
+    ],
+    "thumb": "thumbs/postup_040_1040m_s149.jpg"
+  },
+  {
+    "id": 67,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_043_849m_s230.geojson",
+    "dist_m": 849.7793831342344,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 882,
+        "prevyseni_m": 40,
+        "cas_s": 301,
+        "tempo_str": "5:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 925,
+        "prevyseni_m": 35,
+        "cas_s": 303,
+        "tempo_str": "5:28"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1030,
+        "prevyseni_m": 34,
+        "cas_s": 306,
+        "tempo_str": "4:56"
+      }
+    ],
+    "thumb": "thumbs/postup_043_849m_s230.jpg"
+  },
+  {
+    "id": 68,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_045_1185m_s140.geojson",
+    "dist_m": 1185.0949329062207,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1245,
+        "prevyseni_m": 15,
+        "cas_s": 348,
+        "tempo_str": "4:39"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1236,
+        "prevyseni_m": 19,
+        "cas_s": 366,
+        "tempo_str": "4:56"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1298,
+        "prevyseni_m": 11,
+        "cas_s": 362,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_045_1185m_s140.jpg"
+  },
+  {
+    "id": 69,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_052_698m_s124.geojson",
+    "dist_m": 698.7131027825369,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 728,
+        "prevyseni_m": 3,
+        "cas_s": 205,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 763,
+        "prevyseni_m": 7,
+        "cas_s": 210,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 793,
+        "prevyseni_m": 6,
+        "cas_s": 216,
+        "tempo_str": "4:32"
+      }
+    ],
+    "thumb": "thumbs/postup_052_698m_s124.jpg"
+  },
+  {
+    "id": 70,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_053_686m_s124.geojson",
+    "dist_m": 686.476510887299,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 733,
+        "prevyseni_m": 43,
+        "cas_s": 273,
+        "tempo_str": "6:12"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 759,
+        "prevyseni_m": 39,
+        "cas_s": 280,
+        "tempo_str": "6:08"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 823,
+        "prevyseni_m": 44,
+        "cas_s": 301,
+        "tempo_str": "6:05"
+      }
+    ],
+    "thumb": "thumbs/postup_053_686m_s124.jpg"
+  },
+  {
+    "id": 71,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_056_747m_s123.geojson",
+    "dist_m": 747.3285756613352,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 778,
+        "prevyseni_m": 10,
+        "cas_s": 254,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 793,
+        "prevyseni_m": 10,
+        "cas_s": 255,
+        "tempo_str": "5:22"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 870,
+        "prevyseni_m": 8,
+        "cas_s": 258,
+        "tempo_str": "4:56"
+      }
+    ],
+    "thumb": "thumbs/postup_056_747m_s123.jpg"
+  },
+  {
+    "id": 72,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_058_1370m_s202.geojson",
+    "dist_m": 1370.5838172107533,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1420,
+        "prevyseni_m": 41,
+        "cas_s": 445,
+        "tempo_str": "5:13"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1458,
+        "prevyseni_m": 36,
+        "cas_s": 452,
+        "tempo_str": "5:10"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1510,
+        "prevyseni_m": 43,
+        "cas_s": 467,
+        "tempo_str": "5:09"
+      }
+    ],
+    "thumb": "thumbs/postup_058_1370m_s202.jpg"
+  },
+  {
+    "id": 73,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_058_868m_s122.geojson",
+    "dist_m": 868.3317338436964,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 904,
+        "prevyseni_m": 12,
+        "cas_s": 256,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 907,
+        "prevyseni_m": 12,
+        "cas_s": 265,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 958,
+        "prevyseni_m": 6,
+        "cas_s": 264,
+        "tempo_str": "4:36"
+      }
+    ],
+    "thumb": "thumbs/postup_058_868m_s122.jpg"
+  },
+  {
+    "id": 74,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_059_938m_s121.geojson",
+    "dist_m": 938.416218956173,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 978,
+        "prevyseni_m": 1,
+        "cas_s": 267,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1017,
+        "prevyseni_m": 2,
+        "cas_s": 281,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1033,
+        "prevyseni_m": 6,
+        "cas_s": 287,
+        "tempo_str": "4:37"
+      }
+    ],
+    "thumb": "thumbs/postup_059_938m_s121.jpg"
+  },
+  {
+    "id": 75,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_060_1541m_s200.geojson",
+    "dist_m": 1541.6306302094545,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1610,
+        "prevyseni_m": 58,
+        "cas_s": 526,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1610,
+        "prevyseni_m": 56,
+        "cas_s": 541,
+        "tempo_str": "5:36"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1690,
+        "prevyseni_m": 60,
+        "cas_s": 553,
+        "tempo_str": "5:27"
+      }
+    ],
+    "thumb": "thumbs/postup_060_1541m_s200.jpg"
+  },
+  {
+    "id": 76,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_064_887m_s120.geojson",
+    "dist_m": 887.3837952092657,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 977,
+        "prevyseni_m": 3,
+        "cas_s": 269,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 918,
+        "prevyseni_m": 8,
+        "cas_s": 265,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 977,
+        "prevyseni_m": 6,
+        "cas_s": 278,
+        "tempo_str": "4:44"
+      }
+    ],
+    "thumb": "thumbs/postup_064_887m_s120.jpg"
+  },
+  {
+    "id": 77,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_066_1770m_s192.geojson",
+    "dist_m": 1770.0282483621552,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1839,
+        "prevyseni_m": 16,
+        "cas_s": 530,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1903,
+        "prevyseni_m": 18,
+        "cas_s": 541,
+        "tempo_str": "4:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1866,
+        "prevyseni_m": 16,
+        "cas_s": 550,
+        "tempo_str": "4:54"
+      }
+    ],
+    "thumb": "thumbs/postup_066_1770m_s192.jpg"
+  },
+  {
+    "id": 78,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_067_1030m_s116.geojson",
+    "dist_m": 1030.594488632653,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1088,
+        "prevyseni_m": 20,
+        "cas_s": 328,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1079,
+        "prevyseni_m": 27,
+        "cas_s": 342,
+        "tempo_str": "5:16"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1168,
+        "prevyseni_m": 19,
+        "cas_s": 347,
+        "tempo_str": "4:57"
+      }
+    ],
+    "thumb": "thumbs/postup_067_1030m_s116.jpg"
+  },
+  {
+    "id": 79,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_068_1341m_s191.geojson",
+    "dist_m": 1341.3146536141323,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1390,
+        "prevyseni_m": 22,
+        "cas_s": 405,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1459,
+        "prevyseni_m": 23,
+        "cas_s": 415,
+        "tempo_str": "4:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1383,
+        "prevyseni_m": 28,
+        "cas_s": 432,
+        "tempo_str": "5:12"
+      }
+    ],
+    "thumb": "thumbs/postup_068_1341m_s191.jpg"
+  },
+  {
+    "id": 80,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_073_923m_s112.geojson",
+    "dist_m": 923.9182864301367,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 963,
+        "prevyseni_m": 14,
+        "cas_s": 288,
+        "tempo_str": "4:58"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 963,
+        "prevyseni_m": 16,
+        "cas_s": 293,
+        "tempo_str": "5:04"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1083,
+        "prevyseni_m": 13,
+        "cas_s": 308,
+        "tempo_str": "4:44"
+      }
+    ],
+    "thumb": "thumbs/postup_073_923m_s112.jpg"
+  },
+  {
+    "id": 81,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_075_603m_s111.geojson",
+    "dist_m": 603.0754513325841,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 636,
+        "prevyseni_m": 3,
+        "cas_s": 193,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 651,
+        "prevyseni_m": 2,
+        "cas_s": 193,
+        "tempo_str": "4:57"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 696,
+        "prevyseni_m": 4,
+        "cas_s": 193,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_075_603m_s111.jpg"
+  },
+  {
+    "id": 82,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_077_678m_s109.geojson",
+    "dist_m": 678.6199230791857,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 699,
+        "prevyseni_m": 22,
+        "cas_s": 223,
+        "tempo_str": "5:18"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 746,
+        "prevyseni_m": 19,
+        "cas_s": 230,
+        "tempo_str": "5:08"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 718,
+        "prevyseni_m": 24,
+        "cas_s": 231,
+        "tempo_str": "5:22"
+      }
+    ],
+    "thumb": "thumbs/postup_077_678m_s109.jpg"
+  },
+  {
+    "id": 83,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_103_2095m_s165.geojson",
+    "dist_m": 2095.859012433804,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2218,
+        "prevyseni_m": 69,
+        "cas_s": 662,
+        "tempo_str": "4:58"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2180,
+        "prevyseni_m": 74,
+        "cas_s": 692,
+        "tempo_str": "5:17"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2305,
+        "prevyseni_m": 72,
+        "cas_s": 704,
+        "tempo_str": "5:05"
+      }
+    ],
+    "thumb": "thumbs/postup_103_2095m_s165.jpg"
+  },
+  {
+    "id": 84,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_112_891m_s161.geojson",
+    "dist_m": 891.6557631732103,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 920,
+        "prevyseni_m": 5,
+        "cas_s": 266,
+        "tempo_str": "4:49"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 963,
+        "prevyseni_m": 10,
+        "cas_s": 275,
+        "tempo_str": "4:45"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 968,
+        "prevyseni_m": 5,
+        "cas_s": 279,
+        "tempo_str": "4:48"
+      }
+    ],
+    "thumb": "thumbs/postup_112_891m_s161.jpg"
+  },
+  {
+    "id": 85,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_113_527m_s161.geojson",
+    "dist_m": 527.3755777432247,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 561,
+        "prevyseni_m": 23,
+        "cas_s": 196,
+        "tempo_str": "5:49"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 637,
+        "prevyseni_m": 20,
+        "cas_s": 208,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 557,
+        "prevyseni_m": 23,
+        "cas_s": 222,
+        "tempo_str": "6:39"
+      }
+    ],
+    "thumb": "thumbs/postup_113_527m_s161.jpg"
+  },
+  {
+    "id": 86,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_114_1061m_s161.geojson",
+    "dist_m": 1061.0372283760828,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1104,
+        "prevyseni_m": 8,
+        "cas_s": 316,
+        "tempo_str": "4:46"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1122,
+        "prevyseni_m": 14,
+        "cas_s": 318,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1135,
+        "prevyseni_m": 11,
+        "cas_s": 326,
+        "tempo_str": "4:47"
+      }
+    ],
+    "thumb": "thumbs/postup_114_1061m_s161.jpg"
+  },
+  {
+    "id": 87,
+    "map_id": "homolka",
+    "map_name": "Homolka",
+    "terrain": "cesko",
+    "file": "postup_121_722m_s156.geojson",
+    "dist_m": 722.3745565840479,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 780,
+        "prevyseni_m": 58,
+        "cas_s": 328,
+        "tempo_str": "7:00"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 791,
+        "prevyseni_m": 58,
+        "cas_s": 333,
+        "tempo_str": "7:00"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 806,
+        "prevyseni_m": 58,
+        "cas_s": 327,
+        "tempo_str": "6:45"
+      }
+    ],
+    "thumb": "thumbs/postup_121_722m_s156.jpg"
+  },
+  {
+    "id": 1,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_005_1202m_s216.geojson",
+    "dist_m": 1202.081528017131,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1321,
+        "prevyseni_m": 10,
+        "cas_s": 369,
+        "tempo_str": "4:39"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1349,
+        "prevyseni_m": 15,
+        "cas_s": 368,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1412,
+        "prevyseni_m": 15,
+        "cas_s": 380,
+        "tempo_str": "4:29"
+      }
+    ],
+    "thumb": "thumbs/postup_005_1202m_s216.jpg"
+  },
+  {
+    "id": 2,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_006_1825m_s184.geojson",
+    "dist_m": 1825.821732809641,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2018,
+        "prevyseni_m": 22,
+        "cas_s": 554,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1958,
+        "prevyseni_m": 25,
+        "cas_s": 554,
+        "tempo_str": "4:42"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2099,
+        "prevyseni_m": 16,
+        "cas_s": 568,
+        "tempo_str": "4:30"
+      }
+    ],
+    "thumb": "thumbs/postup_006_1825m_s184.jpg"
+  },
+  {
+    "id": 3,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_007_879m_s168.geojson",
+    "dist_m": 879.5737604089835,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 911,
+        "prevyseni_m": 5,
+        "cas_s": 275,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1052,
+        "prevyseni_m": 6,
+        "cas_s": 271,
+        "tempo_str": "4:18"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1024,
+        "prevyseni_m": 7,
+        "cas_s": 272,
+        "tempo_str": "4:25"
+      }
+    ],
+    "thumb": "thumbs/postup_007_879m_s168.jpg"
+  },
+  {
+    "id": 4,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_008_1240m_s167.geojson",
+    "dist_m": 1240.2519905245063,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1326,
+        "prevyseni_m": 13,
+        "cas_s": 362,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1324,
+        "prevyseni_m": 14,
+        "cas_s": 365,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1419,
+        "prevyseni_m": 7,
+        "cas_s": 374,
+        "tempo_str": "4:23"
+      }
+    ],
+    "thumb": "thumbs/postup_008_1240m_s167.jpg"
+  },
+  {
+    "id": 5,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_009_1518m_s162.geojson",
+    "dist_m": 1518.9881500525275,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1566,
+        "prevyseni_m": 14,
+        "cas_s": 427,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1618,
+        "prevyseni_m": 13,
+        "cas_s": 439,
+        "tempo_str": "4:31"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1632,
+        "prevyseni_m": 19,
+        "cas_s": 443,
+        "tempo_str": "4:31"
+      }
+    ],
+    "thumb": "thumbs/postup_009_1518m_s162.jpg"
+  },
+  {
+    "id": 6,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_010_1498m_s160.geojson",
+    "dist_m": 1498.9496322425248,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1611,
+        "prevyseni_m": 22,
+        "cas_s": 446,
+        "tempo_str": "4:36"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1644,
+        "prevyseni_m": 20,
+        "cas_s": 458,
+        "tempo_str": "4:38"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1621,
+        "prevyseni_m": 19,
+        "cas_s": 464,
+        "tempo_str": "4:46"
+      }
+    ],
+    "thumb": "thumbs/postup_010_1498m_s160.jpg"
+  },
+  {
+    "id": 7,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_011_1125m_s158.geojson",
+    "dist_m": 1125.4443566876153,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1210,
+        "prevyseni_m": 4,
+        "cas_s": 324,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1185,
+        "prevyseni_m": 3,
+        "cas_s": 318,
+        "tempo_str": "4:28"
+      }
+    ],
+    "thumb": "thumbs/postup_011_1125m_s158.jpg"
+  },
+  {
+    "id": 8,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_012_1619m_s149.geojson",
+    "dist_m": 1619.6681758928278,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1819,
+        "prevyseni_m": 3,
+        "cas_s": 473,
+        "tempo_str": "4:20"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1817,
+        "prevyseni_m": 6,
+        "cas_s": 473,
+        "tempo_str": "4:20"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1790,
+        "prevyseni_m": 4,
+        "cas_s": 475,
+        "tempo_str": "4:25"
+      }
+    ],
+    "thumb": "thumbs/postup_012_1619m_s149.jpg"
+  },
+  {
+    "id": 9,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_013_889m_s147.geojson",
+    "dist_m": 889.6207056942864,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 912,
+        "prevyseni_m": 6,
+        "cas_s": 261,
+        "tempo_str": "4:46"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1001,
+        "prevyseni_m": 5,
+        "cas_s": 266,
+        "tempo_str": "4:25"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 964,
+        "prevyseni_m": 8,
+        "cas_s": 266,
+        "tempo_str": "4:36"
+      }
+    ],
+    "thumb": "thumbs/postup_013_889m_s147.jpg"
+  },
+  {
+    "id": 10,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_016_844m_s145.geojson",
+    "dist_m": 844.6448957994123,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 865,
+        "prevyseni_m": 22,
+        "cas_s": 262,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1052,
+        "prevyseni_m": 21,
+        "cas_s": 281,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 931,
+        "prevyseni_m": 22,
+        "cas_s": 277,
+        "tempo_str": "4:57"
+      }
+    ],
+    "thumb": "thumbs/postup_016_844m_s145.jpg"
+  },
+  {
+    "id": 11,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_019_693m_s136.geojson",
+    "dist_m": 693.9920748827035,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 770,
+        "prevyseni_m": 0,
+        "cas_s": 209,
+        "tempo_str": "4:31"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 712,
+        "prevyseni_m": 3,
+        "cas_s": 210,
+        "tempo_str": "4:55"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 823,
+        "prevyseni_m": 4,
+        "cas_s": 215,
+        "tempo_str": "4:21"
+      }
+    ],
+    "thumb": "thumbs/postup_019_693m_s136.jpg"
+  },
+  {
+    "id": 12,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_021_1309m_s136.geojson",
+    "dist_m": 1309.2364186807515,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1413,
+        "prevyseni_m": 18,
+        "cas_s": 396,
+        "tempo_str": "4:40"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1385,
+        "prevyseni_m": 20,
+        "cas_s": 417,
+        "tempo_str": "5:01"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1465,
+        "prevyseni_m": 19,
+        "cas_s": 408,
+        "tempo_str": "4:38"
+      }
+    ],
+    "thumb": "thumbs/postup_021_1309m_s136.jpg"
+  },
+  {
+    "id": 13,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_022_584m_s134.geojson",
+    "dist_m": 584.5083404024275,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 612,
+        "prevyseni_m": 9,
+        "cas_s": 184,
+        "tempo_str": "5:00"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 710,
+        "prevyseni_m": 10,
+        "cas_s": 195,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 678,
+        "prevyseni_m": 7,
+        "cas_s": 204,
+        "tempo_str": "5:00"
+      }
+    ],
+    "thumb": "thumbs/postup_022_584m_s134.jpg"
+  },
+  {
+    "id": 14,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_024_1194m_s130.geojson",
+    "dist_m": 1194.7384651043926,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1311,
+        "prevyseni_m": 12,
+        "cas_s": 358,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1327,
+        "prevyseni_m": 17,
+        "cas_s": 372,
+        "tempo_str": "4:40"
+      }
+    ],
+    "thumb": "thumbs/postup_024_1194m_s130.jpg"
+  },
+  {
+    "id": 15,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_025_570m_s128.geojson",
+    "dist_m": 570.087712549569,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 582,
+        "prevyseni_m": 5,
+        "cas_s": 176,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 663,
+        "prevyseni_m": 4,
+        "cas_s": 179,
+        "tempo_str": "4:30"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 689,
+        "prevyseni_m": 7,
+        "cas_s": 183,
+        "tempo_str": "4:25"
+      }
+    ],
+    "thumb": "thumbs/postup_025_570m_s128.jpg"
+  },
+  {
+    "id": 16,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_026_793m_s127.geojson",
+    "dist_m": 793.0952023559341,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 837,
+        "prevyseni_m": 13,
+        "cas_s": 245,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 863,
+        "prevyseni_m": 15,
+        "cas_s": 242,
+        "tempo_str": "4:40"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 882,
+        "prevyseni_m": 6,
+        "cas_s": 247,
+        "tempo_str": "4:39"
+      }
+    ],
+    "thumb": "thumbs/postup_026_793m_s127.jpg"
+  },
+  {
+    "id": 17,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_027_670m_s119.geojson",
+    "dist_m": 670.1678894127949,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 709,
+        "prevyseni_m": 6,
+        "cas_s": 193,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 728,
+        "prevyseni_m": 9,
+        "cas_s": 200,
+        "tempo_str": "4:34"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 859,
+        "prevyseni_m": 11,
+        "cas_s": 223,
+        "tempo_str": "4:19"
+      }
+    ],
+    "thumb": "thumbs/postup_027_670m_s119.jpg"
+  },
+  {
+    "id": 18,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_028_650m_s114.geojson",
+    "dist_m": 650.2499519415592,
+    "variants_count": 4,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 724,
+        "prevyseni_m": 14,
+        "cas_s": 211,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 756,
+        "prevyseni_m": 14,
+        "cas_s": 214,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 708,
+        "prevyseni_m": 18,
+        "cas_s": 215,
+        "tempo_str": "5:03"
+      },
+      {
+        "id": 4,
+        "color": "#ffaa00",
+        "vzdal_m": 822,
+        "prevyseni_m": 16,
+        "cas_s": 227,
+        "tempo_str": "4:36"
+      }
+    ],
+    "thumb": "thumbs/postup_028_650m_s114.jpg"
+  },
+  {
+    "id": 19,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_029_764m_s114.geojson",
+    "dist_m": 764.8856123630513,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 842,
+        "prevyseni_m": 3,
+        "cas_s": 226,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 825,
+        "prevyseni_m": 5,
+        "cas_s": 225,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 822,
+        "prevyseni_m": 9,
+        "cas_s": 224,
+        "tempo_str": "4:32"
+      }
+    ],
+    "thumb": "thumbs/postup_029_764m_s114.jpg"
+  },
+  {
+    "id": 20,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_030_473m_s111.geojson",
+    "dist_m": 473.97257304616267,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 500,
+        "prevyseni_m": 9,
+        "cas_s": 153,
+        "tempo_str": "5:05"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 548,
+        "prevyseni_m": 11,
+        "cas_s": 159,
+        "tempo_str": "4:49"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 561,
+        "prevyseni_m": 5,
+        "cas_s": 159,
+        "tempo_str": "4:43"
+      }
+    ],
+    "thumb": "thumbs/postup_030_473m_s111.jpg"
+  },
+  {
+    "id": 21,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_031_671m_s110.geojson",
+    "dist_m": 671.0625902253828,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 701,
+        "prevyseni_m": 12,
+        "cas_s": 216,
+        "tempo_str": "5:07"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 735,
+        "prevyseni_m": 14,
+        "cas_s": 210,
+        "tempo_str": "4:46"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 742,
+        "prevyseni_m": 11,
+        "cas_s": 210,
+        "tempo_str": "4:43"
+      }
+    ],
+    "thumb": "thumbs/postup_031_671m_s110.jpg"
+  },
+  {
+    "id": 22,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_032_519m_s110.geojson",
+    "dist_m": 519.7355096585185,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 547,
+        "prevyseni_m": 1,
+        "cas_s": 160,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 611,
+        "prevyseni_m": 5,
+        "cas_s": 168,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 594,
+        "prevyseni_m": 0,
+        "cas_s": 168,
+        "tempo_str": "4:42"
+      }
+    ],
+    "thumb": "thumbs/postup_032_519m_s110.jpg"
+  },
+  {
+    "id": 23,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_033_558m_s105.geojson",
+    "dist_m": 558.3233829959122,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 577,
+        "prevyseni_m": 9,
+        "cas_s": 175,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 606,
+        "prevyseni_m": 12,
+        "cas_s": 174,
+        "tempo_str": "4:47"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 640,
+        "prevyseni_m": 8,
+        "cas_s": 181,
+        "tempo_str": "4:42"
+      }
+    ],
+    "thumb": "thumbs/postup_033_558m_s105.jpg"
+  },
+  {
+    "id": 24,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_034_905m_s105.geojson",
+    "dist_m": 905.883546599672,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1007,
+        "prevyseni_m": 5,
+        "cas_s": 260,
+        "tempo_str": "4:17"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 987,
+        "prevyseni_m": 8,
+        "cas_s": 262,
+        "tempo_str": "4:25"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 997,
+        "prevyseni_m": 6,
+        "cas_s": 263,
+        "tempo_str": "4:23"
+      }
+    ],
+    "thumb": "thumbs/postup_034_905m_s105.jpg"
+  },
+  {
+    "id": 25,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_035_631m_s100.geojson",
+    "dist_m": 631.0507111159926,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 729,
+        "prevyseni_m": 5,
+        "cas_s": 186,
+        "tempo_str": "4:15"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 716,
+        "prevyseni_m": 5,
+        "cas_s": 192,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 764,
+        "prevyseni_m": 5,
+        "cas_s": 190,
+        "tempo_str": "4:09"
+      }
+    ],
+    "thumb": "thumbs/postup_035_631m_s100.jpg"
+  },
+  {
+    "id": 26,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_036_1509m_s97.geojson",
+    "dist_m": 1509.7764735218257,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1613,
+        "prevyseni_m": 4,
+        "cas_s": 425,
+        "tempo_str": "4:23"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1656,
+        "prevyseni_m": 1,
+        "cas_s": 431,
+        "tempo_str": "4:19"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1724,
+        "prevyseni_m": 6,
+        "cas_s": 446,
+        "tempo_str": "4:18"
+      }
+    ],
+    "thumb": "thumbs/postup_036_1509m_s97.jpg"
+  },
+  {
+    "id": 27,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_038_682m_s95.geojson",
+    "dist_m": 682.0923691113983,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 699,
+        "prevyseni_m": 5,
+        "cas_s": 191,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 758,
+        "prevyseni_m": 4,
+        "cas_s": 204,
+        "tempo_str": "4:28"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 758,
+        "prevyseni_m": 8,
+        "cas_s": 204,
+        "tempo_str": "4:29"
+      }
+    ],
+    "thumb": "thumbs/postup_038_682m_s95.jpg"
+  },
+  {
+    "id": 28,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_046_570m_s67.geojson",
+    "dist_m": 570.1096385784053,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 601,
+        "prevyseni_m": 8,
+        "cas_s": 168,
+        "tempo_str": "4:38"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 593,
+        "prevyseni_m": 3,
+        "cas_s": 170,
+        "tempo_str": "4:46"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 610,
+        "prevyseni_m": 6,
+        "cas_s": 167,
+        "tempo_str": "4:34"
+      }
+    ],
+    "thumb": "thumbs/postup_046_570m_s67.jpg"
+  },
+  {
+    "id": 29,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_052_434m_s59.geojson",
+    "dist_m": 434.1658669218482,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 456,
+        "prevyseni_m": 3,
+        "cas_s": 132,
+        "tempo_str": "4:49"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 462,
+        "prevyseni_m": 3,
+        "cas_s": 133,
+        "tempo_str": "4:47"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 491,
+        "prevyseni_m": 4,
+        "cas_s": 133,
+        "tempo_str": "4:31"
+      }
+    ],
+    "thumb": "thumbs/postup_052_434m_s59.jpg"
+  },
+  {
+    "id": 30,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_053_488m_s58.geojson",
+    "dist_m": 488.4669896727925,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 529,
+        "prevyseni_m": 2,
+        "cas_s": 143,
+        "tempo_str": "4:30"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 520,
+        "prevyseni_m": 5,
+        "cas_s": 138,
+        "tempo_str": "4:25"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 587,
+        "prevyseni_m": 6,
+        "cas_s": 150,
+        "tempo_str": "4:15"
+      }
+    ],
+    "thumb": "thumbs/postup_053_488m_s58.jpg"
+  },
+  {
+    "id": 31,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_054_472m_s58.geojson",
+    "dist_m": 472.78430600010404,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 537,
+        "prevyseni_m": 5,
+        "cas_s": 152,
+        "tempo_str": "4:42"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 561,
+        "prevyseni_m": 7,
+        "cas_s": 155,
+        "tempo_str": "4:35"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 487,
+        "prevyseni_m": 10,
+        "cas_s": 149,
+        "tempo_str": "5:05"
+      }
+    ],
+    "thumb": "thumbs/postup_054_472m_s58.jpg"
+  },
+  {
+    "id": 32,
+    "map_id": "holna",
+    "map_name": "Holn\u00e1",
+    "terrain": "cesko",
+    "file": "postup_058_1802m_s53.geojson",
+    "dist_m": 1802.3595645708433,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1931,
+        "prevyseni_m": 24,
+        "cas_s": 528,
+        "tempo_str": "4:33"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1990,
+        "prevyseni_m": 21,
+        "cas_s": 531,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2013,
+        "prevyseni_m": 26,
+        "cas_s": 536,
+        "tempo_str": "4:26"
+      }
+    ],
+    "thumb": "thumbs/postup_058_1802m_s53.jpg"
+  },
+  {
+    "id": 1,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_001_1736m_s270.geojson",
+    "dist_m": 1736.4115295631968,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1862,
+        "prevyseni_m": 3,
+        "cas_s": 508,
+        "tempo_str": "4:32"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1908,
+        "prevyseni_m": 21,
+        "cas_s": 518,
+        "tempo_str": "4:31"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1884,
+        "prevyseni_m": 9,
+        "cas_s": 518,
+        "tempo_str": "4:35"
+      }
+    ],
+    "thumb": "thumbs/postup_001_1736m_s270.jpg"
+  },
+  {
+    "id": 2,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_001_1902m_s302.geojson",
+    "dist_m": 1902.2355269524328,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2134,
+        "prevyseni_m": 72,
+        "cas_s": 665,
+        "tempo_str": "5:11"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2074,
+        "prevyseni_m": 78,
+        "cas_s": 673,
+        "tempo_str": "5:24"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2241,
+        "prevyseni_m": 71,
+        "cas_s": 689,
+        "tempo_str": "5:07"
+      }
+    ],
+    "thumb": "thumbs/postup_001_1902m_s302.jpg"
+  },
+  {
+    "id": 3,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_001_2030m_s307.geojson",
+    "dist_m": 2030.9603639657767,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2204,
+        "prevyseni_m": 84,
+        "cas_s": 720,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2268,
+        "prevyseni_m": 103,
+        "cas_s": 736,
+        "tempo_str": "5:24"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2238,
+        "prevyseni_m": 85,
+        "cas_s": 721,
+        "tempo_str": "5:22"
+      }
+    ],
+    "thumb": "thumbs/postup_001_2030m_s307.jpg"
+  },
+  {
+    "id": 4,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_002_1326m_s183.geojson",
+    "dist_m": 1326.3954915484296,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1394,
+        "prevyseni_m": 41,
+        "cas_s": 457,
+        "tempo_str": "5:27"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1508,
+        "prevyseni_m": 36,
+        "cas_s": 473,
+        "tempo_str": "5:13"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1484,
+        "prevyseni_m": 46,
+        "cas_s": 483,
+        "tempo_str": "5:25"
+      }
+    ],
+    "thumb": "thumbs/postup_002_1326m_s183.jpg"
+  },
+  {
+    "id": 5,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_003_1981m_s179.geojson",
+    "dist_m": 1981.8236551217162,
+    "variants_count": 4,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2071,
+        "prevyseni_m": 9,
+        "cas_s": 626,
+        "tempo_str": "5:02"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2176,
+        "prevyseni_m": 18,
+        "cas_s": 616,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2204,
+        "prevyseni_m": 22,
+        "cas_s": 612,
+        "tempo_str": "4:37"
+      },
+      {
+        "id": 4,
+        "color": "#ffaa00",
+        "vzdal_m": 2244,
+        "prevyseni_m": 29,
+        "cas_s": 630,
+        "tempo_str": "4:40"
+      }
+    ],
+    "thumb": "thumbs/postup_003_1981m_s179.jpg"
+  },
+  {
+    "id": 6,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_004_1283m_s170.geojson",
+    "dist_m": 1283.7834708392222,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1388,
+        "prevyseni_m": 18,
+        "cas_s": 412,
+        "tempo_str": "4:56"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1376,
+        "prevyseni_m": 12,
+        "cas_s": 401,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1483,
+        "prevyseni_m": 11,
+        "cas_s": 417,
+        "tempo_str": "4:41"
+      }
+    ],
+    "thumb": "thumbs/postup_004_1283m_s170.jpg"
+  },
+  {
+    "id": 7,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_004_1546m_s269.geojson",
+    "dist_m": 1546.560700392972,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1697,
+        "prevyseni_m": 8,
+        "cas_s": 472,
+        "tempo_str": "4:38"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1849,
+        "prevyseni_m": 4,
+        "cas_s": 494,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1692,
+        "prevyseni_m": 6,
+        "cas_s": 485,
+        "tempo_str": "4:46"
+      }
+    ],
+    "thumb": "thumbs/postup_004_1546m_s269.jpg"
+  },
+  {
+    "id": 8,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_005_959m_s146.geojson",
+    "dist_m": 959.5962692716141,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1059,
+        "prevyseni_m": 34,
+        "cas_s": 348,
+        "tempo_str": "5:28"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1017,
+        "prevyseni_m": 43,
+        "cas_s": 351,
+        "tempo_str": "5:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1073,
+        "prevyseni_m": 38,
+        "cas_s": 348,
+        "tempo_str": "5:24"
+      }
+    ],
+    "thumb": "thumbs/postup_005_959m_s146.jpg"
+  },
+  {
+    "id": 9,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_006_1860m_s258.geojson",
+    "dist_m": 1860.5174011548506,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1989,
+        "prevyseni_m": 31,
+        "cas_s": 577,
+        "tempo_str": "4:50"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2029,
+        "prevyseni_m": 27,
+        "cas_s": 584,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2069,
+        "prevyseni_m": 33,
+        "cas_s": 600,
+        "tempo_str": "4:50"
+      }
+    ],
+    "thumb": "thumbs/postup_006_1860m_s258.jpg"
+  },
+  {
+    "id": 10,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_006_985m_s131.geojson",
+    "dist_m": 985.6089488230107,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1012,
+        "prevyseni_m": 12,
+        "cas_s": 284,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1080,
+        "prevyseni_m": 14,
+        "cas_s": 304,
+        "tempo_str": "4:41"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1051,
+        "prevyseni_m": 13,
+        "cas_s": 292,
+        "tempo_str": "4:37"
+      }
+    ],
+    "thumb": "thumbs/postup_006_985m_s131.jpg"
+  },
+  {
+    "id": 11,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_007_1252m_s209.geojson",
+    "dist_m": 1252.9964086141667,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1359,
+        "prevyseni_m": 9,
+        "cas_s": 386,
+        "tempo_str": "4:44"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1354,
+        "prevyseni_m": 11,
+        "cas_s": 390,
+        "tempo_str": "4:48"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1431,
+        "prevyseni_m": 10,
+        "cas_s": 401,
+        "tempo_str": "4:39"
+      }
+    ],
+    "thumb": "thumbs/postup_007_1252m_s209.jpg"
+  },
+  {
+    "id": 12,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_007_472m_s123.geojson",
+    "dist_m": 472.9693436154187,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 515,
+        "prevyseni_m": 8,
+        "cas_s": 168,
+        "tempo_str": "5:25"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 592,
+        "prevyseni_m": 13,
+        "cas_s": 185,
+        "tempo_str": "5:12"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 556,
+        "prevyseni_m": 8,
+        "cas_s": 177,
+        "tempo_str": "5:18"
+      }
+    ],
+    "thumb": "thumbs/postup_007_472m_s123.jpg"
+  },
+  {
+    "id": 13,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_008_1125m_s121.geojson",
+    "dist_m": 1125.7219905465115,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1155,
+        "prevyseni_m": 7,
+        "cas_s": 320,
+        "tempo_str": "4:37"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1200,
+        "prevyseni_m": 3,
+        "cas_s": 321,
+        "tempo_str": "4:27"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1274,
+        "prevyseni_m": 4,
+        "cas_s": 341,
+        "tempo_str": "4:27"
+      }
+    ],
+    "thumb": "thumbs/postup_008_1125m_s121.jpg"
+  },
+  {
+    "id": 14,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_009_1788m_s190.geojson",
+    "dist_m": 1788.3861439856887,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1949,
+        "prevyseni_m": 70,
+        "cas_s": 644,
+        "tempo_str": "5:30"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1944,
+        "prevyseni_m": 73,
+        "cas_s": 634,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2001,
+        "prevyseni_m": 82,
+        "cas_s": 661,
+        "tempo_str": "5:30"
+      }
+    ],
+    "thumb": "thumbs/postup_009_1788m_s190.jpg"
+  },
+  {
+    "id": 15,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_009_660m_s119.geojson",
+    "dist_m": 660.0946901770988,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 709,
+        "prevyseni_m": 7,
+        "cas_s": 208,
+        "tempo_str": "4:52"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 748,
+        "prevyseni_m": 14,
+        "cas_s": 221,
+        "tempo_str": "4:55"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 785,
+        "prevyseni_m": 12,
+        "cas_s": 231,
+        "tempo_str": "4:54"
+      }
+    ],
+    "thumb": "thumbs/postup_009_660m_s119.jpg"
+  },
+  {
+    "id": 16,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_010_1169m_s163.geojson",
+    "dist_m": 1169.722189239821,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1265,
+        "prevyseni_m": 47,
+        "cas_s": 437,
+        "tempo_str": "5:45"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1321,
+        "prevyseni_m": 41,
+        "cas_s": 441,
+        "tempo_str": "5:34"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1235,
+        "prevyseni_m": 39,
+        "cas_s": 423,
+        "tempo_str": "5:42"
+      }
+    ],
+    "thumb": "thumbs/postup_010_1169m_s163.jpg"
+  },
+  {
+    "id": 17,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_010_615m_s166.geojson",
+    "dist_m": 615.1828996322963,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 678,
+        "prevyseni_m": 37,
+        "cas_s": 247,
+        "tempo_str": "6:04"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 660,
+        "prevyseni_m": 39,
+        "cas_s": 251,
+        "tempo_str": "6:20"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 789,
+        "prevyseni_m": 30,
+        "cas_s": 252,
+        "tempo_str": "5:18"
+      }
+    ],
+    "thumb": "thumbs/postup_010_615m_s166.jpg"
+  },
+  {
+    "id": 18,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_012_2038m_s154.geojson",
+    "dist_m": 2038.7557479992547,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2201,
+        "prevyseni_m": 115,
+        "cas_s": 768,
+        "tempo_str": "5:48"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2385,
+        "prevyseni_m": 106,
+        "cas_s": 779,
+        "tempo_str": "5:26"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2346,
+        "prevyseni_m": 105,
+        "cas_s": 776,
+        "tempo_str": "5:30"
+      }
+    ],
+    "thumb": "thumbs/postup_012_2038m_s154.jpg"
+  },
+  {
+    "id": 19,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_013_633m_s157.geojson",
+    "dist_m": 633.8177971625599,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 664,
+        "prevyseni_m": 44,
+        "cas_s": 266,
+        "tempo_str": "6:41"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 860,
+        "prevyseni_m": 32,
+        "cas_s": 271,
+        "tempo_str": "5:15"
+      }
+    ],
+    "thumb": "thumbs/postup_013_633m_s157.jpg"
+  },
+  {
+    "id": 20,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_013_780m_s154.geojson",
+    "dist_m": 780.0640999302557,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 818,
+        "prevyseni_m": 36,
+        "cas_s": 307,
+        "tempo_str": "6:15"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 887,
+        "prevyseni_m": 41,
+        "cas_s": 311,
+        "tempo_str": "5:49"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 873,
+        "prevyseni_m": 35,
+        "cas_s": 311,
+        "tempo_str": "5:56"
+      }
+    ],
+    "thumb": "thumbs/postup_013_780m_s154.jpg"
+  },
+  {
+    "id": 21,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_015_2154m_s139.geojson",
+    "dist_m": 2154.5533179756776,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2502,
+        "prevyseni_m": 59,
+        "cas_s": 735,
+        "tempo_str": "4:53"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2373,
+        "prevyseni_m": 59,
+        "cas_s": 728,
+        "tempo_str": "5:06"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2496,
+        "prevyseni_m": 58,
+        "cas_s": 742,
+        "tempo_str": "4:57"
+      }
+    ],
+    "thumb": "thumbs/postup_015_2154m_s139.jpg"
+  },
+  {
+    "id": 22,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_015_959m_s146.geojson",
+    "dist_m": 959.5962692716141,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1059,
+        "prevyseni_m": 34,
+        "cas_s": 348,
+        "tempo_str": "5:28"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1017,
+        "prevyseni_m": 43,
+        "cas_s": 351,
+        "tempo_str": "5:44"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1073,
+        "prevyseni_m": 38,
+        "cas_s": 348,
+        "tempo_str": "5:24"
+      }
+    ],
+    "thumb": "thumbs/postup_015_959m_s146.jpg"
+  },
+  {
+    "id": 23,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_016_599m_s146.geojson",
+    "dist_m": 599.8541489395568,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 686,
+        "prevyseni_m": 1,
+        "cas_s": 194,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 624,
+        "prevyseni_m": 2,
+        "cas_s": 206,
+        "tempo_str": "5:29"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 702,
+        "prevyseni_m": 1,
+        "cas_s": 204,
+        "tempo_str": "4:51"
+      }
+    ],
+    "thumb": "thumbs/postup_016_599m_s146.jpg"
+  },
+  {
+    "id": 24,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_020_905m_s124.geojson",
+    "dist_m": 905.6075308874148,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 954,
+        "prevyseni_m": 9,
+        "cas_s": 292,
+        "tempo_str": "5:06"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1032,
+        "prevyseni_m": 7,
+        "cas_s": 309,
+        "tempo_str": "4:59"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1105,
+        "prevyseni_m": 11,
+        "cas_s": 318,
+        "tempo_str": "4:47"
+      }
+    ],
+    "thumb": "thumbs/postup_020_905m_s124.jpg"
+  },
+  {
+    "id": 25,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_027_598m_s116.geojson",
+    "dist_m": 598.1011620119125,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 639,
+        "prevyseni_m": 17,
+        "cas_s": 204,
+        "tempo_str": "5:18"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 663,
+        "prevyseni_m": 7,
+        "cas_s": 199,
+        "tempo_str": "5:00"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 692,
+        "prevyseni_m": 14,
+        "cas_s": 204,
+        "tempo_str": "4:54"
+      }
+    ],
+    "thumb": "thumbs/postup_027_598m_s116.jpg"
+  },
+  {
+    "id": 26,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_029_640m_s104.geojson",
+    "dist_m": 640.4880951274582,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 718,
+        "prevyseni_m": 27,
+        "cas_s": 270,
+        "tempo_str": "6:16"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 775,
+        "prevyseni_m": 48,
+        "cas_s": 289,
+        "tempo_str": "6:12"
+      }
+    ],
+    "thumb": "thumbs/postup_029_640m_s104.jpg"
+  },
+  {
+    "id": 27,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_032_1250m_s109.geojson",
+    "dist_m": 1250.2499750049988,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1316,
+        "prevyseni_m": 28,
+        "cas_s": 403,
+        "tempo_str": "5:06"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1327,
+        "prevyseni_m": 30,
+        "cas_s": 404,
+        "tempo_str": "5:04"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1414,
+        "prevyseni_m": 22,
+        "cas_s": 410,
+        "tempo_str": "4:49"
+      }
+    ],
+    "thumb": "thumbs/postup_032_1250m_s109.jpg"
+  },
+  {
+    "id": 28,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_033_669m_s105.geojson",
+    "dist_m": 669.1038783328041,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 763,
+        "prevyseni_m": 14,
+        "cas_s": 240,
+        "tempo_str": "5:15"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 712,
+        "prevyseni_m": 30,
+        "cas_s": 254,
+        "tempo_str": "5:56"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 777,
+        "prevyseni_m": 24,
+        "cas_s": 249,
+        "tempo_str": "5:20"
+      }
+    ],
+    "thumb": "thumbs/postup_033_669m_s105.jpg"
+  },
+  {
+    "id": 29,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_034_437m_s88.geojson",
+    "dist_m": 437.32139211339756,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 460,
+        "prevyseni_m": 0,
+        "cas_s": 130,
+        "tempo_str": "4:43"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 537,
+        "prevyseni_m": 1,
+        "cas_s": 137,
+        "tempo_str": "4:15"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 489,
+        "prevyseni_m": 0,
+        "cas_s": 129,
+        "tempo_str": "4:24"
+      }
+    ],
+    "thumb": "thumbs/postup_034_437m_s88.jpg"
+  },
+  {
+    "id": 30,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_037_1360m_s99.geojson",
+    "dist_m": 1360.036764208968,
+    "variants_count": 3,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1516,
+        "prevyseni_m": 83,
+        "cas_s": 562,
+        "tempo_str": "6:10"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1487,
+        "prevyseni_m": 84,
+        "cas_s": 553,
+        "tempo_str": "6:11"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 1524,
+        "prevyseni_m": 83,
+        "cas_s": 573,
+        "tempo_str": "6:16"
+      }
+    ],
+    "thumb": "thumbs/postup_037_1360m_s99.jpg"
+  },
+  {
+    "id": 31,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_049_1907m_s75.geojson",
+    "dist_m": 1907.1247992724545,
+    "variants_count": 4,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 2071,
+        "prevyseni_m": 52,
+        "cas_s": 667,
+        "tempo_str": "5:21"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 2114,
+        "prevyseni_m": 70,
+        "cas_s": 666,
+        "tempo_str": "5:15"
+      },
+      {
+        "id": 3,
+        "color": "#44ff44",
+        "vzdal_m": 2206,
+        "prevyseni_m": 73,
+        "cas_s": 679,
+        "tempo_str": "5:07"
+      },
+      {
+        "id": 4,
+        "color": "#ffaa00",
+        "vzdal_m": 2253,
+        "prevyseni_m": 56,
+        "cas_s": 683,
+        "tempo_str": "5:03"
+      }
+    ],
+    "thumb": "thumbs/postup_049_1907m_s75.jpg"
+  },
+  {
+    "id": 32,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_053_548m_s68.geojson",
+    "dist_m": 548.0191602489825,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 577,
+        "prevyseni_m": 33,
+        "cas_s": 236,
+        "tempo_str": "6:49"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 671,
+        "prevyseni_m": 25,
+        "cas_s": 230,
+        "tempo_str": "5:42"
+      }
+    ],
+    "thumb": "thumbs/postup_053_548m_s68.jpg"
+  },
+  {
+    "id": 33,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_056_1497m_s63.geojson",
+    "dist_m": 1497.706580075016,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1585,
+        "prevyseni_m": 26,
+        "cas_s": 462,
+        "tempo_str": "4:51"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1634,
+        "prevyseni_m": 29,
+        "cas_s": 471,
+        "tempo_str": "4:48"
+      }
+    ],
+    "thumb": "thumbs/postup_056_1497m_s63.jpg"
+  },
+  {
+    "id": 34,
+    "map_id": "bilaskala",
+    "map_name": "B\u00edl\u00e1 sk\u00e1la",
+    "terrain": "cesko",
+    "file": "postup_064_1375m_s44.geojson",
+    "dist_m": 1375.954214354533,
+    "variants_count": 2,
+    "variants": [
+      {
+        "id": 1,
+        "color": "#ff4444",
+        "vzdal_m": 1489,
+        "prevyseni_m": 46,
+        "cas_s": 479,
+        "tempo_str": "5:22"
+      },
+      {
+        "id": 2,
+        "color": "#4444ff",
+        "vzdal_m": 1526,
+        "prevyseni_m": 32,
+        "cas_s": 471,
+        "tempo_str": "5:08"
+      }
+    ],
+    "thumb": "thumbs/postup_064_1375m_s44.jpg"
+  }
+]

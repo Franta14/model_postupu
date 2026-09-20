@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Holna_20240916_TEST_FixTeren",
+    "name": "Holna (Vygenerovaný TEST) (56 postupů)",
+    "dir": "Holna_20240916_TEST_FixTeren",
+    "image": "../../Holna.png",
+    "indexFile": "data/Holna_20240916_TEST_FixTeren/index.json",
+    "count": 56
+  },
+  {
+    "id": "Holna_20240916",
+    "name": "Holna 20240916",
+    "image": "../../Holna.png",
+    "indexFile": "data/Holna_20240916/index.json",
+    "count": 32
+  }
+]

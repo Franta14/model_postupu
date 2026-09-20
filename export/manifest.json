@@ -1,0 +1,17 @@
+{
+  "name": "Model Postupu",
+  "short_name": "Postupy",
+  "description": "Aplikace pro analýzu postupů orientačního běhu",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#b300ff",
+  "icons": [
+    {
+      "src": "https://upload.wikimedia.org/wikipedia/commons/4/44/Orienteering_flag.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
