@@ -2022,7 +2022,27 @@ function preloadAllVisibleReels(currentIndex) {
     }
 }
 
-// Removed dangerous L.GridLayer.prototype._setView override
+const originalSetView = L.GridLayer.prototype._setView;
+let isInsideHack = false;
+L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
+    if (isInsideHack) {
+        return originalSetView.call(this, center, zoom, noPrune, noUpdate);
+    }
+    isInsideHack = true;
+    let oldRound = Math.round;
+    Math.round = function (val) {
+        if (val === zoom && typeof val === 'number') {
+            return Math.min(6, Math.max(3, Math.ceil(val)));
+        }
+        return oldRound(val);
+    };
+    try { 
+        return originalSetView.call(this, center, zoom, noPrune, noUpdate); 
+    } finally { 
+        Math.round = oldRound; 
+        isInsideHack = false;
+    }
+};
 
 function initMapForReel(index) {
     if (mapInstances[index]) return mapInstances[index];
