@@ -2205,8 +2205,8 @@ function renderMapData(index, geojsonOriginal) {
                 return true;
             },
             style: function (f) {
-                if (f.properties && f.properties.type === 'variant') return { color: f.properties.color, weight: 6 * nf, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
-                if (f.properties && f.properties.type === 'spojnice') return { color: iofPurple, weight: 3 * nf, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                if (f.properties && f.properties.type === 'variant') return { color: f.properties.color, weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
+                if (f.properties && f.properties.type === 'spojnice') return { color: iofPurple, weight: 3, opacity: 0.8, lineCap: 'round', lineJoin: 'round' };
             },
         });
 
@@ -2237,16 +2237,16 @@ function renderMapData(index, geojsonOriginal) {
                     layer.addLayer(L.circle([coords[1], coords[0]], { radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false }));
 
                     let nx = -uy, ny = ux;
-                    let textDist = R + 0.90;
+                    let textDist = R + 0.90 * nf;
                     let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
 
                     let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                     svgText.setAttribute('xmlns', "http://www.w3.org/2000/svg");
                     svgText.setAttribute('viewBox', "0 0 100 100");
                     svgText.setAttribute('preserveAspectRatio', 'none');
-                    let fontSize = 75 * nf;
+                    let fontSize = 75;
                     svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
-                    let halfSizeText = 1.0;
+                    let halfSizeText = 1.0 * nf;
                     let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
                     overlays.addLayer(L.svgOverlay(svgText, boundsText, { interactive: false, pane: 'markerPane' }));
                 });
