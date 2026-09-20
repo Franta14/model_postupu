@@ -6,35 +6,25 @@ def spocitat_metriky(cesta, working_grid_base, elev_grid, grid_size, nasobic_mer
     """Vypocet vzdalenosti, prevyseni, usili (s penalizacemi pro algoritmus i bez nich pro cas) a podilu cest pro trasu."""
     vzd = prev = usili = usili_real = road_dist = 0.0
     
-    # --- OPRAVA VÝŠKOVÉHO ŠUMU ---
+    # --- VÝPOČET NASTOUPANÉHO PŘEVÝŠENÍ ---
     if len(cesta) > 0:
-        # Pouziti bilinearni interpolace misto nearest-neighbor pro odstraneni schodoviteho sumu na svazich
+        # Bilineární interpolace výšky podél trasy
         y_c = [p[0] for p in cesta]
         x_c = [p[1] for p in cesta]
         z_raw = map_coordinates(elev_grid, [y_c, x_c], order=1)
-        window = 15
-        z_smooth = []
-        n_pts = len(z_raw)
-        for i in range(n_pts):
-            start_idx = max(0, i - window // 2)
-            end_idx = min(n_pts, i + window // 2 + 1)
-            z_smooth.append(sum(z_raw[start_idx:end_idx]) / (end_idx - start_idx))
-        import config
-        MIN_CLIMB = max(3.0, config.EKVIDISTANCE_M * 0.9)
-        current_valley = z_smooth[0]
-        current_peak = z_smooth[0]
         
-        for z in z_smooth[1:]:
-            if z > current_peak: current_peak = z
-            if z < current_valley: current_valley = z
-                
-            if z - current_valley >= MIN_CLIMB:
-                prev += (z - current_valley)
-                current_valley = z
-                current_peak = z
-            elif current_peak - z >= MIN_CLIMB:
-                current_valley = z
-                current_peak = z
+        # Odstraněno: pohyblivý průměr (uniform_filter1d).
+        # Na lomených úsečkách s řídkými lomy tvořil fantomové kopce. 
+        # elev_grid je z výroby (v setup_mapa.py) dostatečně vyhlazen.
+        z_smooth = z_raw.astype(np.float64)
+        
+        # Kumulativní nastoupané metry: součet kladných výškových přírůstků
+        NOISE_THRESHOLD = 0.1  # metrů
+        prev = 0.0
+        for i in range(1, len(z_smooth)):
+            dz = z_smooth[i] - z_smooth[i - 1]
+            if dz > NOISE_THRESHOLD:
+                prev += dz
     else:
         z_smooth = []
     # -----------------------------
@@ -57,14 +47,10 @@ def spocitat_metriky(cesta, working_grid_base, elev_grid, grid_size, nasobic_mer
         c1 = min(3.0, working_grid_base[y1, x1])
         c2 = min(3.0, working_grid_base[y2, x2])
         
-        if abs(dy_px) > 1.5 or abs(dx_px) > 1.5:
-            mid_y, mid_x = y1 + int(dy_px / 2), x1 + int(dx_px / 2)
-            c_mid = min(3.0, working_grid_base[mid_y, mid_x])
-            terren_cost = c1 * 0.2 + c_mid * 0.3 + c2 * 0.5
-            is_rm = is_rn
-        else:
-            terren_cost = c1 * 0.35 + c2 * 0.65
-            is_rm = is_rn
+        # Použijeme průměr počátečního a koncového bodu úseku, stejně jako Dijkstra
+        # Vyhýbáme se mezikrokům zaokrouhleným přes int(), které by cestu mohly minout.
+        terren_cost = c1 * 0.5 + c2 * 0.5
+        is_rm = is_rn
             
         is_runner_on_road = is_rc
         is_runner_next_road = is_rn and is_rm
@@ -74,6 +60,14 @@ def spocitat_metriky(cesta, working_grid_base, elev_grid, grid_size, nasobic_mer
         dz = z2 - z1
         
         sklon = dz / dist_m if dist_m > 0.1 else 0.0
+        
+        # Ochrana proti mikroschodum a SRTM anomaliim
+        # Původně tu byl limit 8 % pro cesty, ale to ničilo tempo na reálně prudkých cestách.
+        # Nyní aplikujeme stejný limit 40 % na cesty i les (cesty se vyhladí díky z_smooth).
+        is_on_road = c1 < 1.22 and c2 < 1.22
+        max_sklon = 0.40
+        min_sklon = -0.40
+        sklon = max(min_sklon, min(max_sklon, sklon))
         
         if sklon > 0.02:
             sklon_efektivni = sklon - 0.02
@@ -119,12 +113,9 @@ def vypocti_cas(usili_real, zakladni_tempo_min, zakladni_tempo_sec):
     sec_per_m = sec_per_km / 1000.0
     
     # usili_real je usili v metrech s prihlednutim k terenu a prevyseni
-    # Cesta (Zpevnena) ma cost 0.915, Cesta (Lesni) ma cost 0.965, Bily les ma 1.172
-    # Nasobic pro prevod usili na cas by se mel odvijet od toho, ze zakladni_tempo je na lesni ceste (cost 0.965)
-    # Takze sec_per_m plati pro teren_cost = 0.965. 
-    # usili_real = suma(vzd * teren_cost * hm).
-    # Takze celkovy cas = usili_real / 0.965 * sec_per_m
-    celkove_sekundy = (usili_real / 0.965) * sec_per_m
+    # Nyní se vše počítá vůči zpevněné cestě s koeficientem 1.00 (předtím to byla lesní cesta 0.965).
+    # Takže usili_real se rovnou násobí základním časem v sec/m.
+    celkove_sekundy = usili_real * sec_per_m
     return celkove_sekundy
 
 def formatuj_cas(sekundy):

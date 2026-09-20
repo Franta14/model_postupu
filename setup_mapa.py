@@ -46,18 +46,18 @@ def vse_v_cache():
     return all(os.path.getmtime(s) > omap_mtime for s in soubory)
 
 if vse_v_cache():
-    print(f"✅ Cache pro mapu '{map_name}' je aktualni. Neni co delat.")
+    print(f" Cache pro mapu '{map_name}' je aktualni. Neni co delat.")
     print("   Rovnou spust:  python 6_finalni_stavitel.py")
     sys.exit(0)
 
-print(f"🚀 Pripravuji mapu: {map_name}")
+print(f" Pripravuji mapu: {map_name}")
 print(f"   Cache: {cache_dir}\n")
 
 
 # ============================================================
 # KROK 1: KALIBRACE  PNG pixel -> OOM souradnice
 # ============================================================
-print("📐 Krok 1/3: Vypocitavam kalibraci PNG <-> OOM...")
+print(" Krok 1/3: Vypocitavam kalibraci PNG <-> OOM...")
 
 # 1a) Nacteni .pgw: pixel -> projekce (S-JTSK)
 with open(config.PGW_FILE) as f:
@@ -93,7 +93,7 @@ for ctrl in root_xml.findall('.//Control'):
     controls_oom.append([mx, my])
 
 if len(controls_world) < 3:
-    print(f"❌ Potrebuji alespon 3 kontroly v XML, naslo se jen {len(controls_world)}.")
+    print(f" Potrebuji alespon 3 kontroly v XML, naslo se jen {len(controls_world)}.")
     sys.exit(1)
 
 print(f"   Nalezeno {len(controls_world)} kontrol pro kalibraci.")
@@ -132,13 +132,13 @@ cal_f = m21*pgw_c + m22*pgw_f + ty  # offset OOM_y
 
 kalibrace = np.array([cal_a, cal_b, cal_c, cal_d, cal_e, cal_f])
 np.save(cache_kalib, kalibrace)
-print(f"   ✅ Kalibrace ulozena.")
+print(f"    Kalibrace ulozena.")
 
 
 # ============================================================
 # KROK 2: CENOVA MRIZKA (tereny z .omap)
 # ============================================================
-print("\n🗺️  Krok 2/3: Generuji cenovou mrizku terenu...")
+print("\n️  Krok 2/3: Generuji cenovou mrizku terenu...")
 
 GRID_SIZE_M       = 0.5
 SIRKA_CESTY       = 0.5
@@ -146,19 +146,23 @@ SIRKA_ZDI         = 1.0
 SIRKA_PLOTU       = 0.3    # Plot/oplocenka - uzsi buffer nez skala (realne max 1m sirka)
 
 COST_DICT = {
-    "Cesta (Zpevnena)":        0.90,   # bylo 0.915
-    "Cesta (Lesni)":           0.96,   # bylo 0.965 (baseline)
-    "Pesina":                  1.00,   # bylo 1.027
-    "Paseky":                  1.080,
-    "Prusek":                  1.08,   # bylo 1.105
-    "Bily les":                1.10,   # bylo 1.172 – klic. snizeni biasu cest
-    "Bazina":                  1.35,   # bylo 1.317
-    "Voda":                    1.40,   # bylo 1.318
-    "Hustnik 1 (Svetly)":      1.650,  # nezmeneno
-    "Podrost (Srafy)":         1.55,   # bylo 1.800
-    "Hustnik 2 (Stredni)":     1.90,   # bylo 2.254
-    "Hustnik 3 (Tmave)":       3.00,   # bylo 4.057
-    "Kamenne pole":            1.75,   # bylo 1.840
+    # Výpočet tempa (při základu 3:50 min/km = 230s): Tempo = Cost * 230
+    "Cesta (Zpevnena)":        1.00,   # 3:50 min/km (referenční nejrychlejší povrch)
+    "Cesta (Lesni)":           1.05,   # ~ 4:01 min/km
+    "Pesina":                  1.10,   # ~ 4:13 min/km
+    "Louka":                   1.30,   # ~ 4:59 min/km (vyrazna penalizace pro algoritmus, aby se vyhnul okrajum luk)
+    "Paseky":                  1.20,   # ~ 4:36 min/km
+    "Prusek":                  1.14,   # ~ 4:22 min/km (zlevněno pro lepší přirozenou volbu)
+    "Bily les":                1.22,   # ~ 4:40 min/km
+    "Bazina":                  1.46,   # ~ 5:35 min/km
+    "Voda":                    1.46,   # ~ 5:35 min/km
+    "Hustnik 1 (Svetly)":      1.83,   # ~ 7:00 min/km
+    "Podrost (Srafy)":         1.72,   # ~ 6:35 min/km
+    "Hustnik 2 (Stredni)":     2.11,   # ~ 8:05 min/km
+    "Hustnik 3 (Tmave)":       3.33,   # ~ 12:45 min/km
+    "Kamenne pole (Snadne)":   1.80,   # ISOM 208, 209, 210
+    "Kamenne pole (Tezke)":    2.80,   # ISOM 211, 204, 205
+    "Kamenne pole (Extremni)": 4.50,   # ISOM 212, 206, 207
     "Nepruchodna zed / plot":  9999.0,
     "Nepruchodna budova":      9999.0,
     "Nepruchodna voda":        9999.0,
@@ -255,18 +259,40 @@ for obj in root.iter():
         elif isom == '113': crossing_obstacles.append({'geom': LineString(pts), 'penalty_m': 10.0})
         elif isom == '104': crossing_obstacles.append({'geom': LineString(pts), 'penalty_m': 25.0})
 
+    # --- Bodove objekty (kameny a balvany) ---
+    if len(pts) == 1:
+        if isom in ['204', '205', '206', '207']:
+            # Vytvoříme kolem kamene malý polygon, aby se propsal do mřížky a vytvořil odpor
+            pt = Point(pts[0])
+            # Malý kámen 2m, velký balvan 3m, shluk 4m
+            radius = 2.0
+            if isom == '205': radius = 3.0
+            elif isom in ['206', '207']: radius = 4.0
+            poly = pt.buffer(radius)
+            
+            # Zařadíme to do odpovídající kategorie
+            if isom == '204':
+                kategorie["Kamenne pole (Snadne)"].append(poly)
+            elif isom == '205':
+                kategorie["Kamenne pole (Tezke)"].append(poly)
+            else:
+                kategorie["Kamenne pole (Extremni)"].append(poly)
+
     # --- Plošne objekty terenu ---
     if len(pts) >= 3:
         poly = Polygon(pts)
         if not poly.is_valid:
             poly = poly.buffer(0)
         ter_pol = None
-        if isom in ['403', '404']:           ter_pol = "Paseky"
+        if isom in ['401', '402']:           ter_pol = "Louka"
+        elif isom in ['403', '404']:         ter_pol = "Paseky"
         elif isom == '406':                  ter_pol = "Hustnik 1 (Svetly)"
         elif isom == '408':                  ter_pol = "Hustnik 2 (Stredni)"
         elif isom == '410':                  ter_pol = "Hustnik 3 (Tmave)"
         elif isom in ['407', '409']:         ter_pol = "Podrost (Srafy)"
-        elif isom in ['208','209','210','211','212']: ter_pol = "Kamenne pole"
+        elif isom in ['208', '209', '210']:  ter_pol = "Kamenne pole (Snadne)"
+        elif isom == '211':                  ter_pol = "Kamenne pole (Tezke)"
+        elif isom == '212':                  ter_pol = "Kamenne pole (Extremni)"
         elif isom == '311':                  ter_pol = "Bazina"
         elif isom in ['301', '302']:         ter_pol = "Nepruchodna voda"
         elif isom.startswith('30'):          ter_pol = "Voda"
@@ -293,7 +319,7 @@ print(f"   Ulozeno {len(cesty_centerlines)} centerlines cest/pesin pro vizualni 
 # Zjistime rozsah mapy
 all_geoms = [g for g in merged_geom.values() if not g.is_empty]
 if not all_geoms:
-    print("❌ Nenasly se zadne objekty v .omap souboru!")
+    print(" Nenasly se zadne objekty v .omap souboru!")
     sys.exit(1)
 
 vse = unary_union(all_geoms)
@@ -312,18 +338,33 @@ priority_order = [
     "Cesta (Zpevnena)", "Cesta (Lesni)", "Pesina", "Prusek",
     "Voda", "Kamenne pole", "Bazina",
     "Hustnik 3 (Tmave)", "Hustnik 2 (Stredni)", "Podrost (Srafy)",
-    "Hustnik 1 (Svetly)", "Paseky"
+    "Hustnik 1 (Svetly)", "Paseky", "Louka"
 ]
 
 cost_grid = np.full((grid_h, grid_w), DEFAULT_COST, dtype=np.float32)
+louka_mask = np.zeros((grid_h, grid_w), dtype=bool)
+map_mask = np.zeros((grid_h, grid_w), dtype=bool)
 t0 = time.time()
 skip_krok2 = False
-if os.path.exists(cache_cenova) and os.path.exists(cache_meta):
-    print("   ✅ Cenova mrizka nalezena v cache, preskakuji pomaly vypocet...")
+if os.path.exists(cache_cenova) and os.path.exists(cache_meta) and os.path.exists(os.path.join(cache_dir, "map_mask.npy")):
+    print("    Cenova mrizka nalezena v cache, preskakuji pomaly vypocet...")
     cost_grid = np.load(cache_cenova)
+    louka_mask = np.load(os.path.join(cache_dir, "louka_mask.npy"))
+    map_mask = np.load(os.path.join(cache_dir, "map_mask.npy"))
     skip_krok2 = True
 
 if not skip_krok2:
+    prep_vse = prep(vse)
+    
+    # Maska mapy musí pokrýt i bílý les, který nemá žádný polygon.
+    # Proto použijeme obálku všech objektů mapy.
+    # Abychom se zbavili případné legendy, provedeme buffer(50) a následně buffer(-50).
+    # Případně ještě lépe: vytvoříme buffer z centroidů lesa a posuneme ho dovnitř, 
+    # nebo nejprve uděláme convex_hull, ale smrskneme ho bufferem.
+    # Nejjistější způsob, jak odstranit okraje mapy, je buffer(-30) z konvexní obálky.
+    vse_hull = vse.convex_hull.buffer(-100).buffer(100) # Zahodi izolovane objekty legendy
+    prep_vse_hull = prep(vse_hull)
+    
     for y_idx in range(grid_h):
         real_y = min_y + y_idx * GRID_SIZE_M
         if y_idx % 300 == 0:
@@ -334,9 +375,16 @@ if not skip_krok2:
         for x_idx in range(grid_w):
             real_x = min_x + x_idx * GRID_SIZE_M
             pt = Point(real_x, real_y)
+            
+            # Zda je bod vubec uvnitr mapy (mimo bilou legendu)
+            if prep_vse_hull.contains(pt):
+                map_mask[y_idx, x_idx] = True
+                
             for teren in priority_order:
                 if teren in prepared_geom and prepared_geom[teren].contains(pt):
                     cost_grid[y_idx, x_idx] = COST_DICT[teren]
+                    if teren == "Louka":
+                        louka_mask[y_idx, x_idx] = True
                     break
 
     # Ochrana cest/pesin: buffer zdi nesmi zakryt cestu vedle ni
@@ -367,15 +415,17 @@ if not skip_krok2:
             if maska[y, x] and cost_grid[y, x] < 9000.0:
                 cost_grid[y, x] = COST_DICT["Cesta (Lesni)"]
 
+    # Ulozeni
     np.save(cache_cenova, cost_grid)
-    metadata = np.array([min_x, min_y, max_x, max_y, GRID_SIZE_M])
-    np.save(cache_meta, metadata)
-    print(f"   ✅ Cenova mrizka ulozena ({time.time()-t0:.0f}s).")
+    np.save(os.path.join(cache_dir, "louka_mask.npy"), louka_mask)
+    np.save(os.path.join(cache_dir, "map_mask.npy"), map_mask)
+    np.save(cache_meta, np.array([min_x, min_y, max_x, max_y, GRID_SIZE_M], dtype=np.float32))
+    print(f"    Cenova mrizka a masky terenu ulozeny ({time.time()-t0:.0f}s).")
 
 # ============================================================
 # RASTERIZACE CROSSING OBSTACLES (prikopy, srazy)
 # ============================================================
-print(f"\n🚧 Rasterizuji {len(crossing_obstacles)} liniových překážek (příkopy/srázy)...")
+print(f"\n Rasterizuji {len(crossing_obstacles)} liniových překážek (příkopy/srázy)...")
 cache_crossing = os.path.join(cache_dir, "crossing_penalties.npy")
 crossing_grid = np.zeros((grid_h, grid_w), dtype=np.float32)
 
@@ -408,7 +458,7 @@ for obs in crossing_obstacles:
 
 np.save(cache_crossing, crossing_grid)
 n_nonzero = int(np.count_nonzero(crossing_grid))
-print(f"   ✅ Crossing grid uložen ({n_nonzero} buněk s penalizací).")
+print(f"    Crossing grid uložen ({n_nonzero} buněk s penalizací).")
 
 
 
@@ -586,14 +636,14 @@ else:
     vyskova = np.zeros((grid_h, grid_w), dtype=np.float32)
 
 np.save(cache_vyskova, vyskova)
-print(f"   ✅ Vyskova mrizka ulozena.")
+print(f"    Vyskova mrizka ulozena.")
 
 # ============================================================
 # HOTOVO
 # ============================================================
 print(f"""
 ╔══════════════════════════════════════════════════════╗
-║  ✅ MAPA '{map_name}' PRIPRAVENA!
+║   MAPA '{map_name}' PRIPRAVENA!
 ║
 ║  Nyni spust:  python 6_finalni_stavitel.py
 ╚══════════════════════════════════════════════════════╝

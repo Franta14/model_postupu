@@ -34,6 +34,16 @@ class KuratorNastroj:
             print("Žádné postupy ke schválení! Spusť nejprve 9_generator_postupu.py")
             sys.exit(0)
             
+        # Seřazení od nejzajímavějších (nejvyšší score na konci názvu, např. _s102.json)
+        def parse_score(filepath):
+            try:
+                basename = os.path.basename(filepath)
+                return int(basename.split('_s')[-1].replace('.json', ''))
+            except:
+                return 0
+                
+        self.json_files.sort(key=parse_score, reverse=True)
+            
         self.current_idx = 0
         self.current_data = None
         self.vykreslene_prvky = []
@@ -98,6 +108,13 @@ class KuratorNastroj:
         A = np.array([[cal_a, cal_b], [cal_d, cal_e]])
         b = np.array([OOM_x - cal_c, OOM_y - cal_f])
         col, row = np.linalg.solve(A, b)
+        
+        offset_file = os.path.join(self.cache_dir, "kalibrace_offset.npy")
+        if os.path.exists(offset_file):
+            dx, dy = np.load(offset_file)
+            col += dx
+            row += dy
+            
         return int(col), int(row)
 
     def load_current(self):
@@ -179,14 +196,39 @@ class KuratorNastroj:
             
         self.txt_info.set_text(text)
         
-        # Zvyrazneni start a cíl
+        # Zvyrazneni start a cil (orientacky styl)
         sy, sx = self.current_data['start']['gy'], self.current_data['start']['gx']
         ey, ex = self.current_data['end']['gy'], self.current_data['end']['gx']
         spx, spy = self.grid_to_img(sy, sx)
         epx, epy = self.grid_to_img(ey, ex)
-        (m1,) = self.ax_map.plot(spx, spy, 'mo', markersize=12, fillstyle='none', markeredgewidth=3)
-        (m2,) = self.ax_map.plot(epx, epy, 'mo', markersize=12, fillstyle='none', markeredgewidth=3)
-        self.vykreslene_prvky.extend([m1, m2])
+
+        # Start: fialovy trojuhelnik s cislici "1" (orientacky styl)
+        import math
+        angle_to_end = math.atan2(epy - spy, epx - spx)
+        tri_r = 18  # polomer opsane kruznice trojuhelniku (v pixelech obrazku)
+        tri_pts = []
+        for k in range(3):
+            a = angle_to_end + k * 2 * math.pi / 3
+            tri_pts.append([spx + tri_r * math.cos(a), spy + tri_r * math.sin(a)])
+        tri = plt.Polygon(tri_pts, closed=True, fill=False,
+                          edgecolor='#9400D3', linewidth=3, zorder=5)
+        self.ax_map.add_patch(tri)
+        t1 = self.ax_map.text(spx, spy, '1',
+                              color='#9400D3', fontsize=14, fontweight='bold',
+                              ha='center', va='center', zorder=6,
+                              fontfamily='sans-serif')
+        self.vykreslene_prvky.extend([tri, t1])
+
+        # Cil: fialovy kruh s cislici "2" (orientacky styl)
+        circle_r = 18
+        cir = plt.Circle((epx, epy), circle_r, fill=False,
+                         edgecolor='#9400D3', linewidth=3, zorder=5)
+        self.ax_map.add_patch(cir)
+        t2 = self.ax_map.text(epx, epy, '2',
+                              color='#9400D3', fontsize=14, fontweight='bold',
+                              ha='center', va='center', zorder=6,
+                              fontfamily='sans-serif')
+        self.vykreslene_prvky.extend([cir, t2])
         
         # Edit mode UI
         if self.edit_mode:
@@ -278,6 +320,12 @@ class KuratorNastroj:
         self.load_current()
 
     def img_to_grid(self, col, row):
+        offset_file = os.path.join(self.cache_dir, "kalibrace_offset.npy")
+        if os.path.exists(offset_file):
+            dx, dy = np.load(offset_file)
+            col -= dx
+            row -= dy
+            
         kalibrace = np.load(os.path.join(self.cache_dir, "kalibrace.npy"))
         cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = kalibrace
         OOM_x = cal_a * col + cal_b * row + cal_c
@@ -405,7 +453,32 @@ class KuratorNastroj:
         print("Vylaďuji trasu...")
         
         # 1. Preved clicked points to grid coordinates
-        grid_points = [self.img_to_grid(px, py) for px, py in self.edit_points]
+        grid_points_raw = [self.img_to_grid(px, py) for px, py in self.edit_points]
+        
+        # 1.5. Přichytávání na cesty (Snapping) - prevence "zubů"
+        # Pokud je v okolí kliknutí (např. do 20 pixelů = 10m) cesta, přichytíme bod na ni
+        grid_points = []
+        radius = 20
+        h, w = self.cost_grid.shape
+        for gy, gx in grid_points_raw:
+            gy, gx = int(gy), int(gx)
+            y_min, y_max = max(0, gy - radius), min(h, gy + radius + 1)
+            x_min, x_max = max(0, gx - radius), min(w, gx + radius + 1)
+            neighborhood = self.cost_grid[y_min:y_max, x_min:x_max]
+            
+            # Hledáme pixely, které jsou cesta (cost < 1.15)
+            road_mask = neighborhood < 1.15
+            if np.any(road_mask):
+                ry, rx = np.where(road_mask)
+                # Skutečné souřadnice v rámci celého gridu
+                real_y = ry + y_min
+                real_x = rx + x_min
+                # Nejbližší cesta
+                dists = (real_y - gy)**2 + (real_x - gx)**2
+                best_idx = np.argmin(dists)
+                grid_points.append((float(real_y[best_idx]), float(real_x[best_idx])))
+            else:
+                grid_points.append((float(gy), float(gx)))
         
         # 2. Find closest variant to the first clicked point
         first_pt = grid_points[0]

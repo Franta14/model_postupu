@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CourseData xmlns="http://www.orienteering.org/datastandard/3.0" iofVersion="3.0" createTime="2026-09-19T16:00:33.2444185+02:00" creator="Purple Pen version 3.5.5">
+  <Event>
+    <Name>bilaskala</Name>
+  </Event>
+  <RaceCourseData>
+    <Map>
+      <Scale>10000</Scale>
+      <MapPositionTopLeft x="-1435.78" y="207.54" />
+      <MapPositionBottomRight x="823.39" y="-509.71" />
+    </Map>
+    <Control type="Start">
+      <Id>STA1</Id>
+      <Position lng="15.106622666959916" lat="49.082926740326542" />
+      <MapPosition x="457.29" y="28.5" />
+    </Control>
+    <Control type="Control">
+      <Id>31</Id>
+      <Position lng="15.102561374152492" lat="49.086514207735213" />
+      <MapPosition x="424.82" y="66.15" />
+    </Control>
+    <Control type="Control">
+      <Id>32</Id>
+      <Position lng="15.114176694533381" lat="49.083944749171273" />
+      <MapPosition x="511.51" y="43.78" />
+    </Control>
+    <Control type="Control">
+      <Id>33</Id>
+      <Position lng="15.104064945742962" lat="49.074614666018093" />
+      <MapPosition x="445.33" y="-65.04" />
+    </Control>
+    <Control type="Control">
+      <Id>34</Id>
+      <Position lng="15.100853848771969" lat="49.078968219292129" />
+      <MapPosition x="418.44" y="-18.44" />
+    </Control>
+    <Control type="Control">
+      <Id>35</Id>
+      <Position lng="15.116101188098007" lat="49.076580391367742" />
+      <MapPosition x="531.45" y="-36.88" />
+    </Control>
+    <Control type="Control">
+      <Id>36</Id>
+      <Position lng="15.095616842188889" lat="49.066739958439705" />
+      <MapPosition x="390.08" y="-156.83" />
+    </Control>
+  </RaceCourseData>
+</CourseData>

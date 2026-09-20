@@ -32,18 +32,25 @@ Image.MAX_IMAGE_PIXELS = None
 # Cílový poměr stran 4:5 (šířka:výška, IG portrait)
 TARGET_ASPECT = 4 / 5
 # Velikost výstupního thumbnailu (zvýšena na 2000px pro absolutní ostrost i při extrémním 13x zoomu)
-THUMB_WIDTH = 2000
-THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 2500
+THUMB_WIDTH = 2500
+THUMB_HEIGHT = int(THUMB_WIDTH / TARGET_ASPECT)  # = 3125
 # JPEG kvalita (45 pro vynikající kompresi velkých rozlišení bez jakýchkoliv viditelných artefaktů)
-JPEG_QUALITY = 45
+JPEG_QUALITY = 85
 # Výchozí zoom kamery na úvodní stránce (700 % = detailní záběr mapy s čitelnými vrstevnicemi a kameny)
 DEFAULT_MAP_ZOOM = 700
 
 # Padding pro vyříznutí mapy kolem postupu (zajišťuje dostatek "masa" pro zoom bez přejetí mimo mapu)
-BBOX_PADDING_RATIO = 0.35  # Velmi těsný ořez pro co největší detail
+BBOX_PADDING_RATIO = 0.45  # Širší padding pro více masa
 
 # Maximální šířka výřezu originální mapy pro zaručení vysokého detailu i u dlouhých postupů
 MAX_CROP_WIDTH = 1600
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--map-id', required=True)
+parser.add_argument('--png-file', required=True)
+args = parser.parse_args()
+
 
 
 def load_geojson_coords(geojson_path):
@@ -243,8 +250,8 @@ def generate_thumbnails():
     print("🖼️ Generuji náhledy dlaždic (thumbnaily)...")
     
     # Načteme originální mapu
-    print(f"  Načítám mapu {config.PNG_FILE}...")
-    img = Image.open(config.PNG_FILE).convert("RGB")
+    print(f"  Načítám mapu {args.png_file}...")
+    img = Image.open(args.png_file).convert("RGB")
     img_w, img_h = img.size
     print(f"  Rozměry mapy: {img_w}×{img_h}")
     
@@ -429,16 +436,26 @@ def generate_thumbnails():
     
     # Přidáme mapové thumbnail info a metadata tras pro animace
     import time
-    thumbs_meta = {
-        "version": int(time.time()),
-        "maps": {
-            "homolka": {
-                "thumb": "thumbs/map_homolka.jpg",
-                "drift": map_drift
-            }
-        },
-        "routes": route_meta
+    thumbs_meta_path = os.path.join("export", "thumbs", "thumbs_meta.json")
+    
+    thumbs_meta = {"version": int(time.time()), "maps": {}, "routes": {}}
+    if os.path.exists(thumbs_meta_path):
+        try:
+            with open(thumbs_meta_path, "r", encoding="utf-8") as f:
+                existing_meta = json.load(f)
+                thumbs_meta["maps"] = existing_meta.get("maps", {})
+                thumbs_meta["routes"] = existing_meta.get("routes", {})
+        except Exception:
+            pass
+            
+    thumbs_meta["maps"][args.map_id] = {
+        "thumb": f"thumbs/map_{args.map_id}.jpg",
+        "drift": map_drift
     }
+    
+    # Pridame nove routes k existujicim
+    thumbs_meta["routes"].update(route_meta)
+    thumbs_meta["version"] = int(time.time())
     
     thumbs_meta_path = os.path.join("export", "thumbs", "thumbs_meta.json")
     with open(thumbs_meta_path, "w", encoding="utf-8") as f:

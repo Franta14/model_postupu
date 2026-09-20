@@ -5,10 +5,27 @@ import math
 import numpy as np
 import config
 import shutil
+import argparse
+import sys
+
+if sys.platform == "win32":
+    import io
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "buffer"):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 def convert_to_geojson():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cache-dir', required=True)
+    parser.add_argument('--map-id', required=True)
+    parser.add_argument('--map-name', required=True)
+    parser.add_argument('--terrain', required=True)
+    parser.add_argument('--png-file', required=True)
+    args = parser.parse_args()
+
     print("🚀 Starting GeoJSON export for Mobile App...")
-    cache_dir = os.path.join("cache", "Homolka_Vojirov_20240917")
+    cache_dir = args.cache_dir
     input_dir = os.path.join(cache_dir, "schvalene_postupy")
     archiv_dir = os.path.join(cache_dir, "archiv_postupu")
     
@@ -31,10 +48,18 @@ def convert_to_geojson():
     os.makedirs(out_dir, exist_ok=True)
     
     index_data = []
+    index_path = os.path.join(out_dir, "postupy_index.json")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            try:
+                existing = json.load(f)
+                index_data = [x for x in existing if x.get("map_id") != args.map_id]
+            except Exception:
+                pass
     
     from PIL import Image
     Image.MAX_IMAGE_PIXELS = None
-    img = Image.open(config.PNG_FILE)
+    img = Image.open(args.png_file)
     w, h = img.size
     max_zoom = math.ceil(math.log2(max(w, h) / 512))
     scale = 2 ** max_zoom
@@ -146,6 +171,9 @@ def convert_to_geojson():
             
         index_data.append({
             "id": idx + 1,
+            "map_id": args.map_id,
+            "map_name": args.map_name,
+            "terrain": args.terrain,
             "file": geojson_filename,
             "dist_m": data.get("dist_m", 0),
             "variants_count": len(variants_meta),

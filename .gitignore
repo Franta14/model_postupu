@@ -1,0 +1,6 @@
+cache/
+export/
+__pycache__/
+*.npy
+*.pyc
+.env

@@ -13,30 +13,36 @@ from scipy.ndimage import binary_dilation, binary_erosion
 omap_file = 'Homolka_Vojirov_20240917.omap'
 GRID_SIZE_M = 0.5  # Rozlišení mřížky: 0.5 metru (Skvělý detail)
 SIRKA_CESTY_BUFFER = 0.5
-SIRKA_ZDI_BUFFER = 1.0  # 🧱 DŮLEŽITÉ: Zeď musí být dost široká, aby se nedala podběhnout diagonálně
+SIRKA_ZDI_BUFFER = 0.5  # Zuzeno z 1.0 na 0.5m: pri 0.5m/bunka = 1 bunka na kazdou stranu.
+                        # Stale blokuje diagonalni pohyb, ale jiz nepremaze sousedni cesty.
 
 # 🧠 ZLATÝ STANDARD TERÉNŮ (Cena za krok)
 COST_DICT = {
-    "Cesta (Zpevnena)": 0.700,   # Výrazně zlevněno (předtím 0.915)
-    "Cesta (Lesni)": 0.750,      # (předtím 0.965)
-    "Pesina": 0.820,             # (předtím 1.027)
-    "Prusek": 0.950,             # (předtím 1.105)
-    "Paseky": 1.080,
-    "Bily les": 1.172,           # Necháno jako kotva (rozmezí cesta-les je teď mnohem větší)
-    "Bazina": 1.317,
-    "Voda": 1.318,
-    "Hustnik 1 (Svetly)": 1.360,
-    "Podrost (Srafy)": 1.418,
-    "Hustnik 2 (Stredni)": 1.600, # Lehce zdraženo z 1.502
-    "Hustnik 3 (Tmave)": 2.200,   # Výrazně zdraženo z 1.830
-    "Kamenne pole": 1.840,
-    
-    "Kamen (Bod)": 2.500,         # Drobné kameny a srázky (1-2 metry vteřiny zpoždění při přímém přeběhu)
-    "Velky kamen (Bod)": 3.000,   # Větší kameny (výraznější zpomalení)
-    "Ryha / Potok": 5.000,        # Úzká linie. Přeskočení sebere běžci cca 1.5 - 2 vteřiny
+    "Cesta (Zpevnena)": 1.00,
+    "Cesta (Lesni)": 1.05,
+    "Pesina": 1.10,
+    "Prusek": 1.20,
+    "Paseky": 1.20,
+    "Bily les": 1.22,
+    "Bazina": 1.46,
+    "Voda": 1.46,
+    "Hustnik 1 (Svetly)": 1.83,
+    "Podrost (Srafy)": 1.72,
+    "Hustnik 2 (Stredni)": 2.11,
+    "Hustnik 3 (Tmave)": 3.33,
+    "Kamenne pole": 1.75,
+
+    "Kamen (Bod)": 2.500,         # Drobné kameny a srázky
+    "Velky kamen (Bod)": 3.000,   # Větší kameny
+    "Ryha / Potok": 5.000,        # Úzká linie (potok/ryha) — přeskočitelná
     "Nebezpecna bazina": 4.000,   # ISOM 310, silně zpomalující bažina
-    
-    # 🧱 NEPRŮCHODNÉ PŘEKÁŽKY (Zeď)
+
+    # 💧 VODNÍ PLOCHY (ISOM 301: řeky i jezera — drahé ale překonatelné)
+    # Algoritmus se jim vyhne kde to jde, ale může je zkřížit (brodění řeky).
+    # ISOM 302 = explicitně nepřekonatelná voda (jezero, hluboký rybník) → 9999
+    "Reka_Jezero": 4.0,
+
+    # 🧱 NEPRŮCHODNÉ PŘEKÁŽKY
     "Nepruchodna zed / plot": 9999.0,
     "Nepruchodna budova / zakaz": 9999.0,
     "Nepruchodna voda": 9999.0
@@ -117,10 +123,13 @@ for obj in root.iter():
             elif isom == '410': ter_pol = "Hustnik 3 (Tmave)"
             elif isom in ['407', '409']: ter_pol = "Podrost (Srafy)"
             elif isom in ['208', '209', '210', '211', '212']: ter_pol = "Kamenne pole"
-            elif isom == '311': ter_pol = "Bazina" 
-            elif isom == '310': ter_pol = "Nebezpecna bazina" 
-            # 🧱 Přidána neprůchodná voda
-            elif isom in ['301', '302']: ter_pol = "Nepruchodna voda"
+            elif isom == '311': ter_pol = "Bazina"
+            elif isom == '310': ter_pol = "Nebezpecna bazina"
+            # 💧 VODA:
+            # ISOM 301 = vodní plocha (řeka, jezero) — drahá ale překonatelná (brodění)
+            # ISOM 302 = explicitně nepřekonatelná vodní plocha → 9999
+            elif isom == '301': ter_pol = "Reka_Jezero"
+            elif isom == '302': ter_pol = "Nepruchodna voda"
             elif isom.startswith('30'): ter_pol = "Voda"
             # 🧱 Přidány neprůchodné objekty: Olivová(520), Budova(521), Křížkování(526, 709)
             elif isom in ['520', '521', '526', '709']: ter_pol = "Nepruchodna budova / zakaz"
@@ -161,11 +170,15 @@ start_time = time.time()
 
 # ⚠️ ZÁSADNÍ OPRAVA: Zdi musí být úplně první, aby přebily cesty i hustníky
 priority_order = [
+    # Absolutni bariery (prepisou vse)
     "Nepruchodna zed / plot", "Nepruchodna budova / zakaz", "Nepruchodna voda",
-    "Cesta (Zpevnena)", "Cesta (Lesni)", "Pesina", "Prusek", 
+    # Cesty maji prednost pred teky/jezery — cesta podel reky zustane cestou
+    "Cesta (Zpevnena)", "Cesta (Lesni)", "Pesina", "Prusek",
+    # Voda az ZA cestami (nechceme, aby reka premazala cestu podel ni)
+    "Reka_Jezero",
     "Ryha / Potok", "Velky kamen (Bod)", "Kamen (Bod)",
-    "Voda", "Nebezpecna bazina", "Kamenne pole", "Bazina", 
-    "Hustnik 3 (Tmave)", "Hustnik 2 (Stredni)", "Podrost (Srafy)", 
+    "Voda", "Nebezpecna bazina", "Kamenne pole", "Bazina",
+    "Hustnik 3 (Tmave)", "Hustnik 2 (Stredni)", "Podrost (Srafy)",
     "Hustnik 1 (Svetly)", "Paseky"
 ]
 

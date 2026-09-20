@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CourseData xmlns="http://www.orienteering.org/datastandard/3.0" iofVersion="3.0" createTime="2026-09-20T12:48:55.8737807+02:00" creator="Purple Pen version 3.5.5">
+  <Event>
+    <Name>Holna</Name>
+  </Event>
+  <RaceCourseData>
+    <Map>
+      <Scale>15000</Scale>
+      <MapPositionTopLeft x="-169.51" y="116.38" />
+      <MapPositionBottomRight x="1542.76" y="-200.23" />
+    </Map>
+    <Control type="Control">
+      <Id>31</Id>
+      <Position lng="14.846691250499145" lat="49.147996328386384" />
+      <MapPosition x="-102.89" y="68.93" />
+    </Control>
+    <Control type="Control">
+      <Id>32</Id>
+      <Position lng="14.86832018795347" lat="49.146105810223887" />
+      <MapPosition x="3.08" y="63.1" />
+    </Control>
+    <Control type="Control">
+      <Id>33</Id>
+      <Position lng="14.850774235720509" lat="49.136941446263634" />
+      <MapPosition x="-76.75" y="-11.25" />
+    </Control>
+    <Control type="Control">
+      <Id>34</Id>
+      <Position lng="14.85961848494167" lat="49.14244015428698" />
+      <MapPosition x="-37.01" y="32.72" />
+    </Control>
+    <Control type="Control">
+      <Id>35</Id>
+      <Position lng="14.86238313819103" lat="49.129932539380853" />
+      <MapPosition x="-16.41" y="-58.69" />
+    </Control>
+    <Control type="Control">
+      <Id>36</Id>
+      <Position lng="14.858883557444232" lat="49.147343350000511" />
+      <MapPosition x="-43.39" y="68.69" />
+    </Control>
+  </RaceCourseData>
+</CourseData>
