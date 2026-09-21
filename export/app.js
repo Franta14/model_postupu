@@ -2032,6 +2032,7 @@ L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
         if (firstCall) {
             firstCall = false;
             if (typeof val === 'number') {
+                if (isNaN(val)) return 3;
                 return Math.min(6, Math.max(3, Math.ceil(val)));
             }
         }
@@ -2051,6 +2052,7 @@ L.GridLayer.prototype._update = function (center) {
         if (firstCall) {
             firstCall = false;
             if (typeof val === 'number') {
+                if (isNaN(val)) return 3;
                 return Math.min(6, Math.max(3, Math.ceil(val)));
             }
         }
