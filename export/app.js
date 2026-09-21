@@ -2030,8 +2030,10 @@ L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
     }
     isInsideHack = true;
     let oldRound = Math.round;
+    let self = this;
+    let currentMapZoom = self._map ? self._map.getZoom() : null;
     Math.round = function (val) {
-        if (val === zoom && typeof val === 'number') {
+        if ((val === zoom || val === currentMapZoom) && typeof val === 'number') {
             return Math.min(6, Math.max(3, Math.ceil(val)));
         }
         return oldRound(val);
