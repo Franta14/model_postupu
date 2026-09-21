@@ -1002,7 +1002,7 @@ function openChatConversation(name) {
                     } else {
                         targetIndex = Number(data.routeIndex) || 0;
                     }
-                    let vParam = (thumbsMeta && thumbsMeta.version) ? '?v=' + thumbsMeta.version : '';
+                    let vParam = '';
                     let mapThumbPath = data.mapId ? `thumbs/map_${data.mapId}.jpg${vParam}` : `thumbs/map_homolka.jpg${vParam}`;
                     let shareImg = mapThumbPath;
                     let fallbackImg = mapThumbPath;
@@ -1501,8 +1501,8 @@ let thumbsMeta = null;
 
 function loadData() {
     Promise.all([
-        fetch('postupy/postupy_index.json?v=' + Date.now()).then(res => res.json()),
-        fetch('thumbs/thumbs_meta.json?v=' + Date.now()).then(res => res.json()).catch(() => null)
+        fetch('postupy/postupy_index.json').then(res => res.json()),
+        fetch('thumbs/thumbs_meta.json').then(res => res.json()).catch(() => null)
     ]).then(([data, metaData]) => {
         postupyData = data;
         thumbsMeta = metaData;
@@ -1777,7 +1777,7 @@ function buildReels() {
 
 function prefetchGeojsons() {
     if (!postupyData) return;
-    const vStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    const vStr = '';
     postupyData.forEach(p => {
         if (p.file && !geojsonCache[p.file]) {
             fetch('postupy/' + p.file + vStr)
@@ -1982,7 +1982,7 @@ function preloadReel(i) {
         return Promise.resolve();
     }
 
-    const versionStr = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+    const versionStr = '';
     pendingLoads[i] = fetch('postupy/' + postup.file + versionStr)
         .then(res => res.json())
         .then(geojson => {
@@ -2368,7 +2368,7 @@ async function startOfflineSync() {
         let urlsToFetch = ['postupy/postupy_index.json'];
         postupyData.forEach(p => urlsToFetch.push('postupy/' + p.file));
         text.innerText = "Získávám index dlaždic...";
-        let tilesResponse = await fetch('tiles_index.json?v=' + Date.now());
+        let tilesResponse = await fetch('tiles_index.json');
         if (tilesResponse.ok) {
             let tiles = await tilesResponse.json();
             urlsToFetch = urlsToFetch.concat(tiles);
@@ -2744,7 +2744,7 @@ function renderProfileSaved() {
             thumbSrc = 'thumbs/map_' + route.map_id + '.jpg'; // fallback
         }
 
-        let thumbImgSrc = thumbSrc + (thumbsMeta && thumbsMeta.version ? '?v=' + thumbsMeta.version : '');
+        let thumbImgSrc = thumbSrc;
         let metaStyle = '';
         let animClass = 'animated-map-drift';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
@@ -3106,7 +3106,7 @@ function renderExploreGrid() {
         let thumbPath = (mapMeta && typeof mapMeta === 'object' && mapMeta.thumb)
             ? mapMeta.thumb
             : ('thumbs/map_' + group.map_id + '.jpg');
-        const thumbVersion = (thumbsMeta && thumbsMeta.version) ? `?v=${thumbsMeta.version}` : '';
+        const thumbVersion = '';
         const thumbSrc = thumbPath + thumbVersion;
 
         // 1. Priorita: Manuální override z ANIMATION_CONFIG (pokud existuje)
