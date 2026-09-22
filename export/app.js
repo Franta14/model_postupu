@@ -2022,49 +2022,6 @@ function preloadAllVisibleReels(currentIndex) {
     }
 }
 
-const originalSetView = L.GridLayer.prototype._setView;
-const originalUpdate = L.GridLayer.prototype._update;
-
-L.GridLayer.prototype._setView = function (center, zoom, noPrune, noUpdate) {
-    let oldRound = Math.round;
-    let firstCall = true;
-    Math.round = function(val) {
-        if (firstCall) {
-            firstCall = false;
-            if (typeof val === 'number') {
-                if (isNaN(val)) return 3;
-                return Math.min(6, Math.max(3, Math.ceil(val)));
-            }
-        }
-        return oldRound(val);
-    };
-    try {
-        return originalSetView.call(this, center, zoom, noPrune, noUpdate);
-    } finally {
-        Math.round = oldRound;
-    }
-};
-
-L.GridLayer.prototype._update = function (center) {
-    let oldRound = Math.round;
-    let firstCall = true;
-    Math.round = function(val) {
-        if (firstCall) {
-            firstCall = false;
-            if (typeof val === 'number') {
-                if (isNaN(val)) return 3;
-                return Math.min(6, Math.max(3, Math.ceil(val)));
-            }
-        }
-        return oldRound(val);
-    };
-    try {
-        return originalUpdate.call(this, center);
-    } finally {
-        Math.round = oldRound;
-    }
-};
-
 function initMapForReel(index) {
     if (mapInstances[index]) return mapInstances[index];
     const mapContainer = document.getElementById(`map-${index}`);
@@ -3171,3 +3128,4 @@ function renderExploreGrid() {
         container.appendChild(el);
     });
 }
+
