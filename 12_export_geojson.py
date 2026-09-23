@@ -53,10 +53,14 @@ def convert_to_geojson():
         offset_x = float(cal_dx)
         offset_y = float(cal_dy)
         print(f"🎯 Automaticky načten kalibrační offset: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
-    else:
+    elif args.offset_x != 0.0 or args.offset_y != 0.0:
         offset_x = args.offset_x
         offset_y = args.offset_y
-        print(f"ℹ️ Použit výchozí offset: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
+        print(f"ℹ️ Použit zadaný offset: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
+    else:
+        offset_x = float(getattr(config, 'MAP_OFFSET_X', 0.0))
+        offset_y = float(getattr(config, 'MAP_OFFSET_Y', 0.0))
+        print(f"ℹ️ Použit fallback offset z config.py: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
     
     out_dir = os.path.join("export", "postupy")
     os.makedirs(out_dir, exist_ok=True)

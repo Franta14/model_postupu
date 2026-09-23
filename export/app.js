@@ -435,7 +435,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 .ig-reel-card { width: 145px; max-width: 44vw; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; position: relative; background: #111; margin-top: 4px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); cursor: pointer; border: 1px solid var(--border-color); transition: transform 0.15s ease, box-shadow 0.15s ease; -webkit-tap-highlight-color: transparent; }
 .ig-reel-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28); }
 .ig-reel-card:active { transform: scale(0.97); }
-.ig-reel-card img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; }
+.ig-reel-card img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: -webkit-optimize-contrast; }
 .chat-share-actions { display: flex; flex-direction: column; gap: 8px; align-self: center; justify-content: center; }
 .chat-action-circle { width: 34px; height: 34px; border-radius: 50%; background-color: var(--search-bg, #efefef); border: none; outline: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-color, #000); padding: 0; transition: transform 0.12s ease, background-color 0.15s ease; -webkit-tap-highlight-color: transparent; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
 .chat-action-circle:hover { transform: scale(1.08); background-color: var(--border-color, #dbdbdb); }
@@ -1499,8 +1499,8 @@ let selectedTerrains = new Set();
 
 const DEFAULT_CIRCLE_SCALES = {
     'homolka': 1.0,
-    'holna': 2.5,
-    'bilaskala': 2.5
+    'holna': 1.0,
+    'bilaskala': 1.0
 };
 
 let thumbsMeta = null;
@@ -2198,7 +2198,7 @@ function renderMapData(index, geojsonOriginal) {
                 keepBuffer: 2,
                 updateWhenIdle: false,
                 updateWhenZooming: true,
-                detectRetina: false,
+                detectRetina: true,
                 errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
             }).addTo(map);
             currentTileLayers[index] = tl;
@@ -2226,14 +2226,9 @@ function renderMapData(index, geojsonOriginal) {
                     ? thumbsMeta.maps[currentMapId].circle_scale
                     : (DEFAULT_CIRCLE_SCALES[currentMapId] || 1.0);
 
-                // Na mobilních zařízeních (výška obrazovky je menší než na PC monitoru)
-                // mírně kompenzujeme velikost prvků, aby kolečka a čísla nebyla na telefonu titěrná
-                let isMobile = window.innerWidth <= 768;
-                let mobileMultiplier = isMobile ? 1.25 : 1.0;
-
                 let baseR = (1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40) * nf;
-                let R = baseR * circleScale * mobileMultiplier;
-                let gap = (0.10 * nf) * circleScale * mobileMultiplier;
+                let R = baseR * circleScale;
+                let gap = (0.10 * nf) * circleScale;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
 
@@ -2241,7 +2236,7 @@ function renderMapData(index, geojsonOriginal) {
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
                 map._targetBearing = targetBearing;
 
-                let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150)) * (isMobile ? 1.15 : 1.0);
+                let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
                 let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
                 let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
                 if (dist > R * 2 + gap * 2) {
@@ -2254,7 +2249,7 @@ function renderMapData(index, geojsonOriginal) {
                     layer.addLayer(L.circle([coords[1], coords[0]], { radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false }));
 
                     let nx = -uy, ny = ux;
-                    let textDist = R + (0.90 * nf) * circleScale * mobileMultiplier;
+                    let textDist = R + (0.90 * nf) * circleScale;
                     let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
 
                     let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -2263,7 +2258,7 @@ function renderMapData(index, geojsonOriginal) {
                     svgText.setAttribute('preserveAspectRatio', 'none');
                     let fontSize = 75;
                     svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
-                    let halfSizeText = (1.0 * nf) * circleScale * mobileMultiplier;
+                    let halfSizeText = (1.0 * nf) * circleScale;
                     let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
                     overlays.addLayer(L.svgOverlay(svgText, boundsText, { interactive: false, pane: 'markerPane' }));
                 });

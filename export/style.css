@@ -387,10 +387,7 @@ body {
 }
 
 .animated-map-drift img {
-  image-rendering: auto;
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  filter: contrast(1.05) saturate(1.06);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   transform: translateZ(0);
@@ -977,9 +974,8 @@ body {
 }
 
 .leaflet-tile {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  filter: contrast(1.08) saturate(1.04);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* ── Variants Panel ── */
@@ -1620,7 +1616,6 @@ body.chat-mode-active #saved-mode-header {
   object-fit: cover;
   display: block;
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
 }
 
 /* Akční tlačítka u sdíleného postupu v chatu (IG styl) */

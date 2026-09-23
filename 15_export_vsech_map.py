@@ -9,7 +9,9 @@ maps_to_export = [
         "terrain": "cesko",
         "cache_dir": "cache/Homolka_Vojirov_20240917",
         "png_file": "mapa.png",
-        "circle_scale": 1.0
+        "circle_scale": 1.0,
+        "offset_x": 1.0,
+        "offset_y": 9.0
     },
     {
         "map_id": "holna",
@@ -17,7 +19,9 @@ maps_to_export = [
         "terrain": "cesko",
         "cache_dir": "cache/Holna_20240916",
         "png_file": "Holna.png",
-        "circle_scale": 2.5
+        "circle_scale": 1.0,
+        "offset_x": 0.45431364,
+        "offset_y": 5.946594
     },
     {
         "map_id": "bilaskala",
@@ -25,7 +29,9 @@ maps_to_export = [
         "terrain": "cesko",
         "cache_dir": "cache/bilaskala",
         "png_file": "bilaskala.png",
-        "circle_scale": 2.5
+        "circle_scale": 1.0,
+        "offset_x": 0.02601296,
+        "offset_y": 9.333765
     }
 ]
 

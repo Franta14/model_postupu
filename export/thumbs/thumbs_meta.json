@@ -30,7 +30,7 @@
         "endX": -20.9,
         "endY": -63.3
       },
-      "circle_scale": 2.5,
+      "circle_scale": 1.0,
       "resolution_m_px": 1.27
     },
     "bilaskala": {
@@ -46,7 +46,7 @@
         "endX": -62.9,
         "endY": -29.7
       },
-      "circle_scale": 2.5,
+      "circle_scale": 1.0,
       "resolution_m_px": 0.846
     }
   },
