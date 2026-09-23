@@ -17,8 +17,6 @@ maps_to_export = [
         "terrain": "cesko",
         "cache_dir": "cache/Holna_20240916",
         "png_file": "Holna.png",
-        "offset_x": 1,
-        "offset_y": 9,
         "circle_scale": 2.5
     },
     {

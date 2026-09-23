@@ -52,6 +52,7 @@ def generate_tiles(input_png, output_dir, tile_size=512):
                 tile.save(tile_path, "PNG")
 
 import argparse
+import shutil
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -60,6 +61,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     out_dir = os.path.join("export", "tiles", args.map_id)
+    if os.path.exists(out_dir):
+        print(f"Cleaning existing tiles directory: {out_dir}")
+        shutil.rmtree(out_dir, ignore_errors=True)
     os.makedirs(out_dir, exist_ok=True)
     generate_tiles(args.png_file, out_dir)
     print(f"[OK] Tiles generated successfully in {out_dir}")

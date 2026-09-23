@@ -45,6 +45,18 @@ def convert_to_geojson():
     kalibrace = np.load(os.path.join(cache_dir, "kalibrace.npy"))
     cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = kalibrace
     A = np.array([[cal_a, cal_b], [cal_d, cal_e]])
+
+    # Automatické načtení přesného kalibračního posunu z cache (pokud existuje)
+    offset_file = os.path.join(cache_dir, "kalibrace_offset.npy")
+    if os.path.exists(offset_file):
+        cal_dx, cal_dy = np.load(offset_file)
+        offset_x = float(cal_dx)
+        offset_y = float(cal_dy)
+        print(f"🎯 Automaticky načten kalibrační offset: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
+    else:
+        offset_x = args.offset_x
+        offset_y = args.offset_y
+        print(f"ℹ️ Použit výchozí offset: dx={offset_x:.3f} px, dy={offset_y:.3f} px")
     
     out_dir = os.path.join("export", "postupy")
     os.makedirs(out_dir, exist_ok=True)
@@ -72,8 +84,8 @@ def convert_to_geojson():
         b = np.array([OOM_x - cal_c, OOM_y - cal_f])
         col, row = np.linalg.solve(A, b)
         
-        px_x = (float(col) + args.offset_x) / scale
-        px_y = (float(row) + args.offset_y) / scale
+        px_x = (float(col) + offset_x) / scale
+        px_y = (float(row) + offset_y) / scale
         return [px_x, -px_y]
         
     files = glob.glob(os.path.join(input_dir, "*.json"))
@@ -96,8 +108,8 @@ def convert_to_geojson():
             OOM_y = start_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = (float(col) + args.offset_x) / scale
-            px_y = (float(row) + args.offset_y) / scale
+            px_x = (float(col) + offset_x) / scale
+            px_y = (float(row) + offset_y) / scale
             start_coord = [px_x, -px_y]
         else:
             start_coord = to_lnglat(start_pt["gy"], start_pt["gx"])
@@ -114,8 +126,8 @@ def convert_to_geojson():
             OOM_y = end_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = (float(col) + args.offset_x) / scale
-            px_y = (float(row) + args.offset_y) / scale
+            px_x = (float(col) + offset_x) / scale
+            px_y = (float(row) + offset_y) / scale
             end_coord = [px_x, -px_y]
         else:
             end_coord = to_lnglat(end_pt["gy"], end_pt["gx"])

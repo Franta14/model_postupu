@@ -1970,6 +1970,9 @@ function activateReel(index) {
     const activeMap = mapInstances[index];
     if (activeMap) {
         activeMap.invalidateSize({ animate: false });
+        if (activeMap.originalMidX !== undefined && activeMap.originalMidY !== undefined) {
+            activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom || activeMap.getZoom(), { animate: false });
+        }
     }
 }
 
@@ -2179,15 +2182,24 @@ function renderMapData(index, geojsonOriginal) {
             let spanLat = maxLat - minLat;
             let maxSpan = Math.max(spanLng, spanLat, 200);
 
-            // Zvětšená rezerva (45 %), aby rohy zrotované mapy nenarazily do maxBounds limitu
-            let marginLng = maxSpan * 0.45;
-            let marginLat = maxSpan * 0.45;
+            // Velkorysá rezerva pro maxBounds, aby otočené rohy nenarazily do limitu
+            let marginLng = maxSpan * 1.5;
+            let marginLat = maxSpan * 1.5;
             let tileBounds = [[minLat - marginLat, minLng - marginLng], [maxLat + marginLat, maxLng + marginLng]];
 
             map.setMaxBounds(tileBounds);
             let tl = L.tileLayer('tiles/' + currentMapId + '/{z}/{x}/{y}.png', {
-                tileSize: 512, minZoom: 0, maxZoom: 8, maxNativeZoom: maxNative,
-                noWrap: true, tms: false, keepBuffer: 4, updateWhenIdle: false, updateWhenZooming: true, detectRetina: true
+                tileSize: 512,
+                minZoom: 0,
+                maxZoom: 8,
+                maxNativeZoom: 5,
+                noWrap: true,
+                tms: false,
+                keepBuffer: 2,
+                updateWhenIdle: false,
+                updateWhenZooming: true,
+                detectRetina: false,
+                errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
             }).addTo(map);
             currentTileLayers[index] = tl;
         }
@@ -2266,7 +2278,10 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx * dx + dy * dy);
 
-            let targetPixelsY = h * 0.84;
+            let isMobile = w <= 768;
+            // Na mobilu odečteme spodní navigační lištu (49px) a UI tlačítka (cca 65px)
+            let availH = isMobile ? (h - 110) : (h - 49);
+            let targetPixelsY = availH * 0.80;
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
 
@@ -2274,6 +2289,19 @@ function renderMapData(index, geojsonOriginal) {
             idealZoom = Math.max(0, Math.min(maxZoom, idealZoom));
 
             let midX = (startCoords[0] + endCoords[0]) / 2, midY = (startCoords[1] + endCoords[1]) / 2;
+
+            // Na mobilu je spodních 49px vyhrazeno pro #bottom-nav.
+            // Posuneme střed o polovinu spodní lišty (24.5px) nahoru v CRS jednotkách,
+            // aby spojnice a kontroly ležely přesně ve středu viditelné plochy nad lištou.
+            let pixelScale = Math.pow(2, idealZoom);
+            let visualMidX = midX;
+            let visualMidY = midY;
+            if (isMobile && dist > 0) {
+                let ux = dx / dist, uy = dy / dist;
+                let shiftYScreen = 24.5 / pixelScale;
+                visualMidX = midX - ux * shiftYScreen;
+                visualMidY = midY - uy * shiftYScreen;
+            }
             map.setMinZoom(idealZoom);
 
             let ux = dx / dist, uy = dy / dist, vx = -uy, vy = ux;
@@ -2285,7 +2313,6 @@ function renderMapData(index, geojsonOriginal) {
                 if (Math.abs(localX) > maxAbsX) maxAbsX = Math.abs(localX);
             });
 
-            let pixelScale = Math.pow(2, idealZoom);
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
             let routeHalfW = maxAbsX + (50 / pixelScale), routeHalfH = (dist / 2) + (50 / pixelScale);
 
@@ -2305,8 +2332,8 @@ function renderMapData(index, geojsonOriginal) {
             overlays.addLayer(mask);
 
             if (isInitialRender) {
-                map.originalMidX = midX; map.originalMidY = midY; map.originalZoom = idealZoom;
-                map.setView([midY, midX], idealZoom, { animate: false });
+                map.originalMidX = visualMidX; map.originalMidY = visualMidY; map.originalZoom = idealZoom;
+                map.setView([visualMidY, visualMidX], idealZoom, { animate: false });
             }
         }
     } catch (e) { console.warn("Silent ignore map render error", e); }
