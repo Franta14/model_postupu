@@ -114,8 +114,8 @@ body {
 .app-screen {
   display: none;
   width: 100%;
-  height: calc(100vh - 49px - env(safe-area-inset-bottom));
-  height: calc(100dvh - 49px - env(safe-area-inset-bottom));
+  height: calc(100vh - 49px);
+  height: calc(100dvh - 49px);
   position: absolute;
   top: 0;
   left: 0;
@@ -169,15 +169,13 @@ body {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: calc(49px + env(safe-area-inset-bottom));
+  height: 49px;
   background-color: var(--bg-color);
   border-top: 0.5px solid var(--border-color);
   display: flex;
   justify-content: space-around;
-  align-items: flex-start;
+  align-items: center;
   z-index: 9999;
-  padding-top: 4px;
-  padding-bottom: env(safe-area-inset-bottom);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -266,7 +264,7 @@ body {
 /* ==================================================== */
 
 .explore-header {
-  padding: max(14px, env(safe-area-inset-top)) 16px 8px;
+  padding: max(14px, calc(env(safe-area-inset-top) + 8px)) 16px 8px;
   background: var(--bg-color);
   position: sticky;
   top: 0;
@@ -469,7 +467,7 @@ body {
 
 .screen-header {
   padding: 12px 16px;
-  padding-top: max(12px, env(safe-area-inset-top));
+  padding-top: max(12px, calc(env(safe-area-inset-top) + 8px));
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -743,7 +741,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 49px - env(safe-area-inset-bottom));
+  height: calc(100% - 49px);
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -762,7 +760,7 @@ body {
 
 .reel-ui {
   position: absolute;
-  bottom: calc(49px + env(safe-area-inset-bottom));
+  bottom: 49px;
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
@@ -911,7 +909,7 @@ body {
 .reel-actions {
   position: absolute;
   right: 12px;
-  bottom: calc(120px + env(safe-area-inset-bottom));
+  bottom: 120px;
   display: flex;
   flex-direction: column;
   gap: 18px;

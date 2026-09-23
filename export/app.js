@@ -275,7 +275,7 @@ style.innerHTML = `
 html, body { margin: 0; padding: 0; width: 100%; height: 100vh; height: 100dvh; min-height: 100vh; min-height: 100dvh; min-height: -webkit-fill-available; min-height: calc(100% + env(safe-area-inset-top)); background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
 
 #app-content { width: 100%; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
-.app-screen { height: calc(100vh - 49px - env(safe-area-inset-bottom)); height: calc(100dvh - 49px - env(safe-area-inset-bottom)); }
+.app-screen { height: calc(100vh - 49px); height: calc(100dvh - 49px); }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
 #screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100vh !important; height: 100dvh !important; overflow: hidden; }
@@ -290,8 +290,7 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100vh; height: 100dvh; 
 #bottom-nav { 
     background: var(--nav-bg) !important; 
     border-top: 0.5px solid var(--nav-border) !important; 
-    display: flex; justify-content: space-around; align-items: flex-start;
-    padding-top: 4px; padding-bottom: env(safe-area-inset-bottom);
+    display: flex; justify-content: space-around; align-items: center;
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 #bottom-nav.nav-dark { 
@@ -403,7 +402,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 /* --------------------------------- */
 /* CHAT ZPRÁVY (IG Direct style)     */
 /* --------------------------------- */
-.chat-header-main { padding: max(14px, env(safe-area-inset-top)) 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.chat-header-main { padding: max(14px, calc(env(safe-area-inset-top) + 8px)) 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
 .chat-search-bar { margin: 0 16px 10px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 7px 12px; }
 .chat-search-bar svg { width: 16px; height: 16px; color: var(--text-secondary, #737373); flex-shrink: 0; }
 .chat-search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--text-color); }
@@ -421,7 +420,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 /* Aktivní Konverzace */
 #chat-conversation { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: var(--bg-color); z-index: 10005; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
 #chat-conversation.active { transform: translateX(0); }
-.conv-header { display: flex; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 16px; gap: 12px; background: var(--bg-color); }
+.conv-header { display: flex; align-items: center; padding: max(12px, calc(env(safe-area-inset-top) + 8px)) 16px 12px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; font-size: 16px; gap: 12px; background: var(--bg-color); }
 .conv-back { cursor: pointer; opacity: 0.7; display: flex; }
 .conv-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 6px; background: var(--bg-color); }
 .msg-bubble { max-width: 70%; padding: 10px 14px; border-radius: 22px; font-size: 15px; line-height: 1.35; }
@@ -2631,7 +2630,7 @@ function renderProfileSaved() {
     let savedBio = localStorage.getItem('profile_bio') || t('bioDesc');
 
     profileContent.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px 8px; color: inherit; border-bottom: 0.5px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: max(12px, calc(env(safe-area-inset-top) + 8px)) 16px 8px; color: inherit; border-bottom: 0.5px solid var(--border-color);">
             <div style="font-size: 20px; font-weight: 700; display:flex; align-items:center; gap: 6px; letter-spacing: -0.3px;">
                 <span id="profile-username-val" contenteditable="true" spellcheck="false" class="editable-profile-field" title="Klikni pro úpravu">${savedUsername}</span>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.4; cursor: pointer;" onclick="document.getElementById('profile-username-val').focus()"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
