@@ -1,5 +1,5 @@
 {
-  "version": 1790143034,
+  "version": 1790148833,
   "maps": {
     "homolka": {
       "thumb": "thumbs/map_homolka.jpg",
@@ -7,13 +7,14 @@
       "max_zoom": 5,
       "drift": {
         "zoom": 700,
-        "startX": -83.9,
-        "startY": -22.5,
-        "midX": -81.9,
-        "midY": -25.7,
-        "endX": -77.9,
-        "endY": -27.3
-      }
+        "startX": -79.9,
+        "startY": -20.9,
+        "midX": -77.9,
+        "midY": -24.1,
+        "endX": -73.9,
+        "endY": -25.7
+      },
+      "resolution_m_px": 0.846
     },
     "holna": {
       "thumb": "thumbs/map_holna.jpg",
@@ -27,7 +28,8 @@
         "midY": -60.9,
         "endX": -20.9,
         "endY": -63.3
-      }
+      },
+      "resolution_m_px": 1.27
     },
     "bilaskala": {
       "thumb": "thumbs/map_bilaskala.jpg",
@@ -35,13 +37,14 @@
       "max_zoom": 5,
       "drift": {
         "zoom": 700,
-        "startX": -84.9,
-        "startY": -24.9,
-        "midX": -82.9,
-        "midY": -28.1,
-        "endX": -78.9,
-        "endY": -29.7
-      }
+        "startX": -56.9,
+        "startY": -24.1,
+        "midX": -60.9,
+        "midY": -25.7,
+        "endX": -62.9,
+        "endY": -28.9
+      },
+      "resolution_m_px": 0.846
     }
   },
   "routes": {}

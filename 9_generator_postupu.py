@@ -223,9 +223,15 @@ def draw_leg_image(p1, p2, routes, filename):
     
     PURPLE = (200, 0, 200, 255)
     
-    # Zjisteni velikosti kolecka (cca radius 35 px, tloustka 5 px)
-    radius = 35
-    thickness = 5
+    # Zjisteni fyzickeho rozliseni mapy (z pgw souboru) a velikosti kolecka (cca 30 metru)
+    try:
+        with open(config.PGW_FILE, 'r') as f:
+            px_size = abs(float(f.readline().strip()))
+    except:
+        px_size = 0.846
+        
+    radius = int(30.0 / px_size)
+    thickness = max(3, int(radius / 7))
     
     # 1. Kresleni tras (volby)
     colors = [(255, 0, 0, 150), (0, 0, 255, 150), (0, 255, 0, 150)] # Cervena, Modra, Zelena

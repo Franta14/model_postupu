@@ -349,12 +349,16 @@ def generate_thumbnails():
         except Exception:
             pass
             
+    resolution_m_px = thumbs_meta["maps"].get(args.map_id, {}).get("resolution_m_px")
+    
     thumbs_meta["maps"][args.map_id] = {
         "thumb": f"thumbs/map_{args.map_id}.jpg",
         "scale": scale,
         "max_zoom": max_zoom,
         "drift": map_drift
     }
+    if resolution_m_px is not None:
+        thumbs_meta["maps"][args.map_id]["resolution_m_px"] = resolution_m_px
     
     thumbs_meta["version"] = int(time.time())
     

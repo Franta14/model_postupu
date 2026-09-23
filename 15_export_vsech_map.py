@@ -15,7 +15,9 @@ maps_to_export = [
         "map_name": "Holná",
         "terrain": "cesko",
         "cache_dir": "cache/Holna_20240916",
-        "png_file": "Holna.png"
+        "png_file": "Holna.png",
+        "offset_x": 1,
+        "offset_y": 9
     },
     {
         "map_id": "bilaskala",
@@ -39,7 +41,9 @@ def run_export():
             "--map-id", m["map_id"],
             "--map-name", m["map_name"],
             "--terrain", m["terrain"],
-            "--png-file", m["png_file"]
+            "--png-file", m["png_file"],
+            "--offset-x", str(m.get("offset_x", 0)),
+            "--offset-y", str(m.get("offset_y", 0))
         ]
         print(f"Running: {' '.join(cmd1)}")
         try:

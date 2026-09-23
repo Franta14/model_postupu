@@ -22,6 +22,8 @@ def convert_to_geojson():
     parser.add_argument('--map-name', required=True)
     parser.add_argument('--terrain', required=True)
     parser.add_argument('--png-file', required=True)
+    parser.add_argument('--offset-x', type=float, default=0.0)
+    parser.add_argument('--offset-y', type=float, default=0.0)
     args = parser.parse_args()
 
     print("🚀 Starting GeoJSON export for Mobile App...")
@@ -70,8 +72,8 @@ def convert_to_geojson():
         b = np.array([OOM_x - cal_c, OOM_y - cal_f])
         col, row = np.linalg.solve(A, b)
         
-        px_x = (float(col) + config.MAP_OFFSET_X) / scale
-        px_y = (float(row) + config.MAP_OFFSET_Y) / scale
+        px_x = (float(col) + args.offset_x) / scale
+        px_y = (float(row) + args.offset_y) / scale
         return [px_x, -px_y]
         
     files = glob.glob(os.path.join(input_dir, "*.json"))
@@ -94,8 +96,8 @@ def convert_to_geojson():
             OOM_y = start_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = (float(col) + config.MAP_OFFSET_X) / scale
-            px_y = (float(row) + config.MAP_OFFSET_Y) / scale
+            px_x = (float(col) + args.offset_x) / scale
+            px_y = (float(row) + args.offset_y) / scale
             start_coord = [px_x, -px_y]
         else:
             start_coord = to_lnglat(start_pt["gy"], start_pt["gx"])
@@ -112,8 +114,8 @@ def convert_to_geojson():
             OOM_y = end_pt["oom_y"]
             b = np.array([OOM_x - cal_c, OOM_y - cal_f])
             col, row = np.linalg.solve(A, b)
-            px_x = (float(col) + config.MAP_OFFSET_X) / scale
-            px_y = (float(row) + config.MAP_OFFSET_Y) / scale
+            px_x = (float(col) + args.offset_x) / scale
+            px_y = (float(row) + args.offset_y) / scale
             end_coord = [px_x, -px_y]
         else:
             end_coord = to_lnglat(end_pt["gy"], end_pt["gx"])
