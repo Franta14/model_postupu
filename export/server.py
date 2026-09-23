@@ -4,9 +4,9 @@ class CacheHandler(http.server.SimpleHTTPRequestHandler):
     protocol_version = "HTTP/1.1" # Enables Keep-Alive
     
     def end_headers(self):
-        # Cache tiles and thumbs, but no-cache for HTML, JS, CSS and service worker
+        # Cache tiles and thumbs images, but no-cache for HTML, JS, CSS, JSON metadata and service worker
         path_clean = self.path.split('?')[0]
-        if path_clean.endswith(('.html', '.js', '.css')) or path_clean.endswith('/') or 'sw.js' in path_clean:
+        if path_clean.endswith(('.html', '.js', '.css', '.json')) or path_clean.endswith('/') or 'sw.js' in path_clean:
             self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
             self.send_header('Pragma', 'no-cache')
             self.send_header('Expires', '0')

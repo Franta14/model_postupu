@@ -1497,12 +1497,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let selectedTerrains = new Set();
 
+const DEFAULT_CIRCLE_SCALES = {
+    'homolka': 1.0,
+    'holna': 2.5,
+    'bilaskala': 2.5
+};
+
 let thumbsMeta = null;
 
 function loadData() {
+    const vParam = '?v=' + Date.now();
     Promise.all([
-        fetch('postupy/postupy_index.json').then(res => res.json()),
-        fetch('thumbs/thumbs_meta.json').then(res => res.json()).catch(() => null)
+        fetch('postupy/postupy_index.json' + vParam).then(res => res.json()),
+        fetch('thumbs/thumbs_meta.json' + vParam).then(res => res.json()).catch(() => null)
     ]).then(([data, metaData]) => {
         postupyData = data;
         thumbsMeta = metaData;
@@ -2203,13 +2210,18 @@ function renderMapData(index, geojsonOriginal) {
             let dist = Math.sqrt(dx * dx + dy * dy);
             if (dist > 0) {
                 let distM = postupyData[index].dist_m || 0;
-                let circleScale = 1.0;
-                if (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[currentMapId] && thumbsMeta.maps[currentMapId].circle_scale) {
-                    circleScale = thumbsMeta.maps[currentMapId].circle_scale;
-                }
+                let circleScale = (thumbsMeta && thumbsMeta.maps && thumbsMeta.maps[currentMapId] && thumbsMeta.maps[currentMapId].circle_scale)
+                    ? thumbsMeta.maps[currentMapId].circle_scale
+                    : (DEFAULT_CIRCLE_SCALES[currentMapId] || 1.0);
+
+                // Na mobilních zařízeních (výška obrazovky je menší než na PC monitoru)
+                // mírně kompenzujeme velikost prvků, aby kolečka a čísla nebyla na telefonu titěrná
+                let isMobile = window.innerWidth <= 768;
+                let mobileMultiplier = isMobile ? 1.25 : 1.0;
+
                 let baseR = (1.10 + Math.max(0, Math.min(1, (distM - 1600) / 800)) * 0.40) * nf;
-                let R = baseR * circleScale;
-                let gap = (0.10 * nf) * circleScale;
+                let R = baseR * circleScale * mobileMultiplier;
+                let gap = (0.10 * nf) * circleScale * mobileMultiplier;
                 let ux = dx / dist, uy = dy / dist;
                 let targetBearing = (Math.atan2(dy, dx) * 180 / Math.PI) - 90;
 
@@ -2217,7 +2229,7 @@ function renderMapData(index, geojsonOriginal) {
                 if (mContainer) mContainer.style.transform = `rotate(${targetBearing}deg)`;
                 map._targetBearing = targetBearing;
 
-                let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150));
+                let lineWeight = Math.max(2, Math.min(3, 2 + dist / 150)) * (isMobile ? 1.15 : 1.0);
                 let lineStart = [startCoords[0] + ux * (R + gap), startCoords[1] + uy * (R + gap)];
                 let lineEnd = [endCoords[0] - ux * (R + gap), endCoords[1] - uy * (R + gap)];
                 if (dist > R * 2 + gap * 2) {
@@ -2230,7 +2242,7 @@ function renderMapData(index, geojsonOriginal) {
                     layer.addLayer(L.circle([coords[1], coords[0]], { radius: R, color: iofPurple, weight: lineWeight, fill: false, pane: 'markerPane', interactive: false }));
 
                     let nx = -uy, ny = ux;
-                    let textDist = R + (0.90 * nf) * circleScale;
+                    let textDist = R + (0.90 * nf) * circleScale * mobileMultiplier;
                     let cx = coords[0] + nx * textDist, cy = coords[1] + ny * textDist;
 
                     let svgText = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -2239,7 +2251,7 @@ function renderMapData(index, geojsonOriginal) {
                     svgText.setAttribute('preserveAspectRatio', 'none');
                     let fontSize = 75;
                     svgText.innerHTML = `<text x="50" y="80" transform="rotate(${-targetBearing}, 50, 50)" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" fill="${iofPurple}" text-anchor="middle">${num}</text>`;
-                    let halfSizeText = (1.0 * nf) * circleScale;
+                    let halfSizeText = (1.0 * nf) * circleScale * mobileMultiplier;
                     let boundsText = [[cy - halfSizeText, cx - halfSizeText], [cy + halfSizeText, cx + halfSizeText]];
                     overlays.addLayer(L.svgOverlay(svgText, boundsText, { interactive: false, pane: 'markerPane' }));
                 });

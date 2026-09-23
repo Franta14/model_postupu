@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scrollienteering-v35';
+const CACHE_NAME = 'scrollienteering-v36';
 
 self.addEventListener('install', event => {
     // Instalace proběhne rychle, nebudeme čekat na obří preload
@@ -27,8 +27,11 @@ self.addEventListener('fetch', event => {
 
     const url = new URL(event.request.url);
 
-    // 1. Dlaždice, data postupů a náhledy (thumbs) - Cache First (nikdy se nemění bez změny verze v query parametru)
-    if (url.pathname.includes('/tiles/') || url.pathname.includes('/postupy/') || url.pathname.includes('/thumbs/')) {
+    // Metadata (.json) VŽDY Network-First, aby se změny konfigurace (např. circle_scale, nové mapy) ihned projevily
+    const isMetaJson = url.pathname.endsWith('.json');
+
+    // 1. Dlaždice a binární náhledy (obrázky) - Cache First
+    if (!isMetaJson && (url.pathname.includes('/tiles/') || url.pathname.includes('/postupy/') || url.pathname.includes('/thumbs/'))) {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
                 if (cachedResponse) return cachedResponse;
@@ -44,7 +47,7 @@ self.addEventListener('fetch', event => {
             })
         );
     }
-    // 2. Aplikace (HTML, CSS, JS) - Network First s 'no-cache' (vynutí čerstvou verzi)
+    // 2. Aplikace a metadata (HTML, CSS, JS, JSON) - Network First s 'no-store' (vynutí čerstvou verzi)
     else {
         event.respondWith(
             fetch(event.request, { cache: 'no-store' }).then(networkResponse => {
