@@ -272,12 +272,15 @@ style.innerHTML = `
     }
 }
 
-html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100vh; height: 100dvh; min-height: 100vh; min-height: 100dvh; min-height: -webkit-fill-available; min-height: calc(100% + env(safe-area-inset-top)); background-color: var(--bg-color) !important; color: var(--text-color) !important; overflow: hidden; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; }
+
+#app-content { width: 100%; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
+.app-screen { height: calc(100vh - 49px - env(safe-area-inset-bottom)); height: calc(100dvh - 49px - env(safe-area-inset-bottom)); }
 
 /* SCROLLOVÁNÍ NA IPHONECH */
-#screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow: hidden; }
-#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
-.reel { height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
+#screen-scroll { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100vh !important; height: 100dvh !important; overflow: hidden; }
+#reels-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; height: 100vh !important; height: 100dvh !important; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }
+.reel { height: 100vh !important; height: 100dvh !important; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; position: relative; }
 
 /* DŮLEŽITÉ: Touch akce povoluje scrollování a pinch zoom v mapě */
 .leaflet-container { touch-action: pan-y pinch-zoom !important; }
@@ -315,7 +318,7 @@ input[type=range] { flex-grow: 1; margin: 0 14px; accent-color: var(--text-color
 
 /* IG-LIKE SAVED MODE */
 body.saved-mode-active .map-clip { height: 100% !important; }
-#saved-mode-header { position: absolute; top: 0; left: 0; width: 100%; height: 70px; z-index: 9999; display: none; align-items: flex-end; padding: 0 20px 15px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; box-sizing: border-box; pointer-events: auto; user-select: none; -webkit-user-select: none; }
+#saved-mode-header { position: absolute; top: 0; left: 0; width: 100%; height: calc(54px + env(safe-area-inset-top)); z-index: 9999; display: none; align-items: flex-end; padding: env(safe-area-inset-top) 20px 10px 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 1.1rem; font-weight: 600; cursor: pointer; box-sizing: border-box; pointer-events: auto; user-select: none; -webkit-user-select: none; }
 body.saved-mode-active #saved-mode-header { display: flex; }
 
 /* IG SETTINGS STYLES */
@@ -452,7 +455,25 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 document.head.appendChild(style);
 
 
-function applyTheme() { document.documentElement.setAttribute('data-theme', userSettings.theme); }
+function updateStatusBarTheme(isDarkOrMap) {
+    const themeColorMeta = document.getElementById('theme-color-meta') || document.querySelector('meta[name="theme-color"]');
+    if (isDarkOrMap) {
+        if (themeColorMeta) themeColorMeta.setAttribute('content', '#000000');
+        document.body.style.backgroundColor = '#000000';
+    } else {
+        let currentTheme = document.documentElement.getAttribute('data-theme') || (typeof userSettings !== 'undefined' ? userSettings.theme : 'light');
+        let isDark = currentTheme === 'dark' || (currentTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        let color = isDark ? '#000000' : '#ffffff';
+        if (themeColorMeta) themeColorMeta.setAttribute('content', color);
+        document.body.style.backgroundColor = color;
+    }
+}
+
+function applyTheme() {
+    document.documentElement.setAttribute('data-theme', userSettings.theme);
+    const isMapActive = document.getElementById('screen-scroll')?.classList.contains('active') || document.body.classList.contains('saved-mode-active');
+    updateStatusBarTheme(isMapActive);
+}
 applyTheme();
 
 // ==========================================
@@ -1106,6 +1127,7 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
             bottomNav.style.transform = '';
             bottomNav.style.transition = '';
         }
+        updateStatusBarTheme(false);
 
         isClosingChatFeed = false;
         isNavigatingFeed = false;
@@ -1269,12 +1291,14 @@ document.addEventListener("DOMContentLoaded", () => {
             navButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Bottom nav ztmavení na reels feedu (jako IG)
+            // Bottom nav ztmavení na reels feedu (jako IG) a dynamický status bar pro Safari
             const bottomNav = document.getElementById('bottom-nav');
             if (targetId === 'screen-scroll') {
                 bottomNav.classList.add('nav-dark');
+                updateStatusBarTheme(true);
             } else {
                 bottomNav.classList.remove('nav-dark');
+                updateStatusBarTheme(false);
             }
 
             screens.forEach(screen => {
@@ -2902,6 +2926,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     }
 
     document.getElementById('bottom-nav').classList.add('nav-dark');
+    updateStatusBarTheme(true);
 
     const screenScroll = document.getElementById('screen-scroll');
     const reelsContainer = document.getElementById('reels-container');
@@ -3018,6 +3043,7 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
         if (profileNavBtn) profileNavBtn.classList.add('active');
         document.getElementById('bottom-nav').classList.remove('nav-dark');
+        updateStatusBarTheme(false);
 
         const screenScroll = document.getElementById('screen-scroll');
         if (screenScroll) {

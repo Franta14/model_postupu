@@ -80,8 +80,15 @@
 
 html,
 body {
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  min-height: calc(100% + env(safe-area-inset-top));
   width: 100%;
+  margin: 0;
+  padding: 0;
   background-color: var(--bg-color);
   color: var(--text-primary);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -98,7 +105,8 @@ body {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 49px);
+  height: 100vh;
+  height: 100dvh;
   position: relative;
   overflow: hidden;
 }
@@ -106,7 +114,8 @@ body {
 .app-screen {
   display: none;
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 49px - env(safe-area-inset-bottom));
+  height: calc(100dvh - 49px - env(safe-area-inset-bottom));
   position: absolute;
   top: 0;
   left: 0;
@@ -131,13 +140,27 @@ body {
 
 /* Mapa záměrně přesahuje pod status bar – bez safe-area padding */
 #screen-scroll {
-  height: 100vh;
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
   padding-top: 0 !important;
 }
 
 #screen-scroll #reels-container {
-  height: 100vh;
+  height: 100vh !important;
+  height: 100dvh !important;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* ── Bottom Navigation (Instagram Clean Style) ── */
@@ -703,7 +726,9 @@ body {
 
 .reel {
   width: 100vw;
+  width: 100%;
   height: 100vh;
+  height: 100dvh;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   position: relative;
@@ -1543,11 +1568,11 @@ body.chat-mode-active #bottom-nav {
   top: 0;
   left: 0;
   width: 100%;
-  height: 70px;
+  height: calc(54px + env(safe-area-inset-top));
   z-index: 9999;
   display: none;
   align-items: flex-end;
-  padding: 0 20px 15px 20px;
+  padding: env(safe-area-inset-top) 20px 10px 20px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.2) 60%, transparent 100%);
   color: #fff;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
