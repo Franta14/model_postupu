@@ -30,9 +30,13 @@ class NovaMapaGUI:
         frame_settings = tk.LabelFrame(root, text="Nastavení", padx=10, pady=10)
         frame_settings.pack(fill="x", padx=10, pady=5)
         
-        tk.Label(frame_settings, text="Ekvidistance (m):").pack(side="left")
+        tk.Label(frame_settings, text="Ekvidistance (m):").grid(row=0, column=0, sticky="w", pady=2)
         self.eq_var = tk.StringVar(value="5.0")
-        tk.Entry(frame_settings, textvariable=self.eq_var, width=10).pack(side="left", padx=10)
+        tk.Entry(frame_settings, textvariable=self.eq_var, width=10).grid(row=0, column=1, padx=10, pady=2, sticky="w")
+
+        tk.Label(frame_settings, text="Měřítko (např. 10000 pro 1:10 000):").grid(row=1, column=0, sticky="w", pady=2)
+        self.scale_var = tk.StringVar(value="10000")
+        tk.Entry(frame_settings, textvariable=self.scale_var, width=10).grid(row=1, column=1, padx=10, pady=2, sticky="w")
 
         # Spouštěcí tlačítko
         self.btn_run = tk.Button(root, text="Založit mapu a vygenerovat postupy", font=("Arial", 12, "bold"), bg="#4CAF50", fg="white", command=self.run_process)
@@ -75,6 +79,12 @@ class NovaMapaGUI:
             messagebox.showerror("Chyba", "Ekvidistance musí být číslo (např. 5.0)!")
             return
 
+        try:
+            int(self.scale_var.get())
+        except ValueError:
+            messagebox.showerror("Chyba", "Měřítko musí být celé číslo (např. 10000)!")
+            return
+
         self.btn_run.config(state="disabled")
         self.log_widget.delete(1.0, tk.END)
         threading.Thread(target=self._process_thread, daemon=True).start()
@@ -106,6 +116,7 @@ class NovaMapaGUI:
             config_content = re.sub(r'PGW_FILE\s*=\s*".*?"', f'PGW_FILE  = "{basenames["pgw"]}"', config_content)
             config_content = re.sub(r'XML_FILE\s*=\s*".*?"', f'XML_FILE  = "{basenames["xml"]}"', config_content)
             config_content = re.sub(r'EKVIDISTANCE_M\s*=\s*[\d\.]+', f'EKVIDISTANCE_M = {float(self.eq_var.get())}', config_content)
+            config_content = re.sub(r'MAPA_MERITKO\s*=\s*[\d]+', f'MAPA_MERITKO = {int(self.scale_var.get())}', config_content)
 
             with open(config_path, "w", encoding="utf-8") as f:
                 f.write(config_content)
