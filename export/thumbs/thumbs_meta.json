@@ -1,5 +1,5 @@
 {
-  "version": 1789927454,
+  "version": 1790143034,
   "maps": {
     "homolka": {
       "thumb": "thumbs/map_homolka.jpg",
@@ -17,8 +17,8 @@
     },
     "holna": {
       "thumb": "thumbs/map_holna.jpg",
-      "scale": 8,
-      "max_zoom": 3,
+      "scale": 32,
+      "max_zoom": 5,
       "drift": {
         "zoom": 700,
         "startX": -17.9,
@@ -31,15 +31,15 @@
     },
     "bilaskala": {
       "thumb": "thumbs/map_bilaskala.jpg",
-      "scale": 16,
-      "max_zoom": 4,
+      "scale": 32,
+      "max_zoom": 5,
       "drift": {
         "zoom": 700,
-        "startX": -56.9,
+        "startX": -84.9,
         "startY": -24.9,
-        "midX": -60.9,
-        "midY": -26.5,
-        "endX": -62.9,
+        "midX": -82.9,
+        "midY": -28.1,
+        "endX": -78.9,
         "endY": -29.7
       }
     }
