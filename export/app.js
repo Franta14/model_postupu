@@ -1298,6 +1298,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 bottomNav.classList.remove('nav-dark');
                 updateStatusBarTheme(false);
+                hasAnimatedVariants = {};
             }
 
             screens.forEach(screen => {
@@ -1871,6 +1872,7 @@ let isPanelOpen = false;
 let activeIndex = -1;
 
 let variantAnimations = {};
+let hasAnimatedVariants = {};
 
 function stopVariantAnimation(index) {
     if (variantAnimations[index]) {
@@ -2124,14 +2126,25 @@ function toggleVariants(index) {
         isPanelOpen = true;
         showVariantsForIndex[index] = true;
 
+        let shouldAnimate = !hasAnimatedVariants[index];
+        hasAnimatedVariants[index] = true;
+
         if (geojsonCache[postup.file]) {
-            startVariantAnimation(index, geojsonCache[postup.file]);
+            if (shouldAnimate) {
+                startVariantAnimation(index, geojsonCache[postup.file]);
+            } else {
+                stopVariantAnimation(index);
+            }
             renderMapData(index, geojsonCache[postup.file]);
         } else {
             fetch(postup.file).then(r => r.json()).then(g => {
                 geojsonCache[postup.file] = g;
                 if (isPanelOpen && activeIndex === index) {
-                    startVariantAnimation(index, g);
+                    if (shouldAnimate) {
+                        startVariantAnimation(index, g);
+                    } else {
+                        stopVariantAnimation(index);
+                    }
                     renderMapData(index, g);
                 }
             });
@@ -2150,6 +2163,10 @@ function activateReel(index) {
     }
 
     if (activeIndex !== index) {
+        if (activeIndex !== -1) {
+            hasAnimatedVariants[activeIndex] = false;
+        }
+        hasAnimatedVariants[index] = false;
         // Resetovat zoom předešlé mapy, aby nezůstal viset overflowY='hidden' na kontejneru
         if (activeIndex !== -1 && mapInstances[activeIndex]) {
             let oldMap = mapInstances[activeIndex];
