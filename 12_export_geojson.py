@@ -61,7 +61,7 @@ def convert_to_geojson():
     Image.MAX_IMAGE_PIXELS = None
     img = Image.open(args.png_file)
     w, h = img.size
-    max_zoom = math.ceil(math.log2(max(w, h) / 512))
+    max_zoom = 5
     scale = 2 ** max_zoom
     
     def to_lnglat(gy, gx):
@@ -187,3 +187,4 @@ def convert_to_geojson():
 
 if __name__ == "__main__":
     convert_to_geojson()
+

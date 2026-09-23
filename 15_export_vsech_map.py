@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 maps_to_export = [
     {
@@ -33,7 +34,7 @@ def run_export():
         
         # 1. Export geojson
         cmd1 = [
-            "python", "12_export_geojson.py",
+            sys.executable, "12_export_geojson.py",
             "--cache-dir", m["cache_dir"],
             "--map-id", m["map_id"],
             "--map-name", m["map_name"],
@@ -49,7 +50,7 @@ def run_export():
         
         # 2. Export thumbnails
         cmd2 = [
-            "python", "14_export_thumbnails.py",
+            sys.executable, "14_export_thumbnails.py",
             "--map-id", m["map_id"],
             "--png-file", m["png_file"]
         ]
@@ -61,7 +62,7 @@ def run_export():
             continue
         # 3. Export map tiles
         cmd3 = [
-            "python", "11_export_tiler.py",
+            sys.executable, "11_export_tiler.py",
             "--map-id", m["map_id"],
             "--png-file", m["png_file"]
         ]
@@ -75,3 +76,4 @@ def run_export():
 
 if __name__ == "__main__":
     run_export()
+

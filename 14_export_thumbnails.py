@@ -256,7 +256,7 @@ def generate_thumbnails():
     print(f"  Rozměry mapy: {img_w}×{img_h}")
     
     # Spočítáme scale (stejně jako v 12_export_geojson.py)
-    max_zoom = math.ceil(math.log2(max(img_w, img_h) / 512))
+    max_zoom = 5
     scale = 2 ** max_zoom
     print(f"  Max zoom: {max_zoom}, scale: {scale}")
     
@@ -370,3 +370,5 @@ def generate_thumbnails():
 
 if __name__ == "__main__":
     generate_thumbnails()
+
+

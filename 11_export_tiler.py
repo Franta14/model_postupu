@@ -14,7 +14,7 @@ def generate_tiles(input_png, output_dir, tile_size=512):
     print(f"Loaded in {time.time() - start_time:.1f}s")
     
     max_dim = max(w, h)
-    max_zoom = math.ceil(math.log2(max_dim / tile_size))
+    max_zoom = 5
     target_dim = tile_size * (2 ** max_zoom)
     
     print(f"Image size: {w}x{h}. Padding to {target_dim}x{target_dim}. Max zoom level: {max_zoom}")
@@ -63,3 +63,4 @@ if __name__ == "__main__":
     os.makedirs(out_dir, exist_ok=True)
     generate_tiles(args.png_file, out_dir)
     print(f"[OK] Tiles generated successfully in {out_dir}")
+
