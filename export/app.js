@@ -2282,19 +2282,9 @@ function renderMapData(index, geojsonOriginal) {
             idealZoom = Math.max(0, Math.min(maxZoom, idealZoom));
 
             let midX = (startCoords[0] + endCoords[0]) / 2, midY = (startCoords[1] + endCoords[1]) / 2;
-
-            // Na mobilu je spodních 49px vyhrazeno pro #bottom-nav.
-            // Posuneme střed o polovinu spodní lišty (24.5px) nahoru v CRS jednotkách,
-            // aby spojnice a kontroly ležely přesně ve středu viditelné plochy nad lištou.
             let pixelScale = Math.pow(2, idealZoom);
             let visualMidX = midX;
             let visualMidY = midY;
-            if (isMobile && dist > 0) {
-                let ux = dx / dist, uy = dy / dist;
-                let shiftYScreen = 24.5 / pixelScale;
-                visualMidX = midX - ux * shiftYScreen;
-                visualMidY = midY - uy * shiftYScreen;
-            }
             map.setMinZoom(idealZoom);
 
             let ux = dx / dist, uy = dy / dist, vx = -uy, vy = ux;
