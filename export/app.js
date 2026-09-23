@@ -287,7 +287,8 @@ html, body { margin: 0; padding: 0; width: 100%; height: 100%; background-color:
 #bottom-nav { 
     background: var(--nav-bg) !important; 
     border-top: 0.5px solid var(--nav-border) !important; 
-    display: flex; justify-content: space-around; align-items: center;
+    display: flex; justify-content: space-around; align-items: flex-start;
+    padding-top: 4px; padding-bottom: env(safe-area-inset-bottom);
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 #bottom-nav.nav-dark { 

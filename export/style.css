@@ -98,7 +98,7 @@ body {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 49px);
+  height: calc(100vh - 49px - env(safe-area-inset-bottom));
   position: relative;
   overflow: hidden;
 }
@@ -129,9 +129,20 @@ body {
   display: block;
 }
 
+/* ── Ochrana non-map screenů proti viewport-fit=cover ── */
+/* Tyto screeny potřebují padding nahoře, aby obsah nebyl pod status barem */
+#screen-explore,
+#screen-profile,
+#screen-settings,
+#screen-chat {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Mapa záměrně přesahuje pod status bar */
 #screen-scroll {
   height: 100vh;
   overflow: hidden;
+  padding-top: 0 !important;
 }
 
 #screen-scroll #reels-container {
@@ -144,13 +155,14 @@ body {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 49px;
+  height: calc(49px + env(safe-area-inset-bottom));
   background-color: var(--bg-color);
   border-top: 0.5px solid var(--border-color);
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   z-index: 9999;
+  padding-top: 4px;
   padding-bottom: env(safe-area-inset-bottom);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -715,7 +727,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 49px);
+  height: calc(100% - 49px - env(safe-area-inset-bottom));
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -734,7 +746,7 @@ body {
 
 .reel-ui {
   position: absolute;
-  bottom: 49px;
+  bottom: calc(49px + env(safe-area-inset-bottom));
   left: 0;
   width: 100%;
   padding: 10px 14px 12px;
@@ -883,7 +895,7 @@ body {
 .reel-actions {
   position: absolute;
   right: 12px;
-  bottom: 120px;
+  bottom: calc(120px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 18px;
