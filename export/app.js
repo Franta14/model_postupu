@@ -2274,9 +2274,7 @@ function renderMapData(index, geojsonOriginal) {
             let dist = Math.sqrt(dx * dx + dy * dy);
 
             let isMobile = w <= 768;
-            // Na mobilu odečteme spodní navigační lištu (49px) a UI tlačítka (cca 65px)
-            let availH = isMobile ? (h - 110) : (h - 49);
-            let targetPixelsY = availH * 0.80;
+            let targetPixelsY = h * 0.84;
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
 
