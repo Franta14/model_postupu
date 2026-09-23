@@ -2165,6 +2165,29 @@ function initMapForReel(index) {
     mapInstances[index] = map;
 }
 
+let cachedSafeAreaTop = null;
+function getSafeAreaTop() {
+    if (cachedSafeAreaTop !== null) return cachedSafeAreaTop;
+    try {
+        let el = document.createElement('div');
+        el.style.cssText = 'position:fixed;top:0;left:0;height:0;padding-top:env(safe-area-inset-top, 0px);visibility:hidden;pointer-events:none;';
+        document.body.appendChild(el);
+        let top = parseFloat(window.getComputedStyle(el).paddingTop) || 0;
+        el.remove();
+        if (top === 0 && window.innerWidth <= 768 && /iPhone|iPod|iPad/.test(navigator.userAgent)) {
+            if (window.screen && (window.screen.height >= 800 || window.screen.width >= 800)) {
+                top = 50;
+            }
+        }
+        cachedSafeAreaTop = top;
+        return top;
+    } catch (e) {
+        return 0;
+    }
+}
+window.addEventListener('resize', () => { cachedSafeAreaTop = null; });
+window.addEventListener('orientationchange', () => { cachedSafeAreaTop = null; });
+
 function renderMapData(index, geojsonOriginal) {
     try {
         const map = mapInstances[index];
@@ -2297,8 +2320,14 @@ function renderMapData(index, geojsonOriginal) {
             let dx = endCoords[0] - startCoords[0], dy = endCoords[1] - startCoords[1];
             let dist = Math.sqrt(dx * dx + dy * dy);
 
+            let ux = dist > 0 ? dx / dist : 0, uy = dist > 0 ? dy / dist : 1;
+            let vx = -uy, vy = ux;
+
             let isMobile = w <= 768;
-            let targetPixelsY = h * 0.84;
+            let topInset = isMobile ? getSafeAreaTop() : 0;
+            // Výpočet efektivní výšky bez horní lišty, aby zoom postupů zůstal identický jako před využitím celoobrazovkového režimu
+            let effectiveH = isMobile ? Math.max(300, h - topInset) : h;
+            let targetPixelsY = effectiveH * 0.84;
             let idealZoom = 0;
             if (dist > 0) idealZoom = Math.log2(targetPixelsY / dist);
 
@@ -2307,13 +2336,16 @@ function renderMapData(index, geojsonOriginal) {
 
             let midX = (startCoords[0] + endCoords[0]) / 2, midY = (startCoords[1] + endCoords[1]) / 2;
             let pixelScale = Math.pow(2, idealZoom);
-            let visualMidX = midX;
-            let visualMidY = midY;
+
+            // Posun středu zobrazení směrem dolů o polovinu horní lišty (u vector míří k endCoords nahoru,
+            // takže posun vizuálního středu o +u posouvá celý postup na obrazovce směrem DOLŮ od výřezu kamery)
+            let shiftPixels = isMobile ? (topInset / 2) : 0;
+            let shiftMapUnits = shiftPixels / pixelScale;
+            let visualMidX = midX + ux * shiftMapUnits;
+            let visualMidY = midY + uy * shiftMapUnits;
             map.setMinZoom(idealZoom);
 
-            let ux = dx / dist, uy = dy / dist, vx = -uy, vy = ux;
             let maxAbsX = 0;
-
             allLngs.forEach((lng, idx) => {
                 let px = lng - midX, py = allLats[idx] - midY;
                 let localX = px * vx + py * vy;
@@ -2323,23 +2355,23 @@ function renderMapData(index, geojsonOriginal) {
             let screenHalfW = (w / 2) / pixelScale, screenHalfH = (h / 2) / pixelScale;
             let routeHalfW = maxAbsX + (50 / pixelScale), routeHalfH = (dist / 2) + (50 / pixelScale);
 
-            // Přidání 15% rezervy, aby se maska nedostala do vizuálního pole obrazovky
-            let holeHalfW = Math.max(screenHalfW * 1.15, routeHalfW);
-            let holeHalfH = Math.max(screenHalfH * 1.15, routeHalfH);
+            // Rezerva pro bílou masku (zajišťuje plné krytí okolí a žádný průnik do zorného pole ani po posunu středu)
+            let holeHalfW = Math.max(screenHalfW * 1.35, routeHalfW);
+            let holeHalfH = Math.max(screenHalfH * 1.35, routeHalfH + shiftMapUnits + (50 / pixelScale));
 
             let innerRing = [
-                [midY + uy * holeHalfH + vy * holeHalfW, midX + ux * holeHalfH + vx * holeHalfW],
-                [midY + uy * holeHalfH - vy * holeHalfW, midX + ux * holeHalfH - vx * holeHalfW],
-                [midY - uy * holeHalfH - vy * holeHalfW, midX - ux * holeHalfH - vx * holeHalfW],
-                [midY - uy * holeHalfH + vy * holeHalfW, midX - ux * holeHalfH + vx * holeHalfW]
+                [visualMidY + uy * holeHalfH + vy * holeHalfW, visualMidX + ux * holeHalfH + vx * holeHalfW],
+                [visualMidY + uy * holeHalfH - vy * holeHalfW, visualMidX + ux * holeHalfH - vx * holeHalfW],
+                [visualMidY - uy * holeHalfH - vy * holeHalfW, visualMidX - ux * holeHalfH - vx * holeHalfW],
+                [visualMidY - uy * holeHalfH + vy * holeHalfW, visualMidX - ux * holeHalfH + vx * holeHalfW]
             ];
             let outerRing = [[-50000, -50000], [-50000, 50000], [50000, 50000], [50000, -50000]];
 
             let mask = L.polygon([outerRing, innerRing], { color: 'transparent', fillColor: '#ffffff', fillOpacity: 1.0, interactive: false, pane: 'maskPane' });
             overlays.addLayer(mask);
 
+            map.originalMidX = visualMidX; map.originalMidY = visualMidY; map.originalZoom = idealZoom;
             if (isInitialRender) {
-                map.originalMidX = visualMidX; map.originalMidY = visualMidY; map.originalZoom = idealZoom;
                 map.setView([visualMidY, visualMidX], idealZoom, { animate: false });
             }
         }
