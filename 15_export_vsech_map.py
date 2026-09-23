@@ -8,7 +8,8 @@ maps_to_export = [
         "map_name": "Homolka",
         "terrain": "cesko",
         "cache_dir": "cache/Homolka_Vojirov_20240917",
-        "png_file": "mapa.png"
+        "png_file": "mapa.png",
+        "circle_scale": 1.0
     },
     {
         "map_id": "holna",
@@ -17,14 +18,16 @@ maps_to_export = [
         "cache_dir": "cache/Holna_20240916",
         "png_file": "Holna.png",
         "offset_x": 1,
-        "offset_y": 9
+        "offset_y": 9,
+        "circle_scale": 2.5
     },
     {
         "map_id": "bilaskala",
         "map_name": "Bílá skála",
         "terrain": "cesko",
         "cache_dir": "cache/bilaskala",
-        "png_file": "bilaskala.png"
+        "png_file": "bilaskala.png",
+        "circle_scale": 2.5
     }
 ]
 
@@ -56,7 +59,8 @@ def run_export():
         cmd2 = [
             sys.executable, "14_export_thumbnails.py",
             "--map-id", m["map_id"],
-            "--png-file", m["png_file"]
+            "--png-file", m["png_file"],
+            "--circle-scale", str(m.get("circle_scale", 1.0))
         ]
         print(f"Running: {' '.join(cmd2)}")
         try:

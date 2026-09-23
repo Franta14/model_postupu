@@ -10,6 +10,7 @@ XML_FILE  = "Holna.xml"
 
 # --- EKVIDISTANCE vrstevnic tve mapy (bezne 5m) ---
 EKVIDISTANCE_M = 5.0
+CIRCLE_SCALE = 2.5
 
 # ============================================================
 # NASTAVENI BEZCE (nemenis per mapa, jen per zavodnich)

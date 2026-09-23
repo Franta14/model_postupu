@@ -33,7 +33,7 @@ maps_to_export = [
     }
 ]
 
-def draw_leg_image(p1, p2, routes, filename, orig_img, kalibrace, px_size):
+def draw_leg_image(p1, p2, routes, filename, orig_img, kalibrace, circle_scale):
     cal_a, cal_b, cal_c, cal_d, cal_e, cal_f = kalibrace
     def grid_to_img(r, c):
         x = col = cal_a * c + cal_b * r + cal_c
@@ -60,7 +60,7 @@ def draw_leg_image(p1, p2, routes, filename, orig_img, kalibrace, px_size):
             if r > max_r - 300: max_r = r + 300
             
     PURPLE = (200, 0, 200, 255)
-    radius = int(30.0 / px_size)
+    radius = int(35.0 * circle_scale)
     thickness = max(3, int(radius / 7))
     
     colors = [(255, 0, 0, 150), (0, 0, 255, 150), (0, 255, 0, 150)]
@@ -137,7 +137,8 @@ def regenerate():
             p2 = data['end']
             routes = [v['cesta'] for v in data.get('variants', [])]
             
-            draw_leg_image(p1, p2, routes, png_path, orig_img, kalibrace, px_size)
+            circle_scale = m.get('circle_scale', 1.0)
+            draw_leg_image(p1, p2, routes, png_path, orig_img, kalibrace, circle_scale)
             print(f"Regenerated {png_basename}")
 
 if __name__ == '__main__':

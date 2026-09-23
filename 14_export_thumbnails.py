@@ -49,6 +49,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--map-id', required=True)
 parser.add_argument('--png-file', required=True)
+parser.add_argument('--circle-scale', type=float, default=1.0)
 args = parser.parse_args()
 
 
@@ -355,7 +356,8 @@ def generate_thumbnails():
         "thumb": f"thumbs/map_{args.map_id}.jpg",
         "scale": scale,
         "max_zoom": max_zoom,
-        "drift": map_drift
+        "drift": map_drift,
+        "circle_scale": args.circle_scale
     }
     if resolution_m_px is not None:
         thumbs_meta["maps"][args.map_id]["resolution_m_px"] = resolution_m_px

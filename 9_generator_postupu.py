@@ -223,14 +223,8 @@ def draw_leg_image(p1, p2, routes, filename):
     
     PURPLE = (200, 0, 200, 255)
     
-    # Zjisteni fyzickeho rozliseni mapy (z pgw souboru) a velikosti kolecka (cca 30 metru)
-    try:
-        with open(config.PGW_FILE, 'r') as f:
-            px_size = abs(float(f.readline().strip()))
-    except:
-        px_size = 0.846
-        
-    radius = int(30.0 / px_size)
+    circle_scale = getattr(config, 'CIRCLE_SCALE', 1.0)
+    radius = int(35.0 * circle_scale)
     thickness = max(3, int(radius / 7))
     
     # 1. Kresleni tras (volby)
