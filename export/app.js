@@ -1870,6 +1870,179 @@ let showVariantsForIndex = {};
 let isPanelOpen = false;
 let activeIndex = -1;
 
+let variantAnimations = {};
+
+function stopVariantAnimation(index) {
+    if (variantAnimations[index]) {
+        if (variantAnimations[index].rafId) {
+            cancelAnimationFrame(variantAnimations[index].rafId);
+        }
+        if (variantAnimations[index].group) {
+            const map = mapInstances[index];
+            if (map && map.hasLayer(variantAnimations[index].group)) {
+                map.removeLayer(variantAnimations[index].group);
+            }
+        }
+        delete variantAnimations[index];
+    }
+}
+
+function startVariantAnimation(index, geojson) {
+    stopVariantAnimation(index);
+    const map = mapInstances[index];
+    if (!map) return;
+
+    let startCoords = null, endCoords = null;
+    let variantFeatures = [];
+
+    geojson.features.forEach(f => {
+        if (f.properties && f.properties.type === 'start') startCoords = f.geometry.coordinates;
+        if (f.properties && f.properties.type === 'end') endCoords = f.geometry.coordinates;
+        if (f.properties && f.properties.type === 'variant' && f.geometry.type === 'LineString') {
+            variantFeatures.push(f);
+        }
+    });
+
+    if (variantFeatures.length === 0 || !startCoords || !endCoords) return;
+
+    const postup = postupyData[index];
+    let times = variantFeatures.map(f => {
+        let t = f.properties && f.properties.cas_s;
+        if (!t && postup && postup.variants) {
+            let pv = postup.variants.find(v => v.id === f.properties.id);
+            if (pv) t = pv.cas_s;
+        }
+        return (t && t > 0) ? t : 100;
+    });
+
+    let minTime = Math.min(...times);
+    const BASE_DURATION = 1400; // ms pro nejrychlejší variantu
+
+    const animGroup = L.featureGroup().addTo(map);
+    variantAnimations[index] = {
+        rafId: null,
+        group: animGroup
+    };
+
+    let runners = variantFeatures.map((f, i) => {
+        let color = f.properties.color || '#ff4444';
+        let rawCoords = f.geometry.coordinates;
+        if (!rawCoords || rawCoords.length < 2) return null;
+
+        // Ujistíme se, že body vedou od startu do cíle
+        let p0 = rawCoords[0];
+        let pEnd = rawCoords[rawCoords.length - 1];
+        let d0 = (p0[0] - startCoords[0]) ** 2 + (p0[1] - startCoords[1]) ** 2;
+        let dE = (pEnd[0] - startCoords[0]) ** 2 + (pEnd[1] - startCoords[1]) ** 2;
+        let pts = (dE < d0) ? rawCoords.slice().reverse() : rawCoords.slice();
+
+        let latLngs = pts.map(c => [c[1], c[0]]);
+
+        let cumDists = [0];
+        let totalD = 0;
+        for (let j = 0; j < latLngs.length - 1; j++) {
+            let dy = latLngs[j + 1][0] - latLngs[j][0];
+            let dx = latLngs[j + 1][1] - latLngs[j][1];
+            totalD += Math.sqrt(dy * dy + dx * dx);
+            cumDists.push(totalD);
+        }
+
+        // Poměrný čas varianty: nejrychlejší = 1.4s, pomalejší doběhnou proporcionálně později (max 2.1s)
+        let ratio = minTime > 0 ? (times[i] / minTime) : 1.0;
+        let duration = Math.min(2100, Math.max(1000, Math.round(BASE_DURATION * ratio)));
+
+        let poly = L.polyline([latLngs[0]], {
+            color: color,
+            weight: 6,
+            opacity: 0.8,
+            lineCap: 'round',
+            lineJoin: 'round',
+            pane: 'overlayPane',
+            interactive: false
+        }).addTo(animGroup);
+
+        let head = L.circleMarker(latLngs[0], {
+            radius: 6,
+            fillColor: color,
+            fillOpacity: 1.0,
+            color: '#ffffff',
+            weight: 2.5,
+            pane: 'markerPane',
+            interactive: false
+        }).addTo(animGroup);
+
+        return {
+            latLngs: latLngs,
+            cumDists: cumDists,
+            totalD: totalD,
+            duration: duration,
+            poly: poly,
+            head: head,
+            finished: false
+        };
+    }).filter(Boolean);
+
+    if (runners.length === 0) return;
+
+    let startTime = null;
+
+    function step(timestamp) {
+        if (!variantAnimations[index] || variantAnimations[index].group !== animGroup) {
+            return;
+        }
+        if (!startTime) startTime = timestamp;
+        let elapsed = timestamp - startTime;
+        let allFinished = true;
+
+        runners.forEach(r => {
+            if (r.finished) return;
+
+            let progress = Math.min(1.0, elapsed / r.duration);
+            if (progress >= 1.0) {
+                r.finished = true;
+                r.poly.setLatLngs(r.latLngs);
+                if (r.head) {
+                    animGroup.removeLayer(r.head);
+                    r.head = null;
+                }
+                return;
+            }
+
+            allFinished = false;
+
+            let targetD = progress * r.totalD;
+            let j = 0;
+            while (j < r.cumDists.length - 2 && r.cumDists[j + 1] < targetD) {
+                j++;
+            }
+
+            let segStart = r.cumDists[j];
+            let segEnd = r.cumDists[j + 1];
+            let segLen = segEnd - segStart;
+            let frac = segLen > 0 ? (targetD - segStart) / segLen : 0;
+
+            let curLat = r.latLngs[j][0] + frac * (r.latLngs[j + 1][0] - r.latLngs[j][0]);
+            let curLng = r.latLngs[j][1] + frac * (r.latLngs[j + 1][1] - r.latLngs[j][1]);
+
+            let activePts = r.latLngs.slice(0, j + 1);
+            activePts.push([curLat, curLng]);
+
+            r.poly.setLatLngs(activePts);
+            if (r.head) {
+                r.head.setLatLng([curLat, curLng]);
+            }
+        });
+
+        if (!allFinished) {
+            variantAnimations[index].rafId = requestAnimationFrame(step);
+        } else {
+            variantAnimations[index].rafId = null;
+        }
+    }
+
+    variantAnimations[index].rafId = requestAnimationFrame(step);
+}
+
 function toggleVariants(index) {
     const panel = document.getElementById('global-variants-panel');
     const content = document.getElementById('global-variants-content');
@@ -1880,6 +2053,9 @@ function toggleVariants(index) {
         panel.classList.remove('collapsed');
         isPanelOpen = false;
         showVariantsForIndex[index] = false;
+        stopVariantAnimation(index);
+        const postup = postupyData[index];
+        if (geojsonCache[postup.file]) renderMapData(index, geojsonCache[postup.file]);
     } else {
         const postup = postupyData[index];
         content.innerHTML = postup.variants.map(v => {
@@ -1947,9 +2123,20 @@ function toggleVariants(index) {
         panel.classList.add('active');
         isPanelOpen = true;
         showVariantsForIndex[index] = true;
+
+        if (geojsonCache[postup.file]) {
+            startVariantAnimation(index, geojsonCache[postup.file]);
+            renderMapData(index, geojsonCache[postup.file]);
+        } else {
+            fetch(postup.file).then(r => r.json()).then(g => {
+                geojsonCache[postup.file] = g;
+                if (isPanelOpen && activeIndex === index) {
+                    startVariantAnimation(index, g);
+                    renderMapData(index, g);
+                }
+            });
+        }
     }
-    const postup = postupyData[index];
-    if (geojsonCache[postup.file]) renderMapData(index, geojsonCache[postup.file]);
 }
 
 function activateReel(index) {
@@ -1981,12 +2168,14 @@ function activateReel(index) {
             isPanelOpen = false;
             if (activeIndex !== -1) {
                 showVariantsForIndex[activeIndex] = false;
+                stopVariantAnimation(activeIndex);
                 const prevPostup = postupyData[activeIndex];
                 if (prevPostup && geojsonCache[prevPostup.file]) {
                     renderMapData(activeIndex, geojsonCache[prevPostup.file]);
                 }
             }
         }
+        stopVariantAnimation(index);
         activeIndex = index;
     }
     preloadReel(index);
@@ -2251,7 +2440,11 @@ function renderMapData(index, geojsonOriginal) {
             currentTileLayers[index] = tl;
         }
 
-        let showVariants = showVariantsForIndex[index] || false;
+        if (!showVariantsForIndex[index]) {
+            stopVariantAnimation(index);
+        }
+        let isAnimating = !!(variantAnimations[index] && variantAnimations[index].group);
+        let showVariants = (showVariantsForIndex[index] || false) && !isAnimating;
         let layer = L.geoJSON(geojson, {
             filter: function (f) {
                 if (f.properties && f.properties.type === 'variant' && !showVariants) return false;
