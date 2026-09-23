@@ -2192,7 +2192,7 @@ function renderMapData(index, geojsonOriginal) {
                 tileSize: 512,
                 minZoom: 0,
                 maxZoom: 8,
-                maxNativeZoom: 5,
+                maxNativeZoom: L.Browser.retina ? 4 : 5,
                 noWrap: true,
                 tms: false,
                 keepBuffer: 2,
