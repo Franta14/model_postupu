@@ -400,7 +400,7 @@ body.tutorial-active select:not(.tut-allow-interaction) {
 /* --------------------------------- */
 /* CHAT ZPRÁVY (IG Direct style)     */
 /* --------------------------------- */
-.chat-header-main { padding: 14px 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.chat-header-main { padding: max(14px, env(safe-area-inset-top)) 16px 10px; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
 .chat-search-bar { margin: 0 16px 10px; display: flex; align-items: center; gap: 8px; background: var(--search-bg); border-radius: 10px; padding: 7px 12px; }
 .chat-search-bar svg { width: 16px; height: 16px; color: var(--text-secondary, #737373); flex-shrink: 0; }
 .chat-search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--text-color); }

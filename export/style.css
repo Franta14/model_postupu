@@ -98,7 +98,7 @@ body {
 
 #app-content {
   width: 100%;
-  height: calc(100vh - 49px - env(safe-area-inset-bottom));
+  height: calc(100vh - 49px);
   position: relative;
   overflow: hidden;
 }
@@ -129,16 +129,7 @@ body {
   display: block;
 }
 
-/* ── Ochrana non-map screenů proti viewport-fit=cover ── */
-/* Tyto screeny potřebují padding nahoře, aby obsah nebyl pod status barem */
-#screen-explore,
-#screen-profile,
-#screen-settings,
-#screen-chat {
-  padding-top: env(safe-area-inset-top);
-}
-
-/* Mapa záměrně přesahuje pod status bar */
+/* Mapa záměrně přesahuje pod status bar – bez safe-area padding */
 #screen-scroll {
   height: 100vh;
   overflow: hidden;
