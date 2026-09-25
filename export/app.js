@@ -2156,6 +2156,7 @@ function toggleVariants(index) {
 }
 
 function destroyMapForReel(index) {
+    if (index === activeIndex) return; // Nikdy nerušit právě prohlížený postup
     stopVariantAnimation(index);
     const map = mapInstances[index];
     if (!map) return;
@@ -2172,6 +2173,7 @@ function destroyMapForReel(index) {
             try { map.removeLayer(currentOverlays[index]); } catch (e) { }
             delete currentOverlays[index];
         }
+        map.off();
         map.remove();
     } catch (e) {
         console.warn("Error tearing down map", index, e);
@@ -2193,21 +2195,29 @@ function destroyMapForReel(index) {
 function pruneDistantMaps(currentIndex) {
     if (currentIndex === undefined || currentIndex === null || isNaN(currentIndex) || currentIndex < 0) return;
 
+    let keepIndices = new Set();
+    keepIndices.add(Number(currentIndex));
+    if (activeIndex !== -1 && activeIndex !== undefined && !isNaN(activeIndex)) {
+        keepIndices.add(Number(activeIndex));
+    }
+
     // Najít sousedy v seznamu zobrazených postupů (respektuje případné aktivní filtry)
     const visibleReels = Array.from(document.querySelectorAll('.reel'))
         .filter(r => r.style.display !== 'none')
         .map(r => parseInt(r.dataset.index, 10));
 
-    let keepIndices = new Set();
     if (visibleReels.length > 0) {
         let pos = visibleReels.indexOf(Number(currentIndex));
-        if (pos === -1) pos = 0;
-        // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující
-        for (let offset = -2; offset <= 2; offset++) {
-            let p = pos + offset;
-            if (p >= 0 && p < visibleReels.length) {
-                keepIndices.add(visibleReels[p]);
+        if (pos !== -1) {
+            // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující
+            for (let offset = -2; offset <= 2; offset++) {
+                let p = pos + offset;
+                if (p >= 0 && p < visibleReels.length) {
+                    keepIndices.add(visibleReels[p]);
+                }
             }
+        } else {
+            visibleReels.slice(0, 3).forEach(idx => keepIndices.add(idx));
         }
     } else {
         for (let i = currentIndex - 2; i <= currentIndex + 2; i++) {
@@ -2217,6 +2227,7 @@ function pruneDistantMaps(currentIndex) {
 
     Object.keys(mapInstances).forEach(key => {
         const idx = parseInt(key, 10);
+        if (idx === currentIndex || idx === activeIndex) return;
         if (!keepIndices.has(idx)) {
             destroyMapForReel(idx);
         }
@@ -2286,9 +2297,6 @@ function preloadReel(i) {
     if (pendingLoads[i]) return pendingLoads[i];
 
     if (!mapInstances[i]) {
-        if (Object.keys(mapInstances).length >= 6 && activeIndex !== -1) {
-            pruneDistantMaps(activeIndex);
-        }
         initMapForReel(i);
     }
     const postup = postupyData[i];
@@ -2530,7 +2538,7 @@ function renderMapData(index, geojsonOriginal) {
                 keepBuffer: 1,
                 updateWhenIdle: true,
                 updateWhenZooming: false,
-                detectRetina: false,
+                detectRetina: true,
                 updateInterval: 100,
                 errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
             }).addTo(map);
@@ -3083,19 +3091,18 @@ function renderProfileSaved() {
         el.style.cursor = 'pointer';
 
         const thumbRoute = route;
-        let thumbSrc = '';
         let basename = '';
         if (thumbRoute.thumb) {
-            thumbSrc = thumbRoute.thumb;
-            basename = thumbSrc.split('/').pop().replace('.jpg', '');
+            basename = thumbRoute.thumb.split('/').pop().replace('.jpg', '');
         } else if (thumbRoute.file) {
-            basename = thumbRoute.file.replace('.geojson', '');
-            thumbSrc = 'thumbs/' + basename + '.jpg';
-        } else {
-            thumbSrc = 'thumbs/map_' + route.map_id + '.jpg'; // fallback
+            basename = thumbRoute.file.replace('.geojson', '').replace('.json', '');
+        }
+        let mapId = route.map_id || 'homolka';
+        let thumbImgSrc = 'thumbs/map_' + mapId + '.jpg';
+        if (thumbRoute.thumb && !(thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename])) {
+            thumbImgSrc = thumbRoute.thumb;
         }
 
-        let thumbImgSrc = thumbSrc;
         let metaStyle = '';
         let animClass = 'animated-map-drift';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
@@ -3152,7 +3159,8 @@ function renderProfileSaved() {
         }
         el.addEventListener('click', () => {
             try {
-                openFeed(route.map_id, true);
+                let postupIndex = postupyData.findIndex(p => String(p.id) === String(route.id));
+                openFeed(route.map_id, true, postupIndex >= 0 ? postupIndex : undefined);
             } catch (err) {
                 alert("Vyjimka v click handleru: " + err.message + "\n" + err.stack);
             }
@@ -3194,15 +3202,17 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
         let mIndex = Number(reel.dataset.index);
         let postup = postupyData[mIndex];
 
-        let isMatch = (postup && postup.map_id === targetMapId);
+        let isMatch = false;
         if (isSavedMode) {
-            isMatch = isMatch && savedStrings.includes(String(postup.id));
-        }
-
-        if (fromChat) {
+            isMatch = savedStrings.includes(String(postup.id));
+        } else if (fromChat) {
             if (specificIndex !== undefined && Number(specificIndex) >= 0) {
                 isMatch = (mIndex === Number(specificIndex));
+            } else {
+                isMatch = (postup && postup.map_id === targetMapId);
             }
+        } else {
+            isMatch = (postup && postup.map_id === targetMapId);
         }
 
         if (isMatch) {
@@ -3312,6 +3322,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                     }
 
                     isNavigatingFeed = false;
+                    activateReel(firstVisibleIndex);
                     
                     // Po zklidnění animace přednačteme bezprostřední sousedy
                     setTimeout(() => {
