@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scrollienteering-v45';
+const CACHE_NAME = 'scrollienteering-v46';
 
 self.addEventListener('install', event => {
     // Instalace proběhne rychle, nebudeme čekat na obří preload

@@ -741,7 +741,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 49px);
+  height: 100%;
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
@@ -752,7 +752,7 @@ body {
   width: 150vmax;
   height: 150vmax;
   left: 50%;
-  top: 50%;
+  top: calc(50% - 24.5px);
   margin-left: -75vmax;
   margin-top: -75vmax;
   background-color: var(--map-bg);
