@@ -745,6 +745,7 @@ body {
   overflow: hidden;
   z-index: 1;
   background-color: var(--map-bg);
+  contain: content;
 }
 
 .map-container {
@@ -756,6 +757,7 @@ body {
   margin-left: -75vmax;
   margin-top: -75vmax;
   background-color: var(--map-bg);
+  will-change: transform;
 }
 
 .reel-ui {

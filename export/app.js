@@ -1299,6 +1299,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 bottomNav.classList.remove('nav-dark');
                 updateStatusBarTheme(false);
                 hasAnimatedVariants = {};
+                if (activeIndex !== -1) {
+                    pruneDistantMaps(activeIndex);
+                }
             }
 
             screens.forEach(screen => {
@@ -2152,6 +2155,74 @@ function toggleVariants(index) {
     }
 }
 
+function destroyMapForReel(index) {
+    stopVariantAnimation(index);
+    const map = mapInstances[index];
+    if (!map) return;
+    try {
+        if (currentTileLayers[index]) {
+            try { map.removeLayer(currentTileLayers[index]); } catch (e) { }
+            delete currentTileLayers[index];
+        }
+        if (currentLayers[index]) {
+            try { map.removeLayer(currentLayers[index]); } catch (e) { }
+            delete currentLayers[index];
+        }
+        if (currentOverlays[index]) {
+            try { map.removeLayer(currentOverlays[index]); } catch (e) { }
+            delete currentOverlays[index];
+        }
+        map.remove();
+    } catch (e) {
+        console.warn("Error tearing down map", index, e);
+    }
+    delete mapInstances[index];
+    delete currentLayers[index];
+    delete currentTileLayers[index];
+    delete currentOverlays[index];
+    delete hasAnimatedVariants[index];
+
+    const cont = document.getElementById(`map-${index}`);
+    if (cont) {
+        delete cont._leaflet_id;
+        cont.innerHTML = '';
+        cont.style.transform = '';
+    }
+}
+
+function pruneDistantMaps(currentIndex) {
+    if (currentIndex === undefined || currentIndex === null || isNaN(currentIndex) || currentIndex < 0) return;
+
+    // Najít sousedy v seznamu zobrazených postupů (respektuje případné aktivní filtry)
+    const visibleReels = Array.from(document.querySelectorAll('.reel'))
+        .filter(r => r.style.display !== 'none')
+        .map(r => parseInt(r.dataset.index, 10));
+
+    let keepIndices = new Set();
+    if (visibleReels.length > 0) {
+        let pos = visibleReels.indexOf(Number(currentIndex));
+        if (pos === -1) pos = 0;
+        // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující
+        for (let offset = -2; offset <= 2; offset++) {
+            let p = pos + offset;
+            if (p >= 0 && p < visibleReels.length) {
+                keepIndices.add(visibleReels[p]);
+            }
+        }
+    } else {
+        for (let i = currentIndex - 2; i <= currentIndex + 2; i++) {
+            if (i >= 0) keepIndices.add(i);
+        }
+    }
+
+    Object.keys(mapInstances).forEach(key => {
+        const idx = parseInt(key, 10);
+        if (!keepIndices.has(idx)) {
+            destroyMapForReel(idx);
+        }
+    });
+}
+
 function activateReel(index) {
     const postup = postupyData[index];
     if (postup) {
@@ -2195,6 +2266,7 @@ function activateReel(index) {
         stopVariantAnimation(index);
         activeIndex = index;
     }
+    pruneDistantMaps(index);
     preloadReel(index);
     preloadAllVisibleReels(index);
     const activeMap = mapInstances[index];
@@ -2213,12 +2285,17 @@ function preloadReel(i) {
     if (currentLayers[i]) return Promise.resolve();
     if (pendingLoads[i]) return pendingLoads[i];
 
-    if (!mapInstances[i]) initMapForReel(i);
+    if (!mapInstances[i]) {
+        if (Object.keys(mapInstances).length >= 6 && activeIndex !== -1) {
+            pruneDistantMaps(activeIndex);
+        }
+        initMapForReel(i);
+    }
     const postup = postupyData[i];
     if (!postup) return Promise.resolve();
 
     if (geojsonCache[postup.file]) {
-        if (!currentLayers[i]) renderMapData(i, geojsonCache[postup.file]);
+        if (!currentLayers[i] && mapInstances[i]) renderMapData(i, geojsonCache[postup.file]);
         return Promise.resolve();
     }
 
@@ -2227,7 +2304,7 @@ function preloadReel(i) {
         .then(res => res.json())
         .then(geojson => {
             geojsonCache[postup.file] = geojson;
-            if (!currentLayers[i]) renderMapData(i, geojson);
+            if (!currentLayers[i] && mapInstances[i]) renderMapData(i, geojson);
             delete pendingLoads[i];
         })
         .catch(err => {
@@ -2285,6 +2362,7 @@ function initMapForReel(index) {
     // Intuitivní plynulé přiblížení / oddálení dvojklikem (nebo dvojklepnutím)
     let lastClickTime = 0;
     map.on('click', function (e) {
+        if (map._animatingZoom) return;
         let currentTime = Date.now();
         if (currentTime - lastClickTime < 350) {
             let currentZoom = map.getZoom();
@@ -2345,6 +2423,7 @@ function initMapForReel(index) {
     L.control.zoom({ position: 'topleft' }).addTo(map);
 
     map.on('zoomend', function () {
+        if (!map._container) return;
         updateCalibrationShift();
 
         const reelsContainer = document.getElementById('reels-container');
@@ -2448,10 +2527,11 @@ function renderMapData(index, geojsonOriginal) {
                 maxNativeZoom: L.Browser.retina ? 4 : 5,
                 noWrap: true,
                 tms: false,
-                keepBuffer: 2,
-                updateWhenIdle: false,
-                updateWhenZooming: true,
-                detectRetina: true,
+                keepBuffer: 1,
+                updateWhenIdle: true,
+                updateWhenZooming: false,
+                detectRetina: false,
+                updateInterval: 100,
                 errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
             }).addTo(map);
             currentTileLayers[index] = tl;
