@@ -3112,22 +3112,18 @@ function renderProfileSaved() {
     if (window._profileCardObserver) {
         try { window._profileCardObserver.disconnect(); } catch (e) {}
     }
-    // Observer: načítá obrázek jen pro viditelné karty, neviditelné úplně uvolní z GPU paměti
+    // Observer: pozastavuje/obnovuje animace karet mimo viewport pro úsporu CPU a GPU
     window._profileCardObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            const img = entry.target.querySelector('img[data-src]');
             const animEl = entry.target.querySelector('.animated-route-follow, .animated-map-drift');
+            if (!animEl) return;
             if (entry.isIntersecting) {
-                // Materializovat obrázek, spustit animaci
-                if (img && !img.src) img.src = img.getAttribute('data-src');
-                if (animEl) animEl.classList.remove('anim-paused');
+                animEl.classList.remove('anim-paused');
             } else {
-                // Kompletně uvolnit: odstranit src obrázku i GPU texturu
-                if (img && img.src) { img.removeAttribute('src'); }
-                if (animEl) animEl.classList.add('anim-paused');
+                animEl.classList.add('anim-paused');
             }
         });
-    }, { rootMargin: '200px 0px 200px 0px', threshold: 0.01 });
+    }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
 
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
@@ -3186,7 +3182,7 @@ function renderProfileSaved() {
             el.innerHTML = `
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
                     <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom * 100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
-                        <img data-src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
+                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
                         ${svgOverlay}
                     </div>
                 </div>
@@ -3194,12 +3190,11 @@ function renderProfileSaved() {
         } else {
             el.innerHTML = `
                 <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
-                    <img data-src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
                 </div>
             `;
         }
-        el.addEventListener('click', (e) => {
-            e.preventDefault();
+        el.onclick = () => {
             if (isNavigatingFeed || isClosingChatFeed) return;
             try {
                 let postupIndex = postupyData.findIndex(p => String(p.id) === String(route.id));
@@ -3207,31 +3202,16 @@ function renderProfileSaved() {
             } catch (err) {
                 console.error("Vyjimka v click handleru: ", err);
             }
-        });
+        };
         gridContainer.appendChild(el);
         window._profileCardObserver.observe(el);
     });
     dynamicContent.appendChild(gridContainer);
 }
 
-// Uvolní všechny profilové náhledové obrázky z GPU paměti (volat před otevřením feedu)
-function purgeProfileCardImages() {
-    const grid = document.getElementById('profile-saved-grid');
-    if (!grid) return;
-    grid.querySelectorAll('img[data-src]').forEach(img => {
-        img.removeAttribute('src');
-    });
-    grid.querySelectorAll('.animated-route-follow, .animated-map-drift').forEach(el => {
-        el.classList.add('anim-paused');
-    });
-}
-
 function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     if (isNavigatingFeed || isClosingChatFeed) return;
     isNavigatingFeed = true;
-
-    // Uvolnit profilové náhledy z GPU paměti PŘED vytvářením Leaflet map
-    purgeProfileCardImages();
 
     if (activationTimeout) {
         clearTimeout(activationTimeout);
@@ -3354,6 +3334,32 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
         }
         
         activeIndex = firstVisibleIndex;
+
+        // PŘED spuštěním animace inicializujeme a vykreslíme mapu, aby animace probíhala s již načtenou mapou!
+        try {
+            if (!mapInstances[firstVisibleIndex]) {
+                initMapForReel(firstVisibleIndex);
+            }
+            const activeMap = mapInstances[firstVisibleIndex];
+            if (activeMap) {
+                activeMap.invalidateSize({ animate: false });
+                if (activeMap.originalMidX !== undefined) {
+                    activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
+                }
+            }
+            if (postupyData[firstVisibleIndex]) {
+                const pFile = postupyData[firstVisibleIndex].file;
+                if (geojsonCache[pFile]) {
+                    if (!currentLayers[firstVisibleIndex]) {
+                        renderMapData(firstVisibleIndex, geojsonCache[pFile]);
+                    }
+                } else {
+                    preloadReel(firstVisibleIndex);
+                }
+            }
+        } catch (e) {
+            console.warn("Pre-animation map init error:", e);
+        }
         
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -3368,25 +3374,6 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                     if (isClosingChatFeed) {
                         isNavigatingFeed = false;
                         return;
-                    }
-                    try {
-                        if (!mapInstances[firstVisibleIndex]) {
-                            initMapForReel(firstVisibleIndex);
-                        }
-                        const activeMap = mapInstances[firstVisibleIndex];
-                        if (activeMap) {
-                            activeMap.invalidateSize({ animate: false });
-                            if (activeMap.originalMidX !== undefined) {
-                                activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
-                            }
-                        }
-                        if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
-                            if (!currentLayers[firstVisibleIndex]) {
-                                renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Map setup error:", e);
                     }
 
                     screenScroll.style.transition = '';
@@ -3445,18 +3432,11 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
 
-        // Nejprve zničit všechny Leaflet mapy
+        // Uvolnit všechny Leaflet mapy z paměti pro stabilní běh profilu
         Object.keys(mapInstances).forEach(key => {
             destroyMapForReel(parseInt(key, 10), true);
         });
         activeIndex = -1;
-
-        // Vyprázdnit feed DOM, aby se uvolnily reference na map kontejnery
-        const scrollEl = document.getElementById('screen-scroll');
-        if (scrollEl) {
-            const reelsContainer = scrollEl.querySelector('.reels-container');
-            if (reelsContainer) reelsContainer.innerHTML = '';
-        }
 
         document.querySelectorAll('.app-screen').forEach(s => {
             if (s.id !== 'screen-profile') s.classList.remove('active');
@@ -3464,8 +3444,8 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         const profileScreen = document.getElementById('screen-profile');
         if (profileScreen) profileScreen.classList.add('active');
 
-        // Re-render profilové karty, observer znovu načte jen viditelné obrázky
-        try { renderProfileSaved(); } catch (e) { console.error('renderProfileSaved error:', e); }
+        // Karty na profilu již existují a jsou načtené, NENÍ třeba znovu volat renderProfileSaved()
+        // Tím se zabrání probliku/bílému místu a první klik na jakoukoliv kartu ihned funguje
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
@@ -3473,12 +3453,18 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         document.getElementById('bottom-nav').classList.remove('nav-dark');
         updateStatusBarTheme(false);
 
-        if (scrollEl) {
-            scrollEl.style.transform = '';
-            scrollEl.style.transition = '';
-            scrollEl.classList.remove('slide-out-right');
-            scrollEl.classList.remove('slide-in-right');
+        const screenScroll = document.getElementById('screen-scroll');
+        if (screenScroll) {
+            screenScroll.style.transform = '';
+            screenScroll.style.transition = '';
+            screenScroll.classList.remove('slide-out-right');
+            screenScroll.classList.remove('slide-in-right');
         }
+
+        // Spustit zpět animace dlaždic na profilu
+        document.querySelectorAll('.animated-route-follow, .animated-map-drift').forEach(el => {
+            el.classList.remove('anim-paused');
+        });
 
         isClosingChatFeed = false;
         isNavigatingFeed = false;
