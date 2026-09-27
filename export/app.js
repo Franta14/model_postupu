@@ -1119,6 +1119,11 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
             chatConv.classList.add('active');
         }
 
+        Object.keys(mapInstances).forEach(key => {
+            destroyMapForReel(parseInt(key, 10), true);
+        });
+        activeIndex = -1;
+
         const bottomNav = document.getElementById('bottom-nav');
         if (bottomNav) {
             bottomNav.classList.remove('nav-dark');
@@ -1254,34 +1259,24 @@ document.addEventListener("DOMContentLoaded", () => {
             let wasChatMode = document.body.classList.contains('chat-mode-active');
 
             if (wasSavedMode) {
-                document.body.classList.remove('saved-mode-active');
-                updateExploreBadge(document.getElementById('nav-badge'));
-
-                const screenScroll = document.getElementById('screen-scroll');
-                if (screenScroll) {
-                    screenScroll.style.transform = '';
-                    screenScroll.style.transition = '';
-                }
-
-                if (targetId === 'screen-scroll') {
-                    let currentMapId = activeIndex !== -1 ? postupyData[activeIndex].id : null;
-                    let visibleReels = Array.from(document.querySelectorAll('.reel')).filter(r => r.style.display !== 'none');
-                    if (visibleReels.length > 0) {
-                        let nextReel = visibleReels.find(r => postupyData[r.dataset.index].id !== currentMapId) || visibleReels[0];
-                        activeIndex = parseInt(nextReel.dataset.index);
-                        const reelsContainer = document.getElementById('reels-container');
-                        if (reelsContainer) reelsContainer.scrollTo({ top: nextReel.offsetTop, behavior: 'instant' });
+                if (targetId === 'screen-profile') {
+                    closeSavedFeed(true);
+                    return;
+                } else {
+                    closeSavedFeed(true);
+                    if (targetId === 'screen-scroll') {
+                        updateExploreBadge(document.getElementById('nav-badge'));
                     }
                 }
             } else if (wasChatMode) {
-                document.body.classList.remove('chat-mode-active');
-                closeChatConversation();
-                updateExploreBadge(document.getElementById('nav-badge'));
-
-                const screenScroll = document.getElementById('screen-scroll');
-                if (screenScroll) {
-                    screenScroll.style.transform = '';
-                    screenScroll.style.transition = '';
+                if (targetId === 'screen-chat') {
+                    closeChatFeed(true);
+                    return;
+                } else {
+                    closeChatFeed(true);
+                    if (targetId === 'screen-scroll') {
+                        updateExploreBadge(document.getElementById('nav-badge'));
+                    }
                 }
             } else if (targetId === 'screen-scroll') {
                 updateExploreBadge(document.getElementById('nav-badge'));
@@ -1401,9 +1396,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let absY = Math.abs(deltaY);
 
         if (!gestureDetermined) {
-            if (Math.hypot(deltaX, deltaY) > 8) {
+            if (Math.hypot(deltaX, deltaY) > 10) {
                 gestureDetermined = true;
-                if (deltaX > 0 && deltaX > absY * 1.1) {
+                if (startX < window.innerWidth * 0.45 && deltaX > 15 && deltaX > absY * 1.5) {
                     isSwiping = true;
                 } else {
                     isSwiping = false;
@@ -1874,7 +1869,7 @@ function setupObserver() {
                     if (!isNavigatingFeed && !isClosingChatFeed) {
                         activateReel(index);
                     }
-                }, 60);
+                }, 120);
             }
         });
     }, options);
@@ -2170,20 +2165,29 @@ function toggleVariants(index) {
     }
 }
 
-function destroyMapForReel(index) {
-    if (index === activeIndex && document.getElementById('screen-scroll')?.classList.contains('active')) return;
+function destroyMapForReel(index, force = false) {
+    if (!force && index === activeIndex && document.getElementById('screen-scroll')?.classList.contains('active')) return;
     stopVariantAnimation(index);
     const map = mapInstances[index];
     if (map) {
         try {
             if (currentTileLayers[index]) {
-                try { map.removeLayer(currentTileLayers[index]); } catch (e) { }
+                try {
+                    currentTileLayers[index].off();
+                    map.removeLayer(currentTileLayers[index]);
+                } catch (e) { }
             }
             if (currentLayers[index]) {
-                try { map.removeLayer(currentLayers[index]); } catch (e) { }
+                try {
+                    currentLayers[index].off();
+                    map.removeLayer(currentLayers[index]);
+                } catch (e) { }
             }
             if (currentOverlays[index]) {
-                try { map.removeLayer(currentOverlays[index]); } catch (e) { }
+                try {
+                    currentOverlays[index].off();
+                    map.removeLayer(currentOverlays[index]);
+                } catch (e) { }
             }
             map.off();
             map.remove();
@@ -2223,18 +2227,18 @@ function pruneDistantMaps(currentIndex) {
     if (visibleReels.length > 0) {
         let pos = visibleReels.indexOf(Number(currentIndex));
         if (pos !== -1) {
-            // Ponechat v paměti aktuální postup a max 1 předchozí a 1 následující (max 3 mapy pro stabilní paměť)
-            for (let offset = -1; offset <= 1; offset++) {
+            // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující (max 5 map pro plynulý scroll bez trhání)
+            for (let offset = -2; offset <= 2; offset++) {
                 let p = pos + offset;
                 if (p >= 0 && p < visibleReels.length) {
                     keepIndices.add(visibleReels[p]);
                 }
             }
         } else {
-            visibleReels.slice(0, 2).forEach(idx => keepIndices.add(idx));
+            visibleReels.slice(0, 3).forEach(idx => keepIndices.add(idx));
         }
     } else {
-        for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
+        for (let i = currentIndex - 2; i <= currentIndex + 2; i++) {
             if (i >= 0 && i < postupyData.length) keepIndices.add(i);
         }
     }
@@ -2364,7 +2368,11 @@ function preloadAllVisibleReels(currentIndex) {
 function initMapForReel(index) {
     if (mapInstances[index]) return mapInstances[index];
     const mapContainer = document.getElementById(`map-${index}`);
-    if (!mapContainer || mapContainer._leaflet_id) return mapInstances[index];
+    if (!mapContainer) return null;
+    if (mapContainer._leaflet_id) {
+        try { mapContainer._leaflet_id = null; } catch (e) {}
+        mapContainer.innerHTML = '';
+    }
     const map = L.map(`map-${index}`, {
         crs: L.CRS.Simple, minZoom: 0, maxZoom: 8, zoomSnap: 0,
         zoomControl: false, gestureHandling: false, inertia: false,
@@ -3095,6 +3103,21 @@ function renderProfileSaved() {
 
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
 
+    if (window._profileCardObserver) {
+        try { window._profileCardObserver.disconnect(); } catch (e) {}
+    }
+    window._profileCardObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const animEl = entry.target.querySelector('.animated-route-follow, .animated-map-drift');
+            if (!animEl) return;
+            if (entry.isIntersecting) {
+                animEl.classList.remove('anim-paused');
+            } else {
+                animEl.classList.add('anim-paused');
+            }
+        });
+    }, { rootMargin: '80px 0px 80px 0px', threshold: 0.01 });
+
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
@@ -3118,7 +3141,7 @@ function renderProfileSaved() {
         }
 
         let metaStyle = '';
-        let animClass = 'animated-map-drift';
+        let animClass = 'animated-map-drift anim-paused';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
 
@@ -3133,7 +3156,7 @@ function renderProfileSaved() {
             let distance = Math.hypot(dx, dy);
             let animDur = Math.max(12, distance * 1.2); // Plynulý čas pohybu kamery
 
-            animClass = 'animated-route-follow';
+            animClass = 'animated-route-follow anim-paused';
             let maskId = 'mask-' + basename + '-' + idx;
 
             // Už žádný drift, kolečko bude PERFEKTNĚ po celou dobu uprostřed.
@@ -3181,6 +3204,7 @@ function renderProfileSaved() {
             }
         });
         gridContainer.appendChild(el);
+        window._profileCardObserver.observe(el);
     });
     dynamicContent.appendChild(gridContainer);
 }
@@ -3401,16 +3425,17 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
 
-        // Uvolnit všechny mapy z paměti pro stabilní a plynulý běh profilu
-        Object.keys(mapInstances).forEach(key => {
-            destroyMapForReel(parseInt(key, 10));
-        });
-
         document.querySelectorAll('.app-screen').forEach(s => {
             if (s.id !== 'screen-profile') s.classList.remove('active');
         });
         const profileScreen = document.getElementById('screen-profile');
         if (profileScreen) profileScreen.classList.add('active');
+
+        // Uvolnit všechny mapy z paměti pro stabilní a plynulý běh profilu
+        Object.keys(mapInstances).forEach(key => {
+            destroyMapForReel(parseInt(key, 10), true);
+        });
+        activeIndex = -1;
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');

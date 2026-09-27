@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css?v=49" />
+    <link rel="stylesheet" href="style.css?v=50" />
     <link rel="preload" as="image" href="logo.png">
 
     <script>
@@ -33,12 +33,11 @@
             });
         }
         window.onerror = function (message, source, lineno, colno, error) {
-            let stack = (error && error.stack) ? "\nStack: " + error.stack : "";
-            alert("JS Error: " + message + " at " + lineno + ":" + colno + stack);
-            return true;
+            console.error("JS Error: " + message + " at " + lineno + ":" + colno, error);
+            return false;
         };
         window.addEventListener('unhandledrejection', function (event) {
-            alert("Promise Error: " + event.reason);
+            console.error("Unhandled Promise Rejection: ", event.reason);
         });
     </script>
 </head>
@@ -484,7 +483,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
-    <script src="app.js?v=49"></script>
+    <script src="app.js?v=50"></script>
 </body>
 
 </html>

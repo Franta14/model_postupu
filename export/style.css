@@ -437,7 +437,13 @@ body {
 
 .animated-route-follow {
   animation: routeFollow var(--anim-dur, 40s) linear infinite alternate;
-  will-change: transform;
+}
+
+:not(#screen-profile.active) .animated-route-follow,
+body.saved-mode-active .animated-route-follow,
+body.chat-mode-active .animated-route-follow,
+.animated-route-follow.anim-paused {
+  animation-play-state: paused !important;
 }
 
 @keyframes routeFollow {
