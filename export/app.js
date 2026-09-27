@@ -1469,6 +1469,8 @@ function initApp() {
             } else {
                 isClosingChatFeed = true;
                 isNavigatingFeed = true;
+                // OKAMŽITĚ zastavit všechny animace variant, aby nezatěžovaly GPU a CPU při přechodu
+                Object.keys(variantAnimations).forEach(k => stopVariantAnimation(k));
                 screenScrollEl.style.transform = 'translate3d(100%, 0, 0)';
                 if (document.body.classList.contains('chat-mode-active') && bottomNav) {
                     bottomNav.style.transform = 'translate3d(100%, 0, 0)';
@@ -3037,7 +3039,7 @@ function generateProfileCardHTML(route, idx) {
         let distance = Math.hypot(dx, dy);
         let animDur = Math.max(12, distance * 1.2);
 
-        let animClass = 'animated-route-follow anim-paused';
+        let animClass = 'animated-route-follow';
         let yCorr = 0.0;
 
         // Vektorový výpočet bez SVG masek: 100% čistá GPU akcelerace a nulový memory leak ve WebKitu
@@ -3079,7 +3081,7 @@ function generateProfileCardHTML(route, idx) {
         `;
     } else {
         return `
-            <div class="animated-map-drift anim-paused" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
+            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
                 <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             </div>
         `;
@@ -3108,10 +3110,14 @@ function updateProfileSpotlight() {
 
     let bestDist = Infinity;
     let bestRowTop = null;
+    const cardData = [];
 
+    // Jeden průchod: spočítat souřadnice a najít nejvíce vycentrovaný řádek
     cards.forEach(card => {
-        if (!card._isMounted) return;
+        const animEl = card.querySelector('.animated-route-follow, .animated-map-drift');
+        if (!animEl || !card._isMounted) return;
         const rect = card.getBoundingClientRect();
+        cardData.push({ card, animEl, top: rect.top });
         if (rect.bottom < screenRect.top || rect.top > screenRect.bottom) return;
         const cardCenterY = rect.top + rect.height / 2;
         const dist = Math.abs(cardCenterY - centerY);
@@ -3121,20 +3127,17 @@ function updateProfileSpotlight() {
         }
     });
 
-    cards.forEach(card => {
-        const animEl = card.querySelector('.animated-route-follow, .animated-map-drift');
-        if (!animEl) return;
-
-        if (bestRowTop !== null && card._isMounted) {
-            const rect = card.getBoundingClientRect();
-            const isInFocusRow = Math.abs(rect.top - bestRowTop) < 18;
+    // Druhý průchod: aplikovat anim-active bez volání getBoundingClientRect
+    cardData.forEach(item => {
+        if (bestRowTop !== null) {
+            const isInFocusRow = Math.abs(item.top - bestRowTop) < 18;
             if (isInFocusRow) {
-                animEl.classList.remove('anim-paused');
+                item.animEl.classList.add('anim-active');
             } else {
-                animEl.classList.add('anim-paused');
+                item.animEl.classList.remove('anim-active');
             }
         } else {
-            animEl.classList.add('anim-paused');
+            item.animEl.classList.remove('anim-active');
         }
     });
 }
@@ -3363,11 +3366,11 @@ function renderProfileSaved() {
         // Okamžitá aktivace při dotyku či hoveru
         el.addEventListener('pointerenter', () => {
             const animEl = el.querySelector('.animated-route-follow, .animated-map-drift');
-            if (animEl) animEl.classList.remove('anim-paused');
+            if (animEl) animEl.classList.add('anim-active');
         });
         el.addEventListener('touchstart', () => {
             const animEl = el.querySelector('.animated-route-follow, .animated-map-drift');
-            if (animEl) animEl.classList.remove('anim-paused');
+            if (animEl) animEl.classList.add('anim-active');
         }, { passive: true });
 
         el.onclick = () => {
@@ -3608,17 +3611,26 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         clearTimeout(activationTimeout);
         activationTimeout = null;
     }
-    stopVariantAnimation(activeIndex);
+    // Zastavit všechny animace variant běžců okamžitě před začátkem přechodu
+    Object.keys(variantAnimations).forEach(k => stopVariantAnimation(k));
 
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
 
-        // Uvolnit všechny Leaflet mapy z paměti pro stabilní běh profilu
-        setTimeout(() => {
-            Object.keys(mapInstances).forEach(key => {
-                destroyMapForReel(parseInt(key, 10), true);
-            });
-        }, 300);
+        // Bezpečně resetovat scrollování a zoom map bez destruktivního mazání instancí
+        const reelsContainer = document.getElementById('reels-container');
+        if (reelsContainer) reelsContainer.style.overflowY = 'scroll';
+
+        Object.keys(mapInstances).forEach(key => {
+            const m = mapInstances[key];
+            if (m) {
+                try {
+                    if (m.originalMidX !== undefined && m.originalMidY !== undefined) {
+                        m.setView([m.originalMidY, m.originalMidX], m.originalZoom || m.getMinZoom(), { animate: false });
+                    }
+                } catch (e) { }
+            }
+        });
         activeIndex = -1;
 
         document.querySelectorAll('.app-screen').forEach(s => {

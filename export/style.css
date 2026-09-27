@@ -426,19 +426,33 @@ body {
 }
 
 .animated-route-follow {
+  transform: translate(var(--ts-x, 0%), var(--ts-y, 0%));
+}
+
+.animated-route-follow.anim-active {
   animation: routeFollow var(--anim-dur, 40s) linear infinite alternate;
+  will-change: transform;
+}
+
+.animated-map-drift {
+  transform: translate(var(--drift-start-x, -35%), var(--drift-start-y, -35%));
+}
+
+.animated-map-drift.anim-active {
+  animation: mapDrift 60s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 body.saved-mode-active .animated-route-follow,
 body.chat-mode-active .animated-route-follow,
 body.saved-mode-active .animated-map-drift,
 body.chat-mode-active .animated-map-drift {
-  animation-play-state: paused !important;
+  animation: none !important;
 }
 
 .animated-route-follow.anim-paused,
 .animated-map-drift.anim-paused {
-  animation-play-state: paused !important;
+  animation: none !important;
 }
 
 @keyframes routeFollow {
