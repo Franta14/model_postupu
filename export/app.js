@@ -3037,22 +3037,36 @@ function generateProfileCardHTML(route, idx) {
         let distance = Math.hypot(dx, dy);
         let animDur = Math.max(12, distance * 1.2);
 
-        let animClass = 'animated-route-follow';
-        let maskId = 'mask-' + basename + '-' + idx;
+        let animClass = 'animated-route-follow anim-paused';
         let yCorr = 0.0;
 
+        // Vektorový výpočet bez SVG masek: 100% čistá GPU akcelerace a nulový memory leak ve WebKitu
+        const p1_x = pts.start[0] * 14.0;
+        const p1_y = pts.start[1] * 17.5;
+        const p2_x = pts.end[0] * 14.0;
+        const p2_y = pts.end[1] * 17.5;
+
+        const vdx = p2_x - p1_x;
+        const vdy = p2_y - p1_y;
+        const vdist = Math.hypot(vdx, vdy);
+
+        const R = 17.0;
+        const strokeW = 4.6;
+
+        let lineMarkup = '';
+        if (vdist > R * 2) {
+            const sx = p1_x + (vdx / vdist) * R;
+            const sy = p1_y + (vdy / vdist) * R;
+            const ex = p2_x - (vdx / vdist) * R;
+            const ey = p2_y - (vdy / vdist) * R;
+            lineMarkup = `<line x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#b300ff" stroke-width="${strokeW}" stroke-opacity="0.8" stroke-linecap="round" />`;
+        }
+
         let svgOverlay = `
-        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
-            <defs>
-                <mask id="${maskId}">
-                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                    <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="11" fill="black" />
-                    <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="11" fill="black" />
-                </mask>
-            </defs>
-            <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.8" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
-            <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
-            <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
+        <svg viewBox="0 0 1400 1750" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
+            ${lineMarkup}
+            <circle cx="${p1_x.toFixed(1)}" cy="${p1_y.toFixed(1)}" r="${R}" stroke="#b300ff" stroke-width="${strokeW}" fill="none" />
+            <circle cx="${p2_x.toFixed(1)}" cy="${p2_y.toFixed(1)}" r="${R}" stroke="#b300ff" stroke-width="${strokeW}" fill="none" />
         </svg>`;
 
         return `
@@ -3065,11 +3079,64 @@ function generateProfileCardHTML(route, idx) {
         `;
     } else {
         return `
-            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
+            <div class="animated-map-drift anim-paused" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
                 <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
             </div>
         `;
     }
+}
+
+let _profileSpotlightRaf = null;
+function onProfileScroll() {
+    if (_profileSpotlightRaf) return;
+    _profileSpotlightRaf = requestAnimationFrame(() => {
+        _profileSpotlightRaf = null;
+        updateProfileSpotlight();
+    });
+}
+
+function updateProfileSpotlight() {
+    const profileScreen = document.getElementById('screen-profile');
+    if (!profileScreen || !profileScreen.classList.contains('active')) return;
+    if (document.body.classList.contains('saved-mode-active') || document.body.classList.contains('chat-mode-active')) return;
+
+    const cards = profileScreen.querySelectorAll('.explore-grid-item');
+    if (cards.length === 0) return;
+
+    const screenRect = profileScreen.getBoundingClientRect();
+    const centerY = screenRect.top + screenRect.height / 2;
+
+    let bestDist = Infinity;
+    let bestRowTop = null;
+
+    cards.forEach(card => {
+        if (!card._isMounted) return;
+        const rect = card.getBoundingClientRect();
+        if (rect.bottom < screenRect.top || rect.top > screenRect.bottom) return;
+        const cardCenterY = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenterY - centerY);
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestRowTop = rect.top;
+        }
+    });
+
+    cards.forEach(card => {
+        const animEl = card.querySelector('.animated-route-follow, .animated-map-drift');
+        if (!animEl) return;
+
+        if (bestRowTop !== null && card._isMounted) {
+            const rect = card.getBoundingClientRect();
+            const isInFocusRow = Math.abs(rect.top - bestRowTop) < 18;
+            if (isInFocusRow) {
+                animEl.classList.remove('anim-paused');
+            } else {
+                animEl.classList.add('anim-paused');
+            }
+        } else {
+            animEl.classList.add('anim-paused');
+        }
+    });
 }
 
 function renderProfileSaved() {
@@ -3077,6 +3144,7 @@ function renderProfileSaved() {
     if (!profileScreen) return;
 
     profileScreen.innerHTML = '';
+    profileScreen.onscroll = onProfileScroll;
 
     let profileContent = document.createElement('div');
     profileContent.id = 'profile-content-wrapper';
@@ -3245,9 +3313,9 @@ function renderProfileSaved() {
     if (window._profileCardObserver) {
         try { window._profileCardObserver.disconnect(); } catch (e) {}
     }
-    // Virtuální observer: drží v paměti GPU pouze karty v zorném poli (+ 300px rezerva),
-    // vzdálené karty odlehčuje vyprázdněním innerHTML, čímž eliminuje pády z vyčerpání GPU paměti
+    // Virtuální observer s 80px rezervou: drží v paměti GPU pouze viditelné karty a bezprostřední okolí
     window._profileCardObserver = new IntersectionObserver((entries) => {
+        let mountedAny = false;
         entries.forEach(entry => {
             const cardEl = entry.target;
             const rData = cardEl._routeData;
@@ -3258,6 +3326,7 @@ function renderProfileSaved() {
                 if (!cardEl._isMounted) {
                     cardEl.innerHTML = generateProfileCardHTML(rData, rIdx);
                     cardEl._isMounted = true;
+                    mountedAny = true;
                 }
             } else {
                 if (cardEl._isMounted) {
@@ -3266,7 +3335,10 @@ function renderProfileSaved() {
                 }
             }
         });
-    }, { rootMargin: '300px 0px 300px 0px', threshold: 0.01 });
+        if (mountedAny) {
+            updateProfileSpotlight();
+        }
+    }, { rootMargin: '80px 0px 80px 0px', threshold: 0.01 });
 
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
@@ -3282,11 +3354,21 @@ function renderProfileSaved() {
         el._routeIdx = idx;
         el._isMounted = false;
 
-        // Prvních 9 karet (v úvodním zorném poli) namountujeme ihned
-        if (idx < 9) {
+        // Prvních 6 karet namountujeme ihned
+        if (idx < 6) {
             el.innerHTML = generateProfileCardHTML(route, idx);
             el._isMounted = true;
         }
+
+        // Okamžitá aktivace při dotyku či hoveru
+        el.addEventListener('pointerenter', () => {
+            const animEl = el.querySelector('.animated-route-follow, .animated-map-drift');
+            if (animEl) animEl.classList.remove('anim-paused');
+        });
+        el.addEventListener('touchstart', () => {
+            const animEl = el.querySelector('.animated-route-follow, .animated-map-drift');
+            if (animEl) animEl.classList.remove('anim-paused');
+        }, { passive: true });
 
         el.onclick = () => {
             if (isNavigatingFeed || isClosingChatFeed) return;
@@ -3301,11 +3383,16 @@ function renderProfileSaved() {
         window._profileCardObserver.observe(el);
     });
     dynamicContent.appendChild(gridContainer);
+
+    requestAnimationFrame(() => {
+        updateProfileSpotlight();
+    });
 }
 
 function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     if (isNavigatingFeed || isClosingChatFeed) return;
     isNavigatingFeed = true;
+    setTimeout(() => { isNavigatingFeed = false; }, 800);
 
     if (activationTimeout) {
         clearTimeout(activationTimeout);
@@ -3560,14 +3647,19 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
             screenScroll.classList.remove('slide-in-right');
         }
 
-        // Spustit zpět animace dlaždic na profilu
-        document.querySelectorAll('.animated-route-follow, .animated-map-drift').forEach(el => {
-            el.classList.remove('anim-paused');
-        });
+        // Spustit zpět pouze karty ve středovém reflektoru na profilu
+        if (typeof updateProfileSpotlight === 'function') {
+            updateProfileSpotlight();
+        }
 
         isClosingChatFeed = false;
         isNavigatingFeed = false;
     };
+
+    setTimeout(() => {
+        isClosingChatFeed = false;
+        isNavigatingFeed = false;
+    }, 600);
 
     if (isAlreadyAnimatedOut === true) {
         doClose();
