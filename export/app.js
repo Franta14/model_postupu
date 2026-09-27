@@ -118,6 +118,18 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
+// Bezpečnostní pojistka: Pokud Firebase auth neodpoví do 1.8s, zobrazíme přihlašovací tlačítka
+setTimeout(() => {
+    if (!currentUser && loginOverlay && !loginOverlay.classList.contains('show-login') && loginOverlay.style.display !== 'none') {
+        loginOverlay.classList.add('show-login');
+        const loginBox = document.getElementById('splash-login-container');
+        if (loginBox) {
+            loginBox.style.opacity = '1';
+            loginBox.style.pointerEvents = 'auto';
+        }
+    }
+}, 1800);
+
 let currentCommentsUnsubscribe = null;
 let currentChatUnsubscribe = null;
 let isNavigatingFeed = false;
@@ -1225,7 +1237,7 @@ function closeComments() {
 }
 
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
     try {
         let originalUpdatePosition = L.Draggable.prototype._updatePosition;
         L.Draggable.prototype._updatePosition = function () {
@@ -1519,7 +1531,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadData();
     setTimeout(updateUITexts, 200);
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
+}
 
 let selectedTerrains = new Set();
 
@@ -3107,8 +3125,6 @@ function renderProfileSaved() {
     }
 
     let dynamicContent = document.getElementById('profile-dynamic-content');
-    let savedIds = saved.map(String);
-    const savedData = postupyData.filter(map => savedIds.includes(map.file));
     if (savedData.length === 0) {
         dynamicContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
