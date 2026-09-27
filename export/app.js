@@ -1032,8 +1032,7 @@ function openChatConversation(name) {
                     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
                     let savedStrings = saved.map(String);
                     let postupObj = postupyData[targetIndex];
-                    let postupIdStr = postupObj ? String(postupObj.id || (targetIndex + 1)) : String(targetIndex + 1);
-                    let isBookmarked = savedStrings.includes(postupIdStr);
+                    let isBookmarked = postupObj && postupObj.file ? savedStrings.includes(postupObj.file) : false;
 
                     let bookmarkClass = isBookmarked ? 'chat-action-circle bookmark-btn bookmarked' : 'chat-action-circle bookmark-btn';
                     let bookmarkSvg = isBookmarked
@@ -1544,6 +1543,18 @@ function loadData() {
             if (!map.id) map.id = index + 1;
         });
 
+        // Vyčištění neplatných starých ID z předchozích verzí aplikace (např. stará číselná ID 1..6)
+        try {
+            let rawSaved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
+            let validFiles = new Set(postupyData.map(p => p.file));
+            let cleanedSaved = rawSaved.filter(id => typeof id === 'string' && validFiles.has(id));
+            if (cleanedSaved.length !== rawSaved.length) {
+                localStorage.setItem('saved_postupy', JSON.stringify(cleanedSaved));
+            }
+        } catch (e) {
+            console.warn("Chyba při čištění saved_postupy:", e);
+        }
+
         buildReels();
         setupObserver();
         renderExploreGrid();
@@ -1778,7 +1789,7 @@ function buildReels() {
         reel.dataset.index = index;
         reel.dataset.terrain = postup.terrain;
 
-        const isSaved = savedIds.includes(postup.file) || (postup.id && savedIds.includes(String(postup.id)));
+        const isSaved = savedIds.includes(postup.file);
         const bookmarkClass = isSaved ? 'action-btn bookmark-btn bookmarked' : 'action-btn bookmark-btn';
         const bookmarkSvg = isSaved
             ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
@@ -2809,25 +2820,67 @@ function toggleBookmark(index, btn) {
     btn.classList.toggle('bookmarked');
     const postup = postupyData[index];
     if (!postup) return;
-    const mapId = postup.file || String(postup.id || (index + 1));
+    const fileId = postup.file;
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
-    let savedStrings = saved.map(String);
 
-    if (btn.classList.contains('bookmarked')) {
+    const matchingIds = new Set();
+    if (fileId) matchingIds.add(String(fileId));
+    if (postup.id !== undefined && postup.id !== null) matchingIds.add(String(postup.id));
+    matchingIds.add(String(index + 1));
+
+    const isNowBookmarked = btn.classList.contains('bookmarked');
+
+    if (isNowBookmarked) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        if (!savedStrings.includes(mapId)) saved.push(mapId);
+        saved = saved.filter(id => !matchingIds.has(String(id)));
+        if (fileId) saved.push(fileId);
+        window._profileNeedsRefresh = true;
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        saved = saved.filter(id => String(id) !== mapId);
+        saved = saved.filter(id => !matchingIds.has(String(id)));
+
+        // Odstraníme kartu z profilové mřížky v reálném čase, pokud existuje
+        const profileGrid = document.getElementById('profile-saved-grid');
+        if (profileGrid && fileId) {
+            const card = profileGrid.querySelector(`[data-file="${fileId}"]`);
+            if (card) {
+                card.remove();
+                if (profileGrid.children.length === 0) {
+                    const dynamicContent = document.getElementById('profile-dynamic-content');
+                    if (dynamicContent) {
+                        dynamicContent.innerHTML = `
+                            <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
+                                <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                                <div style="font-weight: 600; opacity: 0.7; margin-bottom: 4px;">${t('noSaved')}</div>
+                                <div style="font-size: 0.8rem;">${t('noSavedDesc')}</div>
+                            </div>`;
+                    }
+                }
+            }
+        }
     }
     localStorage.setItem('saved_postupy', JSON.stringify(saved));
 
-    if (document.body.classList.contains('saved-mode-active') && !btn.classList.contains('bookmarked')) {
-        const reel = document.querySelector(`.reel[data-index="${index}"]`);
-        if (reel) reel.style.display = 'none';
+    // Aktualizujeme čítač uložených na profilu
+    const statEl = document.getElementById('stat-saved-count');
+    if (statEl) {
+        const validCount = postupyData.filter(m => saved.includes(m.file)).length;
+        statEl.innerText = validCount;
     }
 
-    renderProfileSaved();
+    // Synchronizace všech ostatních tlačítek záložky pro stejný postup
+    const otherBtns = document.querySelectorAll(`.reel[data-index="${index}"] .bookmark-btn, button[onclick*="toggleBookmark(${index},"]`);
+    otherBtns.forEach(b => {
+        if (b !== btn) {
+            if (isNowBookmarked) {
+                b.classList.add('bookmarked');
+                b.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+            } else {
+                b.classList.remove('bookmarked');
+                b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
+            }
+        }
+    });
 }
 
 function sharePostup(index) {
@@ -2953,7 +3006,9 @@ function renderProfileSaved() {
     let viewed = JSON.parse(localStorage.getItem('viewed_postupy') || '[]');
     let accMs = parseInt(localStorage.getItem('app_time_ms') || '0');
 
-    let ulozenaCislo = saved.length;
+    let savedIds = saved.map(String);
+    const savedData = postupyData.filter(map => savedIds.includes(map.file));
+    let ulozenaCislo = savedData.length;
     let videnoCislo = viewed.length;
     let hodinCislo = (accMs / 3600000).toFixed(1);
 
@@ -3003,7 +3058,7 @@ function renderProfileSaved() {
                     <div style="font-size:13px; color: inherit;">${t('analyzed')}</div>
                 </div>
                 <div>
-                    <div style="font-weight:700; font-size:16px; color: inherit;">${ulozenaCislo}</div>
+                    <div id="stat-saved-count" style="font-weight:700; font-size:16px; color: inherit;">${ulozenaCislo}</div>
                     <div style="font-size:13px; color: inherit;">${t('saved')}</div>
                 </div>
                 <div>
@@ -3053,7 +3108,8 @@ function renderProfileSaved() {
 
     let dynamicContent = document.getElementById('profile-dynamic-content');
     let savedIds = saved.map(String);
-    if (savedIds.length === 0) {
+    const savedData = postupyData.filter(map => savedIds.includes(map.file));
+    if (savedData.length === 0) {
         dynamicContent.innerHTML = `
             <div style="text-align:center; padding: 4rem 1.5rem; color: #888; font-size: 0.95rem;">
                 <svg style="width: 42px; height: 42px; margin-bottom: 10px; stroke: #666;" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
@@ -3062,8 +3118,6 @@ function renderProfileSaved() {
             </div>`;
         return;
     }
-
-    const savedData = postupyData.filter(map => savedIds.includes(map.file) || (map.id && savedIds.includes(String(map.id))));
     const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
     if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) profileSelectedTerrain = 'Vše';
 
@@ -3128,6 +3182,7 @@ function renderProfileSaved() {
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
         el.className = 'explore-grid-item';
+        el.dataset.file = route.file || '';
         el.style.position = 'relative';
         el.style.aspectRatio = '4 / 5';
         el.style.background = 'var(--secondary-bg)';
@@ -3197,7 +3252,7 @@ function renderProfileSaved() {
         el.onclick = () => {
             if (isNavigatingFeed || isClosingChatFeed) return;
             try {
-                let postupIndex = postupyData.findIndex(p => p.file === route.file || String(p.id) === String(route.id));
+                let postupIndex = postupyData.findIndex(p => p.file === route.file);
                 openFeed(route.map_id, true, postupIndex >= 0 ? postupIndex : undefined);
             } catch (err) {
                 console.error("Vyjimka v click handleru: ", err);
@@ -3252,7 +3307,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 
         let isMatch = false;
         if (isSavedMode) {
-            isMatch = savedStrings.includes(String(postup.id));
+            isMatch = postup && postup.file ? savedStrings.includes(postup.file) : false;
         } else if (fromChat) {
             if (specificIndex !== undefined && Number(specificIndex) >= 0) {
                 isMatch = (mIndex === Number(specificIndex));
@@ -3446,8 +3501,11 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         const profileScreen = document.getElementById('screen-profile');
         if (profileScreen) profileScreen.classList.add('active');
 
-        // Karty na profilu již existují a jsou načtené, NENÍ třeba znovu volat renderProfileSaved()
-        // Tím se zabrání probliku/bílému místu a první klik na jakoukoliv kartu ihned funguje
+        // Pokud došlo ke změně uložených tras během prohlížení feedu, obnovíme profil
+        if (window._profileNeedsRefresh) {
+            window._profileNeedsRefresh = false;
+            renderProfileSaved();
+        }
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
