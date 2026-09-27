@@ -433,12 +433,12 @@ body.saved-mode-active .animated-route-follow,
 body.chat-mode-active .animated-route-follow,
 body.saved-mode-active .animated-map-drift,
 body.chat-mode-active .animated-map-drift {
-  animation: none !important;
+  animation-play-state: paused !important;
 }
 
 .animated-route-follow.anim-paused,
 .animated-map-drift.anim-paused {
-  animation: none !important;
+  animation-play-state: paused !important;
 }
 
 @keyframes routeFollow {

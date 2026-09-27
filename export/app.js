@@ -3361,7 +3361,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
             console.warn("Pre-animation map init error:", e);
         }
         
-        requestAnimationFrame(() => {
+        setTimeout(() => {
             requestAnimationFrame(() => {
                 screenScroll.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
                 screenScroll.style.transform = 'translate3d(0, 0, 0)';
@@ -3393,7 +3393,7 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                     }, 50);
                 }, 350);
             });
-        });
+        }, 120);
     } else if (screenScroll) {
         screenScroll.style.transition = '';
         screenScroll.style.transform = '';
@@ -3433,9 +3433,11 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         document.body.classList.remove('saved-mode-active');
 
         // Uvolnit všechny Leaflet mapy z paměti pro stabilní běh profilu
-        Object.keys(mapInstances).forEach(key => {
-            destroyMapForReel(parseInt(key, 10), true);
-        });
+        setTimeout(() => {
+            Object.keys(mapInstances).forEach(key => {
+                destroyMapForReel(parseInt(key, 10), true);
+            });
+        }, 300);
         activeIndex = -1;
 
         document.querySelectorAll('.app-screen').forEach(s => {
