@@ -1124,6 +1124,10 @@ function closeChatFeed(isAlreadyAnimatedOut = false) {
         });
         activeIndex = -1;
 
+        // Uvolnit feed DOM
+        const reelsContainer = screenScroll?.querySelector('.reels-container');
+        if (reelsContainer) reelsContainer.innerHTML = '';
+
         const bottomNav = document.getElementById('bottom-nav');
         if (bottomNav) {
             bottomNav.classList.remove('nav-dark');
@@ -2227,18 +2231,18 @@ function pruneDistantMaps(currentIndex) {
     if (visibleReels.length > 0) {
         let pos = visibleReels.indexOf(Number(currentIndex));
         if (pos !== -1) {
-            // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující (max 5 map pro plynulý scroll bez trhání)
-            for (let offset = -2; offset <= 2; offset++) {
+            // Ponechat v paměti aktuální postup a max 1 předchozí a 1 následující (max 3 mapy pro úsporu GPU paměti)
+            for (let offset = -1; offset <= 1; offset++) {
                 let p = pos + offset;
                 if (p >= 0 && p < visibleReels.length) {
                     keepIndices.add(visibleReels[p]);
                 }
             }
         } else {
-            visibleReels.slice(0, 3).forEach(idx => keepIndices.add(idx));
+            visibleReels.slice(0, 2).forEach(idx => keepIndices.add(idx));
         }
     } else {
-        for (let i = currentIndex - 2; i <= currentIndex + 2; i++) {
+        for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
             if (i >= 0 && i < postupyData.length) keepIndices.add(i);
         }
     }
@@ -3096,6 +3100,7 @@ function renderProfileSaved() {
     dynamicContent.appendChild(pillsContainer);
 
     const gridContainer = document.createElement('div');
+    gridContainer.id = 'profile-saved-grid';
     gridContainer.style.display = 'grid';
     gridContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
     gridContainer.style.gap = '2px';
@@ -3103,20 +3108,26 @@ function renderProfileSaved() {
 
     const displayData = profileSelectedTerrain === 'Vše' ? savedData : savedData.filter(map => map.terrain === profileSelectedTerrain);
 
+    // Odpojit předchozí observer
     if (window._profileCardObserver) {
         try { window._profileCardObserver.disconnect(); } catch (e) {}
     }
+    // Observer: načítá obrázek jen pro viditelné karty, neviditelné úplně uvolní z GPU paměti
     window._profileCardObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+            const img = entry.target.querySelector('img[data-src]');
             const animEl = entry.target.querySelector('.animated-route-follow, .animated-map-drift');
-            if (!animEl) return;
             if (entry.isIntersecting) {
-                animEl.classList.remove('anim-paused');
+                // Materializovat obrázek, spustit animaci
+                if (img && !img.src) img.src = img.getAttribute('data-src');
+                if (animEl) animEl.classList.remove('anim-paused');
             } else {
-                animEl.classList.add('anim-paused');
+                // Kompletně uvolnit: odstranit src obrázku i GPU texturu
+                if (img && img.src) { img.removeAttribute('src'); }
+                if (animEl) animEl.classList.add('anim-paused');
             }
         });
-    }, { rootMargin: '80px 0px 80px 0px', threshold: 0.01 });
+    }, { rootMargin: '200px 0px 200px 0px', threshold: 0.01 });
 
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
@@ -3140,12 +3151,10 @@ function renderProfileSaved() {
             thumbImgSrc = thumbRoute.thumb;
         }
 
-        let metaStyle = '';
         let animClass = 'animated-map-drift anim-paused';
         if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
             let pts = thumbsMeta.routes[basename];
 
-            // Jednotné přiblížení pro všechny postupy (normalizované podle výřezu)
             let baseZoom = 13.0;
             let cropScale = pts.crop_scale || 0.52;
             let zoom = pts.zoom || (baseZoom * cropScale);
@@ -3154,15 +3163,12 @@ function renderProfileSaved() {
             let dy = pts.end[1] - pts.start[1];
 
             let distance = Math.hypot(dx, dy);
-            let animDur = Math.max(12, distance * 1.2); // Plynulý čas pohybu kamery
+            let animDur = Math.max(12, distance * 1.2);
 
             animClass = 'animated-route-follow anim-paused';
             let maskId = 'mask-' + basename + '-' + idx;
-
-            // Už žádný drift, kolečko bude PERFEKTNĚ po celou dobu uprostřed.
             let yCorr = 0.0;
 
-            // Kolečka zmenšena o cca 17% a tloušťka o cca 8% (r=10, stroke-width=2.8)
             let svgOverlay = `
             <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
                 <defs>
@@ -3180,16 +3186,15 @@ function renderProfileSaved() {
             el.innerHTML = `
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
                     <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom * 100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
-                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
+                        <img data-src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
                         ${svgOverlay}
                     </div>
                 </div>
             `;
         } else {
-            metaStyle = `style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;"`;
             el.innerHTML = `
-                <div class="${animClass}" ${metaStyle}>
-                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+                <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
+                    <img data-src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                 </div>
             `;
         }
@@ -3209,9 +3214,24 @@ function renderProfileSaved() {
     dynamicContent.appendChild(gridContainer);
 }
 
+// Uvolní všechny profilové náhledové obrázky z GPU paměti (volat před otevřením feedu)
+function purgeProfileCardImages() {
+    const grid = document.getElementById('profile-saved-grid');
+    if (!grid) return;
+    grid.querySelectorAll('img[data-src]').forEach(img => {
+        img.removeAttribute('src');
+    });
+    grid.querySelectorAll('.animated-route-follow, .animated-map-drift').forEach(el => {
+        el.classList.add('anim-paused');
+    });
+}
+
 function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
     if (isNavigatingFeed || isClosingChatFeed) return;
     isNavigatingFeed = true;
+
+    // Uvolnit profilové náhledy z GPU paměti PŘED vytvářením Leaflet map
+    purgeProfileCardImages();
 
     if (activationTimeout) {
         clearTimeout(activationTimeout);
@@ -3425,17 +3445,27 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
 
+        // Nejprve zničit všechny Leaflet mapy
+        Object.keys(mapInstances).forEach(key => {
+            destroyMapForReel(parseInt(key, 10), true);
+        });
+        activeIndex = -1;
+
+        // Vyprázdnit feed DOM, aby se uvolnily reference na map kontejnery
+        const scrollEl = document.getElementById('screen-scroll');
+        if (scrollEl) {
+            const reelsContainer = scrollEl.querySelector('.reels-container');
+            if (reelsContainer) reelsContainer.innerHTML = '';
+        }
+
         document.querySelectorAll('.app-screen').forEach(s => {
             if (s.id !== 'screen-profile') s.classList.remove('active');
         });
         const profileScreen = document.getElementById('screen-profile');
         if (profileScreen) profileScreen.classList.add('active');
 
-        // Uvolnit všechny mapy z paměti pro stabilní a plynulý běh profilu
-        Object.keys(mapInstances).forEach(key => {
-            destroyMapForReel(parseInt(key, 10), true);
-        });
-        activeIndex = -1;
+        // Re-render profilové karty, observer znovu načte jen viditelné obrázky
+        try { renderProfileSaved(); } catch (e) { console.error('renderProfileSaved error:', e); }
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');
@@ -3443,12 +3473,11 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
         document.getElementById('bottom-nav').classList.remove('nav-dark');
         updateStatusBarTheme(false);
 
-        const screenScroll = document.getElementById('screen-scroll');
-        if (screenScroll) {
-            screenScroll.style.transform = '';
-            screenScroll.style.transition = '';
-            screenScroll.classList.remove('slide-out-right');
-            screenScroll.classList.remove('slide-in-right');
+        if (scrollEl) {
+            scrollEl.style.transform = '';
+            scrollEl.style.transition = '';
+            scrollEl.classList.remove('slide-out-right');
+            scrollEl.classList.remove('slide-in-right');
         }
 
         isClosingChatFeed = false;

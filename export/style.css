@@ -405,33 +405,23 @@ body {
 .animated-map-drift {
   animation: mapDrift var(--drift-dur, 75s) ease-in-out infinite alternate;
   animation-delay: var(--drift-delay, 0s);
-  will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
 }
 
 .animated-map-drift img {
   image-rendering: -webkit-optimize-contrast;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 @keyframes mapDrift {
   0% {
-    transform: translate3d(var(--drift-start-x, -35%), var(--drift-start-y, -35%), 0);
+    transform: translate(var(--drift-start-x, -35%), var(--drift-start-y, -35%));
   }
 
   50% {
-    transform: translate3d(var(--drift-mid-x, -45%), var(--drift-mid-y, -40%), 0);
+    transform: translate(var(--drift-mid-x, -45%), var(--drift-mid-y, -40%));
   }
 
   100% {
-    transform: translate3d(var(--drift-end-x, -40%), var(--drift-end-y, -50%), 0);
+    transform: translate(var(--drift-end-x, -40%), var(--drift-end-y, -50%));
   }
 }
 
@@ -439,20 +429,23 @@ body {
   animation: routeFollow var(--anim-dur, 40s) linear infinite alternate;
 }
 
-:not(#screen-profile.active) .animated-route-follow,
 body.saved-mode-active .animated-route-follow,
-body.chat-mode-active .animated-route-follow,
-.animated-route-follow.anim-paused {
-  animation-play-state: paused !important;
+body.chat-mode-active .animated-route-follow {
+  animation: none !important;
+}
+
+.animated-route-follow.anim-paused,
+.animated-map-drift.anim-paused {
+  animation: none !important;
 }
 
 @keyframes routeFollow {
   0% {
-    transform: translate3d(var(--ts-x, 0%), var(--ts-y, 0%), 0);
+    transform: translate(var(--ts-x, 0%), var(--ts-y, 0%));
   }
 
   100% {
-    transform: translate3d(var(--te-x, 0%), var(--te-y, 0%), 0);
+    transform: translate(var(--te-x, 0%), var(--te-y, 0%));
   }
 }
 
