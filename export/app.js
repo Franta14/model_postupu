@@ -2862,6 +2862,7 @@ function toggleBookmark(index, btn) {
         if (profileGrid && fileId) {
             const card = profileGrid.querySelector(`[data-file="${fileId}"]`);
             if (card) {
+                if (window._profileCardObserver) window._profileCardObserver.unobserve(card);
                 card.remove();
                 if (profileGrid.children.length === 0) {
                     const dynamicContent = document.getElementById('profile-dynamic-content');
@@ -3007,6 +3008,68 @@ function groupRoutesByMap(routesArray) {
         mapGroups.get(route.map_id).routes.push(route);
     });
     return Array.from(mapGroups.values());
+}
+
+function generateProfileCardHTML(route, idx) {
+    const thumbRoute = route;
+    let basename = '';
+    if (thumbRoute.thumb) {
+        basename = thumbRoute.thumb.split('/').pop().replace('.jpg', '');
+    } else if (thumbRoute.file) {
+        basename = thumbRoute.file.replace('.geojson', '').replace('.json', '');
+    }
+    let mapId = route.map_id || 'homolka';
+    let thumbImgSrc = 'thumbs/map_' + mapId + '.jpg';
+    if (thumbRoute.thumb && !(thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename])) {
+        thumbImgSrc = thumbRoute.thumb;
+    }
+
+    if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
+        let pts = thumbsMeta.routes[basename];
+
+        let baseZoom = 13.0;
+        let cropScale = pts.crop_scale || 0.52;
+        let zoom = pts.zoom || (baseZoom * cropScale);
+
+        let dx = pts.end[0] - pts.start[0];
+        let dy = pts.end[1] - pts.start[1];
+
+        let distance = Math.hypot(dx, dy);
+        let animDur = Math.max(12, distance * 1.2);
+
+        let animClass = 'animated-route-follow';
+        let maskId = 'mask-' + basename + '-' + idx;
+        let yCorr = 0.0;
+
+        let svgOverlay = `
+        <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
+            <defs>
+                <mask id="${maskId}">
+                    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                    <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="11" fill="black" />
+                    <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="11" fill="black" />
+                </mask>
+            </defs>
+            <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.8" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
+            <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
+            <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
+        </svg>`;
+
+        return `
+            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
+                <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom * 100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
+                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
+                    ${svgOverlay}
+                </div>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="animated-map-drift" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
+                <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
+            </div>
+        `;
+    }
 }
 
 function renderProfileSaved() {
@@ -3182,18 +3245,28 @@ function renderProfileSaved() {
     if (window._profileCardObserver) {
         try { window._profileCardObserver.disconnect(); } catch (e) {}
     }
-    // Observer: pozastavuje/obnovuje animace karet mimo viewport pro úsporu CPU a GPU
+    // Virtuální observer: drží v paměti GPU pouze karty v zorném poli (+ 300px rezerva),
+    // vzdálené karty odlehčuje vyprázdněním innerHTML, čímž eliminuje pády z vyčerpání GPU paměti
     window._profileCardObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            const animEl = entry.target.querySelector('.animated-route-follow, .animated-map-drift');
-            if (!animEl) return;
+            const cardEl = entry.target;
+            const rData = cardEl._routeData;
+            const rIdx = cardEl._routeIdx;
+            if (!rData) return;
+
             if (entry.isIntersecting) {
-                animEl.classList.remove('anim-paused');
+                if (!cardEl._isMounted) {
+                    cardEl.innerHTML = generateProfileCardHTML(rData, rIdx);
+                    cardEl._isMounted = true;
+                }
             } else {
-                animEl.classList.add('anim-paused');
+                if (cardEl._isMounted) {
+                    cardEl.innerHTML = '';
+                    cardEl._isMounted = false;
+                }
             }
         });
-    }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
+    }, { rootMargin: '300px 0px 300px 0px', threshold: 0.01 });
 
     displayData.forEach((route, idx) => {
         const el = document.createElement('div');
@@ -3205,66 +3278,16 @@ function renderProfileSaved() {
         el.style.overflow = 'hidden';
         el.style.cursor = 'pointer';
 
-        const thumbRoute = route;
-        let basename = '';
-        if (thumbRoute.thumb) {
-            basename = thumbRoute.thumb.split('/').pop().replace('.jpg', '');
-        } else if (thumbRoute.file) {
-            basename = thumbRoute.file.replace('.geojson', '').replace('.json', '');
-        }
-        let mapId = route.map_id || 'homolka';
-        let thumbImgSrc = 'thumbs/map_' + mapId + '.jpg';
-        if (thumbRoute.thumb && !(thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename])) {
-            thumbImgSrc = thumbRoute.thumb;
+        el._routeData = route;
+        el._routeIdx = idx;
+        el._isMounted = false;
+
+        // Prvních 9 karet (v úvodním zorném poli) namountujeme ihned
+        if (idx < 9) {
+            el.innerHTML = generateProfileCardHTML(route, idx);
+            el._isMounted = true;
         }
 
-        let animClass = 'animated-map-drift anim-paused';
-        if (thumbsMeta && thumbsMeta.routes && thumbsMeta.routes[basename]) {
-            let pts = thumbsMeta.routes[basename];
-
-            let baseZoom = 13.0;
-            let cropScale = pts.crop_scale || 0.52;
-            let zoom = pts.zoom || (baseZoom * cropScale);
-
-            let dx = pts.end[0] - pts.start[0];
-            let dy = pts.end[1] - pts.start[1];
-
-            let distance = Math.hypot(dx, dy);
-            let animDur = Math.max(12, distance * 1.2);
-
-            animClass = 'animated-route-follow anim-paused';
-            let maskId = 'mask-' + basename + '-' + idx;
-            let yCorr = 0.0;
-
-            let svgOverlay = `
-            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible;">
-                <defs>
-                    <mask id="${maskId}">
-                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                        <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="11" fill="black" />
-                        <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="11" fill="black" />
-                    </mask>
-                </defs>
-                <line x1="${pts.start[0]}%" y1="${pts.start[1]}%" x2="${pts.end[0]}%" y2="${pts.end[1]}%" stroke="#b300ff" stroke-width="2.8" stroke-opacity="0.8" stroke-linecap="round" mask="url(#${maskId})" />
-                <circle cx="${pts.start[0]}%" cy="${pts.start[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
-                <circle cx="${pts.end[0]}%" cy="${pts.end[1]}%" r="10" stroke="#b300ff" stroke-width="2.8" fill="none" />
-            </svg>`;
-
-            el.innerHTML = `
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
-                    <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom * 100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
-                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
-                        ${svgOverlay}
-                    </div>
-                </div>
-            `;
-        } else {
-            el.innerHTML = `
-                <div class="${animClass}" style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;">
-                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
-                </div>
-            `;
-        }
         el.onclick = () => {
             if (isNavigatingFeed || isClosingChatFeed) return;
             try {
