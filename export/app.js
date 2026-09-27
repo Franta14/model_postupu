@@ -1778,7 +1778,7 @@ function buildReels() {
         reel.dataset.index = index;
         reel.dataset.terrain = postup.terrain;
 
-        const isSaved = savedIds.includes(String(postup.id));
+        const isSaved = savedIds.includes(postup.file) || (postup.id && savedIds.includes(String(postup.id)));
         const bookmarkClass = isSaved ? 'action-btn bookmark-btn bookmarked' : 'action-btn bookmark-btn';
         const bookmarkSvg = isSaved
             ? '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>'
@@ -2809,13 +2809,13 @@ function toggleBookmark(index, btn) {
     btn.classList.toggle('bookmarked');
     const postup = postupyData[index];
     if (!postup) return;
-    const mapId = String(postup.id || (index + 1));
+    const mapId = postup.file || String(postup.id || (index + 1));
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
 
     if (btn.classList.contains('bookmarked')) {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
-        if (!savedStrings.includes(mapId)) saved.push(postup.id || (index + 1));
+        if (!savedStrings.includes(mapId)) saved.push(mapId);
     } else {
         btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>';
         saved = saved.filter(id => String(id) !== mapId);
@@ -3063,7 +3063,7 @@ function renderProfileSaved() {
         return;
     }
 
-    const savedData = postupyData.filter(map => savedIds.includes(String(map.id)));
+    const savedData = postupyData.filter(map => savedIds.includes(map.file) || (map.id && savedIds.includes(String(map.id))));
     const uniqueTerrains = [...new Set(savedData.map(map => map.terrain))];
     if (profileSelectedTerrain !== 'Vše' && !uniqueTerrains.includes(profileSelectedTerrain)) profileSelectedTerrain = 'Vše';
 
@@ -3197,7 +3197,7 @@ function renderProfileSaved() {
         el.onclick = () => {
             if (isNavigatingFeed || isClosingChatFeed) return;
             try {
-                let postupIndex = postupyData.findIndex(p => String(p.id) === String(route.id));
+                let postupIndex = postupyData.findIndex(p => p.file === route.file || String(p.id) === String(route.id));
                 openFeed(route.map_id, true, postupIndex >= 0 ? postupIndex : undefined);
             } catch (err) {
                 console.error("Vyjimka v click handleru: ", err);
