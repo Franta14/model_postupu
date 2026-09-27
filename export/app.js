@@ -1552,7 +1552,7 @@ function loadData() {
         renderProfileSaved();
         renderChatScreen(); // Předgenerujeme chat screen
         updateUITexts();
-        prefetchGeojsons();
+        setTimeout(prefetchGeojsons, 1200);
 
         setTimeout(() => {
             const loader = document.getElementById('loader');
@@ -1812,17 +1812,26 @@ function buildReels() {
 
 function prefetchGeojsons() {
     if (!postupyData) return;
-    const vStr = '';
-    postupyData.forEach(p => {
-        if (p.file && !geojsonCache[p.file]) {
-            fetch('postupy/' + p.file + vStr)
+    const toFetch = postupyData.filter(p => p.file && !geojsonCache[p.file]);
+    let idx = 0;
+    function fetchBatch() {
+        if (idx >= toFetch.length) return;
+        const chunk = toFetch.slice(idx, idx + 4);
+        idx += 4;
+        Promise.all(chunk.map(p =>
+            fetch('postupy/' + p.file)
                 .then(res => res.json())
                 .then(data => {
                     geojsonCache[p.file] = data;
                 })
-                .catch(e => console.warn("Prefetch geojson error", e));
-        }
-    });
+                .catch(e => console.warn("Prefetch geojson error", e))
+        )).then(() => {
+            if (idx < toFetch.length) {
+                setTimeout(fetchBatch, 80);
+            }
+        });
+    }
+    fetchBatch();
 }
 
 let reelObserver = null;
@@ -1838,6 +1847,8 @@ function setupObserver() {
     // 1. Observer pro okamžitý předstihový preload (1.5 výšky obrazovky dopředu i dozadu)
     let preloadOptions = { root: rc, rootMargin: '150% 0px 150% 0px', threshold: 0.01 };
     preloadObserver = new IntersectionObserver((entries) => {
+        const screenScroll = document.getElementById('screen-scroll');
+        if (!screenScroll || !screenScroll.classList.contains('active')) return;
         if (isNavigatingFeed || isClosingChatFeed) return;
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
@@ -1850,12 +1861,16 @@ function setupObserver() {
     // 2. Observer pro aktivaci přehrávaného postupu
     let options = { root: rc, rootMargin: '0px', threshold: 0.51 };
     reelObserver = new IntersectionObserver((entries) => {
+        const screenScroll = document.getElementById('screen-scroll');
+        if (!screenScroll || !screenScroll.classList.contains('active')) return;
         if (isNavigatingFeed || isClosingChatFeed) return;
         entries.forEach(entry => {
             if (entry.isIntersecting && entry.target.style.display !== 'none') {
                 const index = parseInt(entry.target.dataset.index);
                 if (activationTimeout) clearTimeout(activationTimeout);
                 activationTimeout = setTimeout(() => {
+                    const screenScrollNow = document.getElementById('screen-scroll');
+                    if (!screenScrollNow || !screenScrollNow.classList.contains('active')) return;
                     if (!isNavigatingFeed && !isClosingChatFeed) {
                         activateReel(index);
                     }
@@ -2156,27 +2171,25 @@ function toggleVariants(index) {
 }
 
 function destroyMapForReel(index) {
-    if (index === activeIndex) return; // Nikdy nerušit právě prohlížený postup
+    if (index === activeIndex && document.getElementById('screen-scroll')?.classList.contains('active')) return;
     stopVariantAnimation(index);
     const map = mapInstances[index];
-    if (!map) return;
-    try {
-        if (currentTileLayers[index]) {
-            try { map.removeLayer(currentTileLayers[index]); } catch (e) { }
-            delete currentTileLayers[index];
+    if (map) {
+        try {
+            if (currentTileLayers[index]) {
+                try { map.removeLayer(currentTileLayers[index]); } catch (e) { }
+            }
+            if (currentLayers[index]) {
+                try { map.removeLayer(currentLayers[index]); } catch (e) { }
+            }
+            if (currentOverlays[index]) {
+                try { map.removeLayer(currentOverlays[index]); } catch (e) { }
+            }
+            map.off();
+            map.remove();
+        } catch (e) {
+            console.warn("Error tearing down map", index, e);
         }
-        if (currentLayers[index]) {
-            try { map.removeLayer(currentLayers[index]); } catch (e) { }
-            delete currentLayers[index];
-        }
-        if (currentOverlays[index]) {
-            try { map.removeLayer(currentOverlays[index]); } catch (e) { }
-            delete currentOverlays[index];
-        }
-        map.off();
-        map.remove();
-    } catch (e) {
-        console.warn("Error tearing down map", index, e);
     }
     delete mapInstances[index];
     delete currentLayers[index];
@@ -2186,7 +2199,8 @@ function destroyMapForReel(index) {
 
     const cont = document.getElementById(`map-${index}`);
     if (cont) {
-        delete cont._leaflet_id;
+        cont._leaflet_id = null;
+        try { delete cont._leaflet_id; } catch (e) {}
         cont.innerHTML = '';
         cont.style.transform = '';
     }
@@ -2209,19 +2223,19 @@ function pruneDistantMaps(currentIndex) {
     if (visibleReels.length > 0) {
         let pos = visibleReels.indexOf(Number(currentIndex));
         if (pos !== -1) {
-            // Ponechat v paměti aktuální postup a max 2 předchozí a 2 následující
-            for (let offset = -2; offset <= 2; offset++) {
+            // Ponechat v paměti aktuální postup a max 1 předchozí a 1 následující (max 3 mapy pro stabilní paměť)
+            for (let offset = -1; offset <= 1; offset++) {
                 let p = pos + offset;
                 if (p >= 0 && p < visibleReels.length) {
                     keepIndices.add(visibleReels[p]);
                 }
             }
         } else {
-            visibleReels.slice(0, 3).forEach(idx => keepIndices.add(idx));
+            visibleReels.slice(0, 2).forEach(idx => keepIndices.add(idx));
         }
     } else {
-        for (let i = currentIndex - 2; i <= currentIndex + 2; i++) {
-            if (i >= 0) keepIndices.add(i);
+        for (let i = currentIndex - 1; i <= currentIndex + 1; i++) {
+            if (i >= 0 && i < postupyData.length) keepIndices.add(i);
         }
     }
 
@@ -3110,15 +3124,14 @@ function renderProfileSaved() {
 
             // Jednotné přiblížení pro všechny postupy (normalizované podle výřezu)
             let baseZoom = 13.0;
-            let cropScale = pts.crop_scale || 0.6;
-            let zoom = baseZoom * cropScale;
+            let cropScale = pts.crop_scale || 0.52;
+            let zoom = pts.zoom || (baseZoom * cropScale);
 
             let dx = pts.end[0] - pts.start[0];
             let dy = pts.end[1] - pts.start[1];
-            let maxDiff = Math.max(Math.abs(dx), Math.abs(dy));
 
             let distance = Math.hypot(dx, dy);
-            let animDur = Math.max(12, distance * 1.2); // Zpomaleno o 50% navíc: 1.2s na každý 1% bod délky
+            let animDur = Math.max(12, distance * 1.2); // Plynulý čas pohybu kamery
 
             animClass = 'animated-route-follow';
             let maskId = 'mask-' + basename + '-' + idx;
@@ -3144,7 +3157,7 @@ function renderProfileSaved() {
             el.innerHTML = `
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden;">
                     <div class="${animClass}" style="position: absolute; top: 50%; left: 50%; width: ${zoom * 100}%; height: auto; --anim-dur: ${animDur.toFixed(1)}s; --ts-x: -${pts.start[0].toFixed(3)}%; --ts-y: -${(pts.start[1] - yCorr).toFixed(3)}%; --te-x: -${pts.end[0].toFixed(3)}%; --te-y: -${(pts.end[1] - yCorr).toFixed(3)}%;">
-                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;">
+                        <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: auto; display: block;" loading="lazy">
                         ${svgOverlay}
                     </div>
                 </div>
@@ -3153,16 +3166,18 @@ function renderProfileSaved() {
             metaStyle = `style="position: absolute; top: 0; left: 0; width: 150%; height: 150%;"`;
             el.innerHTML = `
                 <div class="${animClass}" ${metaStyle}>
-                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <img src="${thumbImgSrc}" alt="${route.map_name}" style="width: 100%; height: 100%; object-fit: cover; display: block;" loading="lazy">
                 </div>
             `;
         }
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (isNavigatingFeed || isClosingChatFeed) return;
             try {
                 let postupIndex = postupyData.findIndex(p => String(p.id) === String(route.id));
                 openFeed(route.map_id, true, postupIndex >= 0 ? postupIndex : undefined);
             } catch (err) {
-                alert("Vyjimka v click handleru: " + err.message + "\n" + err.stack);
+                console.error("Vyjimka v click handleru: ", err);
             }
         });
         gridContainer.appendChild(el);
@@ -3171,6 +3186,15 @@ function renderProfileSaved() {
 }
 
 function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
+    if (isNavigatingFeed || isClosingChatFeed) return;
+    isNavigatingFeed = true;
+
+    if (activationTimeout) {
+        clearTimeout(activationTimeout);
+        activationTimeout = null;
+    }
+    if (activeIndex !== -1) stopVariantAnimation(activeIndex);
+
     let saved = JSON.parse(localStorage.getItem('saved_postupy') || '[]');
     let savedStrings = saved.map(String);
 
@@ -3297,23 +3321,30 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
                 }
 
                 setTimeout(() => {
-                    // Po dokončení animace provedeme těžkou inicializaci mapy
-                    if (!mapInstances[firstVisibleIndex]) {
-                        initMapForReel(firstVisibleIndex);
+                    if (isClosingChatFeed) {
+                        isNavigatingFeed = false;
+                        return;
                     }
-                    const activeMap = mapInstances[firstVisibleIndex];
-                    if (activeMap) {
-                        activeMap.invalidateSize({ animate: false });
-                        if (activeMap.originalMidX !== undefined) {
-                            activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
+                    try {
+                        if (!mapInstances[firstVisibleIndex]) {
+                            initMapForReel(firstVisibleIndex);
                         }
-                    }
-                    if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
-                        if (!currentLayers[firstVisibleIndex]) {
-                            renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
+                        const activeMap = mapInstances[firstVisibleIndex];
+                        if (activeMap) {
+                            activeMap.invalidateSize({ animate: false });
+                            if (activeMap.originalMidX !== undefined) {
+                                activeMap.setView([activeMap.originalMidY, activeMap.originalMidX], activeMap.originalZoom, { animate: false });
+                            }
                         }
+                        if (postupyData[firstVisibleIndex] && geojsonCache[postupyData[firstVisibleIndex].file]) {
+                            if (!currentLayers[firstVisibleIndex]) {
+                                renderMapData(firstVisibleIndex, geojsonCache[postupyData[firstVisibleIndex].file]);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn("Map setup error:", e);
                     }
-                    
+
                     screenScroll.style.transition = '';
                     screenScroll.style.transform = '';
                     if (bottomNav) {
@@ -3323,10 +3354,9 @@ function openFeed(map_id, isSavedMode, specificIndex, fromChat) {
 
                     isNavigatingFeed = false;
                     activateReel(firstVisibleIndex);
-                    
-                    // Po zklidnění animace přednačteme bezprostřední sousedy
+
                     setTimeout(() => {
-                        if (!isClosingChatFeed) {
+                        if (!isClosingChatFeed && !isNavigatingFeed) {
                             preloadAllVisibleReels(firstVisibleIndex);
                         }
                     }, 50);
@@ -3362,14 +3392,25 @@ function closeSavedFeed(isAlreadyAnimatedOut = false) {
     isClosingChatFeed = true;
     isNavigatingFeed = true;
 
+    if (activationTimeout) {
+        clearTimeout(activationTimeout);
+        activationTimeout = null;
+    }
+    stopVariantAnimation(activeIndex);
+
     const doClose = () => {
         document.body.classList.remove('saved-mode-active');
-        updateExploreBadge(document.getElementById('nav-badge'));
+
+        // Uvolnit všechny mapy z paměti pro stabilní a plynulý běh profilu
+        Object.keys(mapInstances).forEach(key => {
+            destroyMapForReel(parseInt(key, 10));
+        });
 
         document.querySelectorAll('.app-screen').forEach(s => {
             if (s.id !== 'screen-profile') s.classList.remove('active');
         });
-        document.getElementById('screen-profile').classList.add('active');
+        const profileScreen = document.getElementById('screen-profile');
+        if (profileScreen) profileScreen.classList.add('active');
 
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         const profileNavBtn = document.querySelector('.nav-btn[data-target="screen-profile"]');

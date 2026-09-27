@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
 /* ==================================================== */
 /* SPLASH SCREEN & LOGIN OVERLAY                        */
 /* ==================================================== */
@@ -20,6 +18,7 @@
   /* Optical center (slightly above geometric center) - matches Instagram */
   transition: padding-top 0.8s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   box-sizing: border-box;
+  will-change: opacity;
 }
 
 #login-overlay.show-login {
@@ -34,12 +33,17 @@
   justify-content: center;
   align-items: center;
   animation: splashScaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .splash-svg {
   width: 100%;
   height: auto;
   overflow: visible;
+  display: block;
 }
 
 @keyframes splashScaleIn {
@@ -434,12 +438,6 @@ body {
 .animated-route-follow {
   animation: routeFollow var(--anim-dur, 40s) linear infinite alternate;
   will-change: transform;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-  -webkit-perspective: 1000px;
-  perspective: 1000px;
 }
 
 @keyframes routeFollow {
@@ -1536,6 +1534,11 @@ body.saved-mode-active #screen-scroll {
   z-index: 50;
   animation: none !important;
   box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
+}
+
+body.saved-mode-active #screen-profile *,
+body.chat-mode-active #screen-profile * {
+  animation-play-state: paused !important;
 }
 
 body.chat-mode-active #screen-scroll {

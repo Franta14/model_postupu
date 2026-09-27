@@ -362,6 +362,28 @@ def generate_thumbnails():
     if resolution_m_px is not None:
         thumbs_meta["maps"][args.map_id]["resolution_m_px"] = resolution_m_px
     
+    # Automatický výpočet přesných souřadnic start/cíl kontrol pro náhledy postupu na profilu
+    for geojson_file in geojson_files:
+        basename = os.path.basename(geojson_file).replace(".geojson", "")
+        feats = per_postup_features.get(basename, [])
+        sc = None
+        ec = None
+        for feat in feats:
+            t = feat.get("properties", {}).get("type")
+            if t == "start": sc = feat.get("geometry", {}).get("coordinates")
+            elif t == "end": ec = feat.get("geometry", {}).get("coordinates")
+        if sc and ec:
+            sx = (sc[0] * scale / img_w) * 100.0
+            sy = (-sc[1] * scale / img_h) * 100.0
+            ex = (ec[0] * scale / img_w) * 100.0
+            ey = (-ec[1] * scale / img_h) * 100.0
+            thumbs_meta["routes"][basename] = {
+                "start": [round(sx, 4), round(sy, 4)],
+                "end": [round(ex, 4), round(ey, 4)],
+                "crop_scale": 0.52,
+                "zoom": 6.8
+            }
+
     thumbs_meta["version"] = int(time.time())
     
     thumbs_meta_path = os.path.join("export", "thumbs", "thumbs_meta.json")
