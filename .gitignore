@@ -3,3 +3,6 @@ __pycache__/
 *.npy
 *.pyc
 .env
+mobile_app/node_modules/
+mobile_app/.expo/
+
