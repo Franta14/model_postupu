@@ -16,10 +16,12 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
+  withSequence,
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFilter } from '../../context/FilterContext';
+import { useApp, useThemeColors } from '../../context/AppContext';
 
 // Načteme skutečná data o postupech
 import postupyIndex from '../../../assets/postupy/postupy_index.json';
@@ -88,33 +90,59 @@ const getRoutesCountText = (count: number) => {
   return `${count} postupů`;
 };
 
-// Komponenta pro dlaždici s jemným animovaným posunem mapy (Ken Burns drift)
+// Komponenta pro dlaždici s 4-bodovou Ken Burns animací (70s cyklus, identicky s webem)
 function DriftingTile({ item, index, onPress }: { item: any; index: number; onPress: () => void }) {
   const thumb = MAP_THUMBS[item.map_id];
+  const colors = useThemeColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
   useEffect(() => {
-    const baseDur = 35000;
-    const durX = baseDur + (index % 3) * 6000;
-    const durY = baseDur + ((index + 1) % 3) * 7000;
+    // 4 body pohybu s různým časováním pro každou dłaždici (identicky s web @keyframes mapDrift)
+    // Faze posun závisí na indexu — dłaždice se nehybou synchronně
+    const phase = (index * 0.37) % 1.0; // 0–1
+    const cycleDur = 70000; // 70s identicky s webem
+    const segDur = cycleDur / 4; // každý segment ~17.5s
+
+    // X osa: 4-bodový pohyb s proměnným směrem
+    const xPoints = [0, -14, -6, -18, 0];
+    // Y osa: 4-bodový pohyb ortogonálně k X
+    const yPoints = [0, -8, -16, -4, 0];
+
+    // Posuneme startovní bod podle phase
+    const pIdx = Math.floor(phase * 4);
+    const xShifted = [...xPoints.slice(pIdx), ...xPoints.slice(1, pIdx + 1)];
+    const yShifted = [...yPoints.slice(pIdx), ...yPoints.slice(1, pIdx + 1)];
+
+    const ease = Easing.inOut(Easing.ease);
 
     translateX.value = withRepeat(
-      withTiming(-16, { duration: durX, easing: Easing.inOut(Easing.ease) }),
+      withSequence(
+        withTiming(xShifted[1], { duration: segDur, easing: ease }),
+        withTiming(xShifted[2], { duration: segDur, easing: ease }),
+        withTiming(xShifted[3], { duration: segDur, easing: ease }),
+        withTiming(xShifted[0], { duration: segDur, easing: ease }),
+      ),
       -1,
-      true
+      false
     );
     translateY.value = withRepeat(
-      withTiming(-12, { duration: durY, easing: Easing.inOut(Easing.ease) }),
+      withSequence(
+        withTiming(yShifted[1], { duration: segDur + 2000, easing: ease }),
+        withTiming(yShifted[2], { duration: segDur + 1000, easing: ease }),
+        withTiming(yShifted[3], { duration: segDur + 3000, easing: ease }),
+        withTiming(yShifted[0], { duration: segDur, easing: ease }),
+      ),
       -1,
-      true
+      false
     );
   }, [index]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: 1.28 },
+      { scale: 1.32 }, // Trochu větší scale aby kraj pohybu nebyl vidět
       { translateX: translateX.value },
       { translateY: translateY.value },
     ],
@@ -156,6 +184,8 @@ function DriftingTile({ item, index, onPress }: { item: any; index: number; onPr
 export default function ExploreScreen() {
   const router = useRouter();
   const { selectedTerrains, toggleTerrain, isTerrainSelected } = useFilter();
+  const colors = useThemeColors();
+  const styles = React.useMemo(() => getStyles(colors), [colors]);
 
   // Zoskupení dat podle map_id s podporou vícenásobného výběru filtrů
   const groupedData = useMemo(() => {
@@ -192,7 +222,7 @@ export default function ExploreScreen() {
           style: styles.storyRing,
         }
       : {
-          style: [styles.storyRing, { backgroundColor: '#dbdbdb' }],
+          style: [styles.storyRing, { backgroundColor: colors.border }],
         };
 
     const imageSource = story.isLocal ? story.img : { uri: story.img as string };
@@ -210,7 +240,7 @@ export default function ExploreScreen() {
         <Text
           style={[
             styles.storyText,
-            isSelected && { fontWeight: '700', color: '#000000' },
+            isSelected && { fontWeight: '700', color: colors.text },
           ]}
           numberOfLines={1}
         >
@@ -265,10 +295,10 @@ export default function ExploreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.background,
   },
   exploreHeader: {
     paddingHorizontal: 15,
@@ -280,7 +310,7 @@ const styles = StyleSheet.create({
   exploreTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#000000',
+    color: colors.text,
     letterSpacing: -0.5,
   },
   storiesContainer: {
@@ -305,12 +335,12 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 29.5,
     borderWidth: 2.5,
-    borderColor: '#ffffff',
+    borderColor: colors.background,
   },
   storyText: {
     fontSize: 11,
     marginTop: 5,
-    color: '#262626',
+    color: colors.text,
     fontWeight: '400',
     textAlign: 'center',
   },
@@ -326,7 +356,7 @@ const styles = StyleSheet.create({
     height: TILE_HEIGHT,
     position: 'relative',
     overflow: 'hidden',
-    backgroundColor: '#efefef',
+    backgroundColor: colors.pillBg,
   },
   tileImageContainer: {
     width: '100%',
@@ -339,13 +369,13 @@ const styles = StyleSheet.create({
   },
   imagePlaceholder: {
     flex: 1,
-    backgroundColor: '#efefef',
+    backgroundColor: colors.pillBg,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
   },
   tilePlaceholderText: {
-    color: '#999',
+    color: colors.secondaryText,
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
@@ -384,13 +414,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333333',
+    color: colors.text,
     marginBottom: 6,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#888888',
+    color: colors.secondaryText,
     textAlign: 'center',
   },
 });
