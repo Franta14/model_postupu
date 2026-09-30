@@ -7,15 +7,16 @@ import {
   FlatList,
   TouchableOpacity,
   Pressable,
-  Image,
   ViewToken,
   Modal,
   TextInput,
   ScrollView,
   Share,
   PanResponder,
+  Platform,
   Animated as RNAnimated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import Svg, {
@@ -166,16 +167,19 @@ interface RouteItem {
 }
 
 // ==========================================
+// ==========================================
 // KOMPONENTA JEDNOHO REELU
 // ==========================================
-function ReelItem({
+function ReelItemComponent({
   item,
   isActive,
+  isNear,
   onOpenComments,
   onOpenShare,
 }: {
   item: RouteItem;
   isActive: boolean;
+  isNear: boolean;
   onOpenComments: (route: RouteItem) => void;
   onOpenShare: (route: RouteItem) => void;
 }) {
@@ -345,12 +349,10 @@ function ReelItem({
     const fontSize = Math.round(28 * mapResRatio);
 
     // Inteligetní pozicování panelu variant (identické s webem)
-    // Analyzujeme, který roh obrazovky má nejméně variant
     let panelCorner: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' = 'top-right';
     if (geojsonData && geojsonData.features && dist > 0) {
       const ux2 = dx / dist;
       const uy2 = dy / dist;
-      // Perpendiculární osa (vx, vy = osa levo-pravo vzhledem ke směru běhu)
       const vx2 = -uy2;
       const vy2 = ux2;
       let maxBulgeTopLeft = 0, maxBulgeTopRight = 0, maxBulgeBottomLeft = 0;
@@ -359,12 +361,12 @@ function ReelItem({
           f.geometry.coordinates.forEach((c: number[]) => {
             const px2 = c[0] * 32 - midX;
             const py2 = -c[1] * 32 - midY;
-            const localY = px2 * ux2 + py2 * uy2; // poloha poédl směru běhu
-            const localX = px2 * vx2 + py2 * vy2; // poloha příčně
-            if (localY > dist * 0.6) { // horní část (blíže cíli)
+            const localY = px2 * ux2 + py2 * uy2;
+            const localX = px2 * vx2 + py2 * vy2;
+            if (localY > dist * 0.6) {
               if (localX > maxBulgeTopLeft) maxBulgeTopLeft = localX;
               if (-localX > maxBulgeTopRight) maxBulgeTopRight = -localX;
-            } else if (localY < dist * 0.4) { // dolní část (blíže startu)
+            } else if (localY < dist * 0.4) {
               if (localX > maxBulgeBottomLeft) maxBulgeBottomLeft = localX;
             }
           });
@@ -481,21 +483,21 @@ function ReelItem({
 
   // Animace běžců — useFrameCallback běží pouze když jsou Volby otevřené a reel je aktivní
   const isRunning = isOptionsOpen && isActive;
-  useFrameCallback((frameInfo) => {
+  const frameCallback = useFrameCallback((frameInfo) => {
     if (animStartTs.value < 0) {
       animStartTs.value = frameInfo.timestamp;
     }
     const elapsed = frameInfo.timestamp - animStartTs.value;
     animCycleMs.value = elapsed % 3400;
-  }, isRunning);
+  }, false);
 
-  // Reset při zastavení
   useEffect(() => {
+    frameCallback.setActive(isRunning);
     if (!isRunning) {
       animCycleMs.value = 0;
       animStartTs.value = -1;
     }
-  }, [isRunning]);
+  }, [isRunning, frameCallback]);
 
   // JS-side helper pro výpočet pozice běžce (používáme jen při renderu)
   const getRunnerPosition = (v: (typeof variantData)[0], elapsedMs: number) => {
@@ -531,6 +533,13 @@ function ReelItem({
   const bookmarked = isBookmarked(basename);
   const liked = isLiked(basename);
 
+  // KRITICKÁ OPTIMALIZACE PAMĚTI:
+  // Pokud položka není v bezprostřední blízkosti aktivní obrazovky (isNear === false),
+  // vůbec nemontujeme bitmapu mapy ani SVG do nativního stromu.
+  if (!isNear) {
+    return <View style={styles.reelContainer} />;
+  }
+
   return (
     <View style={styles.reelContainer}>
       {/* ── MAPOVÉ PLÁTNO A VEKTORY ── */}
@@ -548,7 +557,7 @@ function ReelItem({
               animatedMapStyle,
             ]}
           >
-            {/* 1. Podkladová orienťácká mapa */}
+            {/* 1. Podkladová orienťácká mapa (expo-image s hardware poolingem a okamžitým uvolňováním paměti) */}
             <Image
               source={routeGeometry.mapCfg.image}
               style={{
@@ -556,7 +565,9 @@ function ReelItem({
                 height: routeGeometry.mapCfg.height,
                 position: 'absolute',
               }}
-              resizeMode="cover"
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`map-${item.map_id}`}
             />
 
             {/* 2. Vektorový SVG overlay */}
@@ -566,48 +577,6 @@ function ReelItem({
               viewBox={`0 0 ${routeGeometry.mapCfg.width} ${routeGeometry.mapCfg.height}`}
               style={styles.svgAbsolute}
             >
-              {/* ── BÍLÁ MASKA okolo viditelné oblasti (jako na webu) ── */}
-              {routeGeometry.dist > 0 && (() => {
-                // Výpočet maskovacího polygonu identický s web verzí
-                const { midX, midY, scale, bearingDeg, dist, mapCfg, screenMidX, screenMidY } = routeGeometry;
-                const bearingRad = (bearingDeg * Math.PI) / 180;
-                const cosB = Math.cos(bearingRad);
-                const sinB = Math.sin(bearingRad);
-
-                // Rozměry viditelné oblasti v map-space souřadnicích (před rotací)
-                const visW = (SCREEN_WIDTH / scale) * 1.05;
-                const visH = (SCREEN_HEIGHT / scale) * 1.05;
-
-                // Střed viditelné oblasti v map-space
-                const cx = midX;
-                const cy = midY;
-
-                // 4 rohy viditelného obdélníku v map-space (rotované)
-                const hw = visW / 2;
-                const hh = visH / 2;
-                const corners = [
-                  [-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh],
-                ].map(([lx, ly]) => [
-                  cx + lx * cosB - ly * sinB,
-                  cy + lx * sinB + ly * cosB,
-                ]);
-
-                // Obří vnější rámeček (pro fill-rule=evenodd efekt)
-                const big = Math.max(mapCfg.width, mapCfg.height) * 2;
-                const outerPath = `M -${big} -${big} L ${big} -${big} L ${big} ${big} L -${big} ${big} Z`;
-                const innerPath = `M ${corners.map(c => `${c[0]} ${c[1]}`).join(' L ')} Z`;
-
-                return (
-                  <Path
-                    d={`${outerPath} ${innerPath}`}
-                    fill="#ffffff"
-                    fillRule="evenodd"
-                    stroke="none"
-                    opacity={1}
-                  />
-                );
-              })()}
-
               {/* Spojnice kontrol */}
               {routeGeometry.dist > (routeGeometry.R + routeGeometry.strokeW) * 2 && (
                 <Line
@@ -860,6 +829,14 @@ function ReelItem({
   );
 }
 
+const ReelItem = React.memo(ReelItemComponent, (prev, next) => {
+  return (
+    prev.item.id === next.item.id &&
+    prev.isActive === next.isActive &&
+    prev.isNear === next.isNear
+  );
+});
+
 // ==========================================
 // BOTTOM SHEET (Komentáře, Instagram styl)
 // Plně UI-thread animace přes Reanimated + GestureDetector
@@ -1082,12 +1059,17 @@ export default function ReelsScreen() {
     return routes;
   }, [map, selectedTerrains]);
 
+  const displayRoutesRef = useRef(displayRoutes);
+  useEffect(() => {
+    displayRoutesRef.current = displayRoutes;
+  }, [displayRoutes]);
+
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+      if (viewableItems.length > 0 && viewableItems[0].index !== null && viewableItems[0].index !== undefined) {
         const idx = viewableItems[0].index;
         setActiveIndex(idx);
-        const currentRoute = displayRoutes[idx];
+        const currentRoute = displayRoutesRef.current[idx];
         if (currentRoute) {
           markViewed(currentRoute.id);
         }
@@ -1099,11 +1081,11 @@ export default function ReelsScreen() {
     itemVisiblePercentThreshold: 60,
   }).current;
 
-  const handleOpenComments = (route: RouteItem) => {
+  const handleOpenComments = useCallback((route: RouteItem) => {
     setCommentsRoute(route);
-  };
+  }, []);
 
-  const handleOpenShare = async (route: RouteItem) => {
+  const handleOpenShare = useCallback(async (route: RouteItem) => {
     try {
       await Share.share({
         message: `Koukni na tento orienťácký postup: ${route.map_name} (${Math.round(
@@ -1113,7 +1095,7 @@ export default function ReelsScreen() {
     } catch (e) {
       // Ignorovat
     }
-  };
+  }, []);
 
   const handleAddComment = async () => {
     if (!commentText.trim() || !commentsRoute) return;
@@ -1134,19 +1116,38 @@ export default function ReelsScreen() {
     }
   };
 
+  const getItemLayout = useCallback(
+    (_: any, index: number) => ({
+      length: SCREEN_HEIGHT,
+      offset: SCREEN_HEIGHT * index,
+      index,
+    }),
+    []
+  );
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: RouteItem; index: number }) => {
+      const isNear = Math.abs(index - activeIndex) <= 1;
+      return (
+        <ReelItem
+          item={item}
+          isActive={index === activeIndex}
+          isNear={isNear}
+          onOpenComments={handleOpenComments}
+          onOpenShare={handleOpenShare}
+        />
+      );
+    },
+    [activeIndex, handleOpenComments, handleOpenShare]
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
         data={displayRoutes}
         keyExtractor={(item) => item.file}
-        renderItem={({ item, index }) => (
-          <ReelItem
-            item={item}
-            isActive={index === activeIndex}
-            onOpenComments={handleOpenComments}
-            onOpenShare={handleOpenShare}
-          />
-        )}
+        renderItem={renderItem}
+        getItemLayout={getItemLayout}
         pagingEnabled
         snapToInterval={SCREEN_HEIGHT}
         snapToAlignment="start"
@@ -1157,6 +1158,7 @@ export default function ReelsScreen() {
         initialNumToRender={1}
         maxToRenderPerBatch={2}
         windowSize={3}
+        removeClippedSubviews={Platform.OS === 'android'}
       />
 
       {/* SPODNÍ SHEET PRO KOMENTÁŘE */}
